@@ -1,14 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Global Heroes</title>
   <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: none; }
+    /* Основные стили */
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #1a1a1a;
+    }
+    
+    #gameCanvas {
+      display: block; /* Изменено с none на block */
+      width: 100vw;
+      height: 100vh;
+      cursor: none;
+      background: #2a2a2a;
+      transition: background 0.3s;
+    }
+
+    /* Индикатор подключения */
+    #connectionStatus {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 5px 10px;
+      border-radius: 3px;
+      background: rgba(0,0,0,0.7);
+    }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
+  <div id="connectionStatus">Connecting...</div>
+  
+  <!-- Скрипты -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="gameClient.js"></script>
 </body>
