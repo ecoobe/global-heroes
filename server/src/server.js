@@ -1,73 +1,81 @@
 const express = require('express');
-const socketio = require('socket.io');
-const redis = require('redis');
-const http = require('http');
+const { createServer } = require('node:http');
+const { Server } = require('socket.io');
+const { createClient } = require('redis');
 
-// Инициализация приложения
 const app = express();
-const server = http.createServer(app);
-const io = socketio(server, {
+const server = createServer(app);
+const io = new Server(server, {
   cors: {
     origin: "https://coobe.ru",
     methods: ["GET", "POST"]
   }
 });
 
-// Подключение к Redis
-const redisClient = redis.createClient({
-  host: 'redis',
-  port: 6379
+// Redis клиент
+const redisClient = createClient({
+  url: 'redis://redis:6379',
+  socket: {
+    reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
+  }
 });
 
-// Middleware для CORS
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://coobe.ru");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
+(async () => {
+  try {
+    await redisClient.connect();
+    console.log('Connected to Redis');
+  } catch (err) {
+    console.error('Redis connection error:', err);
+  }
+})();
 
 // Игровое состояние
 const gameState = {
-  players: {}
+  players: new Map()
 };
 
-// Обработчики WebSocket
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   console.log(`Player connected: ${socket.id}`);
 
-  // Инициализация игрока
-  gameState.players[socket.id] = {
-    x: Math.random() * 800,
-    y: Math.random() * 600,
-    color: `#${Math.floor(Math.random()*16777215).toString(16)}`
-  };
+  try {
+    // Инициализация игрока
+    const initialData = {
+      x: Math.floor(Math.random() * 800),
+      y: Math.floor(Math.random() * 600),
+      color: `#${Math.floor(Math.random()*16777215).toString(16)}`
+    };
 
-  // Отправка начального состояния
-  socket.emit('init', gameState.players);
+    gameState.players.set(socket.id, initialData);
+    await redisClient.hSet('players', socket.id, JSON.stringify(initialData));
+    
+    socket.emit('init', Object.fromEntries(gameState.players));
+    io.emit('update', { [socket.id]: initialData });
 
-  // Обработка движения
-  socket.on('move', (direction) => {
-    if (!isValidMove(direction)) return;
+    // Обработка движения
+    socket.on('move', async (direction) => {
+      if (!isValidDirection(direction)) return;
 
-    const player = gameState.players[socket.id];
-    player.x += direction.x * 5;
-    player.y += direction.y * 5;
+      const player = gameState.players.get(socket.id);
+      player.x += direction.x * 5;
+      player.y += direction.y * 5;
 
-    // Сохранение в Redis и рассылка
-    redisClient.hset('players', socket.id, JSON.stringify(player));
-    io.emit('update', player);
-  });
+      await redisClient.hSet('players', socket.id, JSON.stringify(player));
+      io.emit('update', { [socket.id]: player });
+    });
 
-  // Отключение игрока
-  socket.on('disconnect', () => {
-    redisClient.hdel('players', socket.id);
-    delete gameState.players[socket.id];
-    io.emit('playerDisconnected', socket.id);
-  });
+    // Отключение
+    socket.on('disconnect', async () => {
+      gameState.players.delete(socket.id);
+      await redisClient.hDel('players', socket.id);
+      io.emit('removePlayer', socket.id);
+    });
+
+  } catch (err) {
+    console.error('Socket error:', err);
+  }
 });
 
-// Валидация движения
-function isValidMove(direction) {
+function isValidDirection(direction) {
   return (
     Math.abs(direction.x) <= 1 &&
     Math.abs(direction.y) <= 1 &&
@@ -76,7 +84,6 @@ function isValidMove(direction) {
   );
 }
 
-// Запуск сервера
 server.listen(3000, () => {
-  console.log('Game server listening on port 3000');
+  console.log('Game server running on port 3000');
 });

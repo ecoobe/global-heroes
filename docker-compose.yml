@@ -1,40 +1,49 @@
 services:
   game-server:
-    build: ./server
-    networks:
-      - game-network
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
     environment:
       - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+    networks:
+      - game-network
     depends_on:
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', res => process.exit(res.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   redis:
-    image: redis:alpine
+    image: redis:7.2-alpine
+    command: redis-server --save 60 1 --loglevel warning
     networks:
       - game-network
     volumes:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 3
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   nginx:
-    image: nginx:alpine
+    image: nginx:1.25-alpine
     ports:
       - "80:80"
-      - "443:443"  # Добавляем 443 порт
+      - "443:443"
+    networks:
+      - game-network
     volumes:
       - ./client:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro  # Подключаем сертификаты
-    networks:
-      - game-network
+      - /etc/letsencrypt/live/coobe.ru:/etc/nginx/certs:ro
     depends_on:
-      game-server:
-        condition: service_started
+      - game-server
+      - redis
 
 volumes:
   redis_data:
@@ -42,3 +51,8 @@ volumes:
 networks:
   game-network:
     driver: bridge
+    attachable: true
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
