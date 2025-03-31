@@ -69,16 +69,16 @@ class GameClient {
 	}
   
 	gameLoop() {
-		// Логирование текущих нажатых клавиш
-		console.log('Filtered keys:', filteredKeys); // Обновлённый лог
-	  
-		// Рассчёт направления
+		// Переместите фильтрацию клавиш В начало
 		const filteredKeys = Array.from(this.keys).filter(key => 
-			['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)
+		  ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)
 		);
+	  
+		console.log('Filtered keys:', filteredKeys); // Теперь переменная определена
+	  
 		const direction = { x: 0, y: 0 };
 		
-		this.keys.forEach(key => {
+		filteredKeys.forEach(key => { // Используем отфильтрованные клавиши
 		  switch(key) {
 			case 'ArrowLeft': direction.x -= 1; break;
 			case 'ArrowRight': direction.x += 1; break;
@@ -86,8 +86,7 @@ class GameClient {
 			case 'ArrowDown': direction.y += 1; break;
 		  }
 		});
-	
-		// Логирование направления
+	  
 		if (direction.x !== 0 || direction.y !== 0) {
 		  console.log('Sending movement:', direction);
 		  this.socket.emit('move', direction);
