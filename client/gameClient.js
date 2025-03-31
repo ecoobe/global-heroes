@@ -26,3 +26,11 @@ document.addEventListener('keydown', (e) => {
   
   socket.emit('move', { x: playerX, y: playerY });
 });
+
+socket.on("connect_error", (err) => {
+	console.log("Connection error:", err.message);
+  });
+  
+  socket.on("connect", () => {
+	console.log("Connected to server!");
+  });
