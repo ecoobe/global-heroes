@@ -33,15 +33,33 @@ class GameClient {
 	}
   
 	initEventListeners() {
-	  window.addEventListener('resize', () => this.resizeCanvas());
-	  document.addEventListener('keydown', (e) => this.keys.add(e.key));
-	  document.addEventListener('keyup', (e) => this.keys.delete(e.key));
+		// Заменяем слушатели на версию с фильтрацией
+		const validKeys = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']);
+		
+		document.addEventListener('keydown', (e) => {
+		  if (validKeys.has(e.key)) {
+			this.keys.add(e.key);
+			console.log('Key added:', e.key); // Для отладки
+		  }
+		});
+	  
+		document.addEventListener('keyup', (e) => {
+		  if (validKeys.has(e.key)) {
+			this.keys.delete(e.key);
+			console.log('Key removed:', e.key); // Для отладки
+		  }
+		});
 	}
   
 	initCanvas() {
-	  this.canvas.width = window.innerWidth;
-	  this.canvas.height = window.innerHeight;
-	  this.ctx.imageSmoothingEnabled = true;
+		this.canvas.tabIndex = 0; // Делаем элемент фокусируемым
+		this.canvas.focus(); // Устанавливаем фокус
+		this.canvas.style.outline = 'none'; // Убираем стандартный outline
+		
+		this.canvas.addEventListener('blur', () => {
+		  this.keys.clear(); // Сбрасываем клавиши при потере фокуса
+		  console.log('Canvas lost focus!');
+		});
 	}
   
 	resizeCanvas() {
@@ -52,9 +70,12 @@ class GameClient {
   
 	gameLoop() {
 		// Логирование текущих нажатых клавиш
-		console.log('Active keys:', Array.from(this.keys));
+		console.log('Filtered keys:', filteredKeys); // Обновлённый лог
 	  
 		// Рассчёт направления
+		const filteredKeys = Array.from(this.keys).filter(key => 
+			['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)
+		);
 		const direction = { x: 0, y: 0 };
 		
 		this.keys.forEach(key => {
