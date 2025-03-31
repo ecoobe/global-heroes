@@ -1,8 +1,6 @@
 services:
   game-server:
-    build: 
-      context: ./server
-      dockerfile: Dockerfile
+    build: ./server
     environment:
       - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
@@ -12,7 +10,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', res => process.exit(res.statusCode === 200 ? 0 : 1))"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/socket.io', res => process.exit(res.statusCode === 400 ? 0 : 1))"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -51,8 +49,6 @@ volumes:
 networks:
   game-network:
     driver: bridge
-    attachable: true
     ipam:
       config:
-        - subnet: 172.20.0.0/24
-          gateway: 172.20.0.1
+        - subnet: 172.22.0.0/24

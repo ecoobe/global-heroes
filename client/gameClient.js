@@ -1,80 +1,123 @@
-const socket = io({
-	transports: ['websocket'],
-	secure: true,
-	path: '/socket.io',
-	reconnection: true,
-	reconnectionDelay: 1000,
-	reconnectionAttempts: Infinity,
-	timeout: 20000,
-	auth: {
-	  token: localStorage.getItem('playerToken') || null
+class GameClient {
+	constructor() {
+	  this.canvas = document.getElementById('gameCanvas');
+	  this.ctx = this.canvas.getContext('2d');
+	  this.statusElement = document.getElementById('connectionStatus');
+	  this.players = new Map();
+	  this.keys = new Set();
+	  
+	  this.initSocket();
+	  this.initEventListeners();
+	  this.initCanvas();
+	  this.gameLoop();
 	}
-  });
   
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = 800;
-  canvas.height = 600;
+	initSocket() {
+	  this.socket = io({
+		transports: ['websocket'],
+		secure: true,
+		path: '/socket.io',
+		reconnection: true,
+		reconnectionAttempts: Infinity,
+		auth: {
+		  token: localStorage.getItem('playerToken')
+		}
+	  });
   
-  let players = {};
-  
-  // Обработчики соединения
-  socket.on('connect', () => {
-	console.log('Connected with ID:', socket.id);
-	localStorage.setItem('playerToken', socket.id);
-  });
-  
-  socket.on('init', (initialPlayers) => {
-	players = initialPlayers;
-	render();
-  });
-  
-  socket.on('update', (updatedPlayers) => {
-	Object.assign(players, updatedPlayers);
-	requestAnimationFrame(render);
-  });
-  
-  socket.on('removePlayer', (playerId) => {
-	delete players[playerId];
-	requestAnimationFrame(render);
-  });
-  
-  socket.on('connect_error', (err) => {
-	console.error('Connection error:', err.message);
-	setTimeout(() => socket.connect(), 5000);
-  });
-  
-  // Обработка ввода
-  const keys = new Set();
-  document.addEventListener('keydown', (e) => keys.add(e.key));
-  document.addEventListener('keyup', (e) => keys.delete(e.key));
-  
-  setInterval(() => {
-	const direction = {
-	  x: 0,
-	  y: 0
-	};
-	
-	if (keys.has('ArrowLeft')) direction.x = -1;
-	if (keys.has('ArrowRight')) direction.x = 1;
-	if (keys.has('ArrowUp')) direction.y = -1;
-	if (keys.has('ArrowDown')) direction.y = 1;
-  
-	if (direction.x || direction.y) {
-	  socket.emit('move', direction);
+	  this.socket.on('connect', () => this.handleConnect());
+	  this.socket.on('disconnect', () => this.handleDisconnect());
+	  this.socket.on('init', (data) => this.handleInit(data));
+	  this.socket.on('update', (data) => this.handleUpdate(data));
+	  this.socket.on('removePlayer', (id) => this.handleRemovePlayer(id));
+	  this.socket.on('connect_error', (err) => this.handleError(err));
 	}
-  }, 50);
   
-  // Отрисовка
-  function render() {
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	
-	Object.entries(players).forEach(([id, player]) => {
-	  ctx.beginPath();
-	  ctx.arc(player.x, player.y, 20, 0, Math.PI * 2);
-	  ctx.fillStyle = player.color;
-	  ctx.fill();
-	  ctx.strokeStyle = '#333';
-	  ctx.stroke();
-	});
+	initEventListeners() {
+	  window.addEventListener('resize', () => this.resizeCanvas());
+	  document.addEventListener('keydown', (e) => this.keys.add(e.key));
+	  document.addEventListener('keyup', (e) => this.keys.delete(e.key));
+	}
+  
+	initCanvas() {
+	  this.canvas.width = window.innerWidth;
+	  this.canvas.height = window.innerHeight;
+	  this.ctx.imageSmoothingEnabled = true;
+	}
+  
+	resizeCanvas() {
+	  this.canvas.width = window.innerWidth;
+	  this.canvas.height = window.innerHeight;
+	  this.render();
+	}
+  
+	gameLoop() {
+	  const direction = {
+		x: [].reduce.call(this.keys, (acc, key) => {
+		  if (key === 'ArrowLeft') return {...acc, x: acc.x - 1};
+		  if (key === 'ArrowRight') return {...acc, x: acc.x + 1};
+		  if (key === 'ArrowUp') return {...acc, y: acc.y - 1};
+		  if (key === 'ArrowDown') return {...acc, y: acc.y + 1};
+		  return acc;
+		}, {x: 0, y: 0})
+	  };
+  
+	  if (direction.x.x !== 0 || direction.x.y !== 0) {
+		this.socket.emit('move', direction.x);
+	  }
+	  
+	  requestAnimationFrame(() => this.gameLoop());
+	}
+  
+	handleConnect() {
+	  this.statusElement.className = 'connected';
+	  this.statusElement.textContent = `Connected (ID: ${this.socket.id})`;
+	  localStorage.setItem('playerToken', this.socket.id);
+	}
+  
+	handleDisconnect() {
+	  this.statusElement.className = 'connecting';
+	  this.statusElement.textContent = 'Reconnecting...';
+	}
+  
+	handleInit(data) {
+	  this.players = new Map(Object.entries(data));
+	  this.render();
+	}
+  
+	handleUpdate(data) {
+	  Object.entries(data).forEach(([id, player]) => {
+		this.players.set(id, player);
+	  });
+	  this.render();
+	}
+  
+	handleRemovePlayer(id) {
+	  this.players.delete(id);
+	  this.render();
+	}
+  
+	handleError(err) {
+	  this.statusElement.className = 'error';
+	  this.statusElement.textContent = `Error: ${err.message}`;
+	  console.error('Connection error:', err);
+	}
+  
+	render() {
+	  this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+	  
+	  this.players.forEach(player => {
+		this.ctx.beginPath();
+		this.ctx.arc(player.x, player.y, 20, 0, Math.PI * 2);
+		this.ctx.fillStyle = player.color;
+		this.ctx.fill();
+		this.ctx.strokeStyle = '#34495e';
+		this.ctx.lineWidth = 2;
+		this.ctx.stroke();
+	  });
+	}
   }
+  
+  // Инициализация игры при полной загрузке DOM
+  document.addEventListener('DOMContentLoaded', () => {
+	new GameClient();
+  });
