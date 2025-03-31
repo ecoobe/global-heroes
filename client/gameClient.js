@@ -51,21 +51,28 @@ class GameClient {
 	}
   
 	gameLoop() {
-	  const direction = {
-		x: [].reduce.call(this.keys, (acc, key) => {
-		  if (key === 'ArrowLeft') return {...acc, x: acc.x - 1};
-		  if (key === 'ArrowRight') return {...acc, x: acc.x + 1};
-		  if (key === 'ArrowUp') return {...acc, y: acc.y - 1};
-		  if (key === 'ArrowDown') return {...acc, y: acc.y + 1};
-		  return acc;
-		}, {x: 0, y: 0})
-	  };
-  
-	  if (direction.x.x !== 0 || direction.x.y !== 0) {
-		this.socket.emit('move', direction.x);
-	  }
+		// Логирование текущих нажатых клавиш
+		console.log('Active keys:', Array.from(this.keys));
 	  
-	  requestAnimationFrame(() => this.gameLoop());
+		// Рассчёт направления
+		const direction = { x: 0, y: 0 };
+		
+		this.keys.forEach(key => {
+		  switch(key) {
+			case 'ArrowLeft': direction.x -= 1; break;
+			case 'ArrowRight': direction.x += 1; break;
+			case 'ArrowUp': direction.y -= 1; break;
+			case 'ArrowDown': direction.y += 1; break;
+		  }
+		});
+	
+		// Логирование направления
+		if (direction.x !== 0 || direction.y !== 0) {
+		  console.log('Sending movement:', direction);
+		  this.socket.emit('move', direction);
+		}
+	  
+		requestAnimationFrame(() => this.gameLoop());
 	}
   
 	handleConnect() {

@@ -53,15 +53,24 @@ io.on('connection', async (socket) => {
 
     // Обработка движения
     socket.on('move', async (direction) => {
-      if (!isValidDirection(direction)) return;
-
-      const player = gameState.players.get(socket.id);
-      player.x += direction.x * 5;
-      player.y += direction.y * 5;
-
-      await redisClient.hSet('players', socket.id, JSON.stringify(player));
-      io.emit('update', { [socket.id]: player });
-    });
+		console.log(`Move from ${socket.id}:`, direction);
+		
+		if (!isValidDirection(direction)) {
+		  console.warn('Invalid direction:', direction);
+		  return;
+		}
+	  
+		try {
+		  const player = gameState.players.get(socket.id);
+		  player.x += direction.x * 5;
+		  player.y += direction.y * 5;
+	  
+		  await redisClient.hSet('players', socket.id, JSON.stringify(player));
+		  io.emit('update', { [socket.id]: player });
+		} catch (err) {
+		  console.error('Move error:', err);
+		}
+	});
 
     // Отключение
     socket.on('disconnect', async () => {
