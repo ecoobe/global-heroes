@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  game-server:
+    build: ./server
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - game-network
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - game-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./client:/usr/share/nginx/html:ro
+    networks:
+      - game-network
+
+volumes:
+  redis_data:
+
+networks:
+  game-network:
+    driver: bridge
