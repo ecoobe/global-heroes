@@ -40,7 +40,7 @@ services:
     volumes:
       - ./client:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - /etc/letsencrypt/live/coobe.ru:/etc/nginx/certs:ro
+      - /etc/letsencrypt/live/coobe.ru/:/etc/nginx/certs:ro
     depends_on:
       - game-server
       - redis
