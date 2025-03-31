@@ -53,23 +53,18 @@ io.on('connection', async (socket) => {
 
     // Обработка движения
     socket.on('move', async (direction) => {
-		console.log(`Move from ${socket.id}:`, direction);
+		const player = gameState.players.get(socket.id);
 		
-		if (!isValidDirection(direction)) {
-		  console.warn('Invalid direction:', direction);
-		  return;
-		}
-	  
-		try {
-		  const player = gameState.players.get(socket.id);
-		  player.x += direction.x * 5;
-		  player.y += direction.y * 5;
-	  
-		  await redisClient.hSet('players', socket.id, JSON.stringify(player));
-		  io.emit('update', { [socket.id]: player });
-		} catch (err) {
-		  console.error('Move error:', err);
-		}
+		// Рассчёт новых координат относительно текущих размеров экрана
+		player.x = (player.x + direction.x * 5) % player.screenWidth;
+		player.y = (player.y + direction.y * 5) % player.screenHeight;
+		
+		// Ограничение координат
+		if (player.x < 0) player.x = 0;
+		if (player.y < 0) player.y = 0;
+		
+		await redisClient.hSet('players', socket.id, JSON.stringify(player));
+		io.emit('update', { [socket.id]: player });
 	});
 
     // Отключение

@@ -52,13 +52,16 @@ class GameClient {
 	}
   
 	initCanvas() {
-		this.canvas.tabIndex = 0; // Делаем элемент фокусируемым
-		this.canvas.focus(); // Устанавливаем фокус
-		this.canvas.style.outline = 'none'; // Убираем стандартный outline
+		this.canvas.tabIndex = 0;
+		this.canvas.focus();
+		this.canvas.style.outline = 'none';
 		
-		this.canvas.addEventListener('blur', () => {
-		  this.keys.clear(); // Сбрасываем клавиши при потере фокуса
-		  console.log('Canvas lost focus!');
+		// Автофокус при клике в любом месте окна
+		window.addEventListener('click', () => {
+		  if (document.activeElement !== this.canvas) {
+			this.canvas.focus();
+			console.log('Forced canvas focus!');
+		  }
 		});
 	}
   
