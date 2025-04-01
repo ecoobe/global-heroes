@@ -51,6 +51,7 @@ services:
       - ./client:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/nginx.conf:ro  # Важно!
       - /etc/letsencrypt/:/etc/letsencrypt/:ro
+      - ./nginx/secrets/.htpasswd-prometheus:/etc/nginx/.htpasswd-prometheus:ro
     depends_on:
       - game-server
 
@@ -62,7 +63,6 @@ services:
     volumes:
       - ./monitoring/prometheus:/etc/prometheus
       - prometheus_data:/prometheus
-      - ./nginx/secrets/.htpasswd-prometheus:/etc/nginx/.htpasswd-prometheus:ro
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'

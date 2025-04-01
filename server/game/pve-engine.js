@@ -20,7 +20,7 @@ class PveGame {
     initAI() {
         const aiDeck = Object.keys(abilities)
             .slice(0, 5)
-            .map(id => ({ 
+            .map(id => ({
                 ...abilities[id], 
                 strength: Math.floor(abilities[id].strength * 0.8)
             }));
