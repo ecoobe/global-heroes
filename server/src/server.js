@@ -12,6 +12,7 @@ const sessionManager = new SessionManager();
 const app = express();
 const server = createServer(app);
 
+// Инициализация Socket.IO с явным указанием транспортов
 const io = new Server(server, {
   cors: {
     origin: [
@@ -25,9 +26,11 @@ const io = new Server(server, {
   },
   connectionStateRecovery: {
     maxDisconnectionDuration: 30000
-  }
+  },
+  transports: ["websocket", "polling"]
 });
 
+// Prometheus metrics middleware
 const metricsMiddleware = promBundle({
   includeMethod: true,
   includePath: true,
@@ -37,52 +40,52 @@ const metricsMiddleware = promBundle({
 
 app.use(metricsMiddleware);
 
+// Healthcheck endpoint
 app.get("/health", (req, res) => {
-	if (isReady && redisClient.isReady) {
-	  res.status(200).json({ status: "OK" });
-	} else {
-	  res.status(503).json({ status: "Service Unavailable" });
-	}
+  if (isReady && redisClient.status === 'ready') {
+    res.status(200).json({ status: "OK" });
+  } else {
+    res.status(503).json({ status: "Service Unavailable" });
+  }
 });
 
+// Redis client configuration
 const redisClient = new Redis({
-	host: 'redis',
-	port: 6379,
-	retryStrategy: (times) => Math.min(times * 100, 3000),
-	enableOfflineQueue: false,
-	maxRetriesPerRequest: 3
-});
-  
-// Добавим проверку подключения перед запуском сервера
-redisClient.on('ready', async () => {
-	try {
-	  await redisClient.ping();
-	  isReady = true;
-	  console.log('Redis connection verified');
-	  server.listen(3000, '0.0.0.0', () => {
-		console.log('Game server started on port 3000');
-	  });
-	} catch (err) {
-	  console.error('Redis ping failed:', err);
-	  process.exit(1);
-	}
+  host: 'redis',
+  port: 6379,
+  retryStrategy: (times) => Math.min(times * 100, 3000),
+  enableOfflineQueue: false,
+  maxRetriesPerRequest: 3
 });
 
-redisClient.on('error', (err) => console.error('Redis Error:', err));
-redisClient.on('connect', () => console.log('Redis connected successfully'));
-redisClient.on('reconnecting', () => console.log('Redis reconnecting...'));
+// Redis event handlers
+redisClient.on('connect', () => {
+  console.log('Redis connection established');
+});
 
-(async () => {
-	try {
-	  await redisClient.connect();
-	  console.log('Redis connection established');
-	  isReady = true; // Устанавливаем флаг готовности
-	} catch (err) {
-	  console.error('Redis connection failed:', err);
-	  process.exit(1);
-	}
-})();
+redisClient.on('ready', () => {
+  console.log('Redis client ready');
+  isReady = true;
+});
 
+redisClient.on('error', (err) => {
+  console.error('Redis Error:', err);
+  isReady = false;
+});
+
+redisClient.on('reconnecting', () => {
+  console.log('Redis reconnecting...');
+  isReady = false;
+});
+
+// Start server after Redis connection
+redisClient.once('ready', () => {
+  server.listen(3000, '0.0.0.0', () => {
+    console.log('Game server started on port 3000');
+  });
+});
+
+// Socket.IO event handlers
 io.engine.on("connection", (socket) => {
   console.log(`New connection attempt: ${socket.id}`);
 });
@@ -93,7 +96,7 @@ io.on("error", (err) => {
 
 io.on('connection', (socket) => {
   console.log(`Player connected: ${socket.id}`);
-  
+
   socket.on('disconnect', (reason) => {
     console.log(`Player disconnected (${socket.id}): ${reason}`);
   });
@@ -139,11 +142,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// Единственный вызов server.listen
-server.listen(3000, '0.0.0.0', () => {
-  console.log('Game server running on port 3000');
-});
-
+// Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('Shutting down gracefully...');
   
