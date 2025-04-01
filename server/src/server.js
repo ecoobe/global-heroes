@@ -36,15 +36,12 @@ io.on('connection', (socket) => {
     console.log(`Player connected: ${socket.id}`);
     
     socket.on('startPve', async (deck) => {
-        const game = new PveGame(deck);
-        await game.saveToRedis(redisClient);
-        socket.emit('gameState', game.getPublicState());
-    });
-
-	socket.on('startPve', (deck) => {
+		const game = new PveGame(deck);
+		await game.saveToRedis(redisClient);
 		const sessionId = sessionManager.createSession(deck);
 		socket.join(sessionId);
-	  });
+		socket.emit('gameState', game.getPublicState());
+	});
 });
 
 server.listen(3000, () => {
