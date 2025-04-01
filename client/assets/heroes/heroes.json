@@ -1,29 +1,173 @@
 [
     {
         "id": 1,
-        "name": "Артас",
-        "class": "Рыцарь",
-        "strength": 15,
-        "health": 100,
-        "abilities": ["Щит", "Удар мечом"],
-        "image": "/assets/images/arthas.png"
+        "name": "Кайто",
+        "class": "Воин",
+        "strength": 4,
+        "health": 6,
+        "abilities": ["Месть клинка"],
+        "image": "/assets/images/kaito.png"
     },
     {
         "id": 2,
-        "name": "Джайна",
-        "class": "Маг",
-        "strength": 25,
-        "health": 80,
-        "abilities": ["Ледяная стрела", "Буря"],
-        "image": "/assets/images/jaina.png"
+        "name": "Ханзо",
+        "class": "Стрелок",
+        "strength": 5,
+        "health": 5,
+        "abilities": ["Невидимость"],
+        "image": "/assets/images/hanzo.png"
     },
     {
         "id": 3,
-        "name": "Силвана",
-        "class": "Охотник",
-        "strength": 18,
-        "health": 90,
-        "abilities": ["Снайперский выстрел", "Ловушка"],
-        "image": "/assets/images/sylvanas.png"
+        "name": "Токугава",
+        "class": "Тактик",
+        "strength": 3,
+        "health": 9,
+        "abilities": ["Тактик"],
+        "image": "/assets/images/tokugawa.png"
+    },
+    {
+        "id": 4,
+        "name": "Айя",
+        "class": "Стрелок",
+        "strength": 4,
+        "health": 5,
+        "abilities": ["Стрела Луны"],
+        "image": "/assets/images/aya.png"
+    },
+    {
+        "id": 5,
+        "name": "Фрейя",
+        "class": "Танк",
+        "strength": 3,
+        "health": 8,
+        "abilities": ["Щит предков"],
+        "image": "/assets/images/freya.png"
+    },
+    {
+        "id": 6,
+        "name": "Рагнар",
+        "class": "Воин",
+        "strength": 6,
+        "health": 4,
+        "abilities": ["Ярость Вальгаллы"],
+        "image": "/assets/images/ragnar.png"
+    },
+    {
+        "id": 7,
+        "name": "Амара",
+        "class": "Лекарь",
+        "strength": 1,
+        "health": 9,
+        "abilities": ["Крылья света"],
+        "image": "/assets/images/amara.png"
+    },
+    {
+        "id": 8,
+        "name": "Вальтер",
+        "class": "Танк",
+        "strength": 5,
+        "health": 7,
+        "abilities": ["Непробиваемый доспех"],
+        "image": "/assets/images/walter.png"
+    },
+    {
+        "id": 9,
+        "name": "Нейтхани",
+        "class": "Шаман",
+        "strength": 3,
+        "health": 7,
+        "abilities": ["Песчаная ловушка"],
+        "image": "/assets/images/neytani.png"
+    },
+    {
+        "id": 10,
+        "name": "Горо",
+        "class": "Стрелок",
+        "strength": 4,
+        "health": 7,
+        "abilities": ["Меткий бросок"],
+        "image": "/assets/images/goro.png"
+    },
+    {
+        "id": 11,
+        "name": "Зигги",
+        "class": "Инженер",
+        "strength": 1,
+        "health": 5,
+        "abilities": ["Взрывной коктейль"],
+        "image": "/assets/images/ziggy.png"
+    },
+    {
+        "id": 12,
+        "name": "Искра",
+        "class": "Маг",
+        "strength": 3,
+        "health": 6,
+        "abilities": ["Огненный шторм"],
+        "image": "/assets/images/iskra.png"
+    },
+    {
+        "id": 13,
+        "name": "Даркул",
+        "class": "Некромант",
+        "strength": 7,
+        "health": 3,
+        "abilities": ["Тёмное воскрешение"],
+        "image": "/assets/images/darkul.png"
+    },
+    {
+        "id": 14,
+        "name": "Эльмира",
+        "class": "Шаман",
+        "strength": 2,
+        "health": 8,
+        "abilities": ["Корни Мироздания"],
+        "image": "/assets/images/elmira.png"
+    },
+    {
+        "id": 15,
+        "name": "Мако",
+        "class": "Шаман",
+        "strength": 3,
+        "health": 7,
+        "abilities": ["Приливная Волна"],
+        "image": "/assets/images/mako.png"
+    },
+    {
+        "id": 16,
+        "name": "Любава",
+        "class": "Шаман",
+        "strength": 3,
+        "health": 6,
+        "abilities": ["Родство с Зверем"],
+        "image": "/assets/images/lyubava.png"
+    },
+    {
+        "id": 17,
+        "name": "Светозар",
+        "class": "Танк",
+        "strength": 3,
+        "health": 10,
+        "abilities": ["Щит Перуна"],
+        "image": "/assets/images/svetozar.png"
+    },
+    {
+        "id": 18,
+        "name": "Волхв Мирослав",
+        "class": "Некромант",
+        "strength": 5,
+        "health": 4,
+        "abilities": ["Обряд Перерождения"],
+        "image": "/assets/images/miroslav.png"
+    },
+    {
+        "id": 19,
+        "name": "Ли Вэй",
+        "class": "Воин",
+        "strength": 3,
+        "health": 10,
+        "abilities": ["Энергетический щит"],
+        "image": "/assets/images/liwei.png"
     }
 ]
