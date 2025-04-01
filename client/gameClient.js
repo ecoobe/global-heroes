@@ -87,16 +87,15 @@ class GameClient {
     }
 
     renderHeroSelect() {
-        this.log('Рендеринг выбора героев');
-        this.heroSelectEl.innerHTML = this.heroes.map(hero => `
-            <div class="hero-card" 
-                 data-id="${hero.id}"
-                 onclick="gameClient.toggleHeroSelection('${hero.id}')">
-                <h3>${hero.name}</h3>
-                <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
-            </div>
-        `).join('');
-    }
+		this.heroSelectEl.innerHTML = this.heroes.map(hero => `
+			<div class="hero-card" 
+				 data-id="${hero.id}"
+				 onclick="gameClient.toggleHeroSelection(${hero.id})"> <!-- Убрали кавычки -->
+				<h3>${hero.name}</h3>
+				<p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
+			</div>
+		`).join('');
+	}
 
     toggleHeroSelection(heroId) {
         this.log('Выбор героя', heroId);
@@ -151,11 +150,30 @@ class GameClient {
     }
 
     async startPveGame(deck) {
+        // Конвертируем строковые ID в числа
+        const numericDeck = deck.map(id => {
+            const numId = Number(id);
+            if (isNaN(numId)) {
+                this.error("Некорректный ID героя:", id);
+                throw new Error("Обнаружены некорректные ID героев");
+            }
+            return numId;
+        });
+
+        this.log("Отправка числовых ID:", numericDeck);
+        
         return new Promise((resolve, reject) => {
-            this.socket.timeout(10000).emit('startPve', deck, (err, response) => {
+            this.socket.timeout(10000).emit('startPve', numericDeck, (err, response) => {
                 if (err) {
-                    reject(err);
+                    // Обработка ошибок соединения
+                    this.error("Ошибка сети:", err.message);
+                    reject(new Error("Сервер не отвечает"));
+                } else if (response.status === 'error') {
+                    // Обработка бизнес-ошибок от сервера
+                    this.error("Сервер вернул ошибку:", response.message);
+                    reject(new Error(response.message || "Неизвестная ошибка сервера"));
                 } else {
+                    // Успешный ответ
                     resolve(response);
                 }
             });
@@ -169,8 +187,17 @@ class GameClient {
     }
 
     showError(message) {
-        this.log('Показ ошибки пользователю', message);
-        alert(`Ошибка: ${message}`);
+        this.log("Показ ошибки:", message);
+        
+        // Специальный элемент для ошибок вместо alert
+        const errorEl = document.getElementById('error-message');
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => errorEl.style.display = 'none', 5000);
+        } else {
+            console.error("Fallback error:", message);
+        }
     }
 }
 
