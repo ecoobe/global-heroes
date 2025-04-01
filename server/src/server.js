@@ -3,6 +3,7 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const redis = require('redis');
 const { PveGame } = require('../game/pve-engine');
+const promBundle = require("express-prom-bundle");
 
 const app = express();
 const server = createServer(app);
@@ -11,6 +12,19 @@ const io = new Server(server, {
         origin: "https://coobe.ru",
         methods: ["GET", "POST"]
     }
+});
+
+const metricsMiddleware = promBundle({
+	includeMethod: true,
+	includePath: true
+  });
+
+
+app.use(metricsMiddleware);
+
+  // Эндпоинт для проверки работы
+app.get("/health", (req, res) => {
+	res.status(200).send("OK");
 });
 
 const redisClient = redis.createClient({ url: 'redis://redis:6379' });
