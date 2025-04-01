@@ -40,7 +40,7 @@ services:
       - game-network
     volumes:
       - ./client:/usr/share/nginx/html:ro
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro  # Важно!
       - /etc/letsencrypt/:/etc/letsencrypt/:ro
     depends_on:
       - game-server
