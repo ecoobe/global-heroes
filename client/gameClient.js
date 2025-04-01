@@ -13,7 +13,10 @@ class GameClient {
         this.startButton = document.getElementById('startPve');
         this.heroSelectEl = document.getElementById('heroSelect');
         this.selectedHeroes = new Set();
-        this.heroes = []; // Явная инициализация
+        this.heroes = [];
+
+        // Привязка контекста
+        this.handleHeroClick = this.handleHeroClick.bind(this);
 
         // Обработчики событий
         this.socket.on('connect', this.handleConnect.bind(this));
@@ -55,9 +58,18 @@ class GameClient {
 
     async loadHeroes() {
         try {
-            const response = await fetch('/assets/heroes/heroes.json'); // Исправлен путь
+            const response = await fetch('/assets/heroes/heroes.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return await response.json(); // Возвращаем результат
+            const heroes = await response.json();
+            
+            // Валидация данных
+            if (!Array.isArray(heroes)) throw new Error("Неверный формат данных");
+            return heroes.map(hero => ({
+                ...hero,
+                id: Number(hero.id),
+                strength: Number(hero.strength),
+                health: Number(hero.health)
+            }));
         } catch (err) {
             throw new Error('Ошибка загрузки данных');
         }
@@ -65,7 +77,6 @@ class GameClient {
 
     renderHeroSelect() {
         if (!this.heroes || this.heroes.length === 0) {
-            console.error('Нет данных для рендеринга');
             this.heroSelectEl.innerHTML = '<div class="error">Нет доступных героев</div>';
             return;
         }
@@ -73,48 +84,67 @@ class GameClient {
         this.heroSelectEl.innerHTML = this.heroes
             .map(hero => `
                 <div class="hero-card" data-id="${hero.id}">
+                    <div class="hero-image" style="background-image: url('${hero.image}')"></div>
                     <h3>${hero.name}</h3>
                     <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
                 </div>
-            `)
-            .join('');
+            `).join('');
+
+        // Добавляем обработчики после рендера
+        this.heroSelectEl.querySelectorAll('.hero-card').forEach(card => {
+            card.addEventListener('click', this.handleHeroClick);
+        });
     }
 
-    toggleHero(heroId) {
-        const card = document.querySelector(`[data-id="${heroId}"]`);
+    handleHeroClick(event) {
+        const card = event.currentTarget;
+        const heroId = Number(card.dataset.id);
         
         if (this.selectedHeroes.has(heroId)) {
             this.selectedHeroes.delete(heroId);
             card.classList.remove('selected');
         } else {
             if (this.selectedHeroes.size >= 5) {
-                alert('Максимум 5 героев!');
+                this.showError('Максимум 5 героев!');
                 return;
             }
             this.selectedHeroes.add(heroId);
             card.classList.add('selected');
         }
+        
+        console.log('Выбрано героев:', this.selectedHeroes.size);
     }
 
     initEventListeners() {
         this.startButton.addEventListener('click', () => {
             if (this.selectedHeroes.size !== 5) {
-                alert('Выберите 5 героев!');
+                this.showError('Выберите 5 героев!');
                 return;
             }
 
-            const numericDeck = Array.from(this.selectedHeroes).map(Number);
+            const numericDeck = Array.from(this.selectedHeroes);
             this.socket.emit('startPve', numericDeck, response => {
                 if (response.status === 'success') {
                     document.getElementById('mainMenu').style.display = 'none';
                     document.getElementById('gameContainer').style.display = 'block';
                 } else {
-                    alert(`Ошибка: ${response.message}`);
+                    this.showError(response.message || 'Ошибка сервера');
                 }
             });
         });
     }
+
+    showError(message) {
+        const errorEl = document.getElementById('error-message');
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => errorEl.style.display = 'none', 5000);
+        }
+    }
 }
 
-// Инициализация после загрузки
-window.gameClient = new GameClient();
+// Инициализация
+window.addEventListener('DOMContentLoaded', () => {
+    window.gameClient = new GameClient();
+});
