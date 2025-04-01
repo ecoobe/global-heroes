@@ -4,6 +4,8 @@ const { Server } = require('socket.io');
 const redis = require('redis');
 const { PveGame } = require('../game/pve-engine');
 const promBundle = require("express-prom-bundle");
+const SessionManager = require('../game/session-manager');
+const sessionManager = new SessionManager();
 
 const app = express();
 const server = createServer(app);
@@ -38,6 +40,11 @@ io.on('connection', (socket) => {
         await game.saveToRedis(redisClient);
         socket.emit('gameState', game.getPublicState());
     });
+
+	socket.on('startPve', (deck) => {
+		const sessionId = sessionManager.createSession(deck);
+		socket.join(sessionId);
+	  });
 });
 
 server.listen(3000, () => {
