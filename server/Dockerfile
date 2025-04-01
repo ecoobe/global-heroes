@@ -2,11 +2,13 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Устанавливаем curl для healthcheck
-RUN apk add --no-cache curl
+# Устанавливаем curl для healthcheck и python3 для сборки native модулей
+RUN apk add --no-cache curl python3 make g++
 
 COPY package*.json ./
-RUN npm ci --production
+
+# Устанавливаем зависимости через npm install с production флагом
+RUN npm install --production --no-package-lock --no-audit --fund=false
 
 COPY . .
 
