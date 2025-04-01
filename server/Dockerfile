@@ -2,13 +2,13 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install --production
+# Устанавливаем curl для healthcheck
+RUN apk add --no-cache curl
 
-COPY src/ ./src/
-COPY game/ ./game/
-COPY heroes/ ./heroes/
+COPY package*.json ./
+RUN npm ci --production
+
+COPY . .
 
 EXPOSE 3000
-
 CMD ["node", "src/server.js"]

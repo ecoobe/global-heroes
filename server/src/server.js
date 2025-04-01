@@ -3,7 +3,7 @@ let isReady = false;
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-const redis = require('redis');
+const Redis = require('ioredis');
 const { PveGame } = require('../game/pve-engine');
 const promBundle = require("express-prom-bundle");
 const SessionManager = require('../game/session-manager');
@@ -45,11 +45,10 @@ app.get("/health", (req, res) => {
 	}
 });
 
-const redisClient = redis.createClient({ 
-  url: 'redis://redis:6379',
-  socket: {
-    reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
-  }
+const redisClient = new Redis({
+	host: 'redis',
+	port: 6379,
+	retryStrategy: (times) => Math.min(times * 100, 3000)
 });
 
 redisClient.on('error', (err) => console.error('Redis Error:', err));
