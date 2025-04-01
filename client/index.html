@@ -1,16 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global Heroes</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Heroes</title>
+    <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
-  <div id="connectionStatus" class="connecting">Connecting...</div>
-  
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script src="gameClient.js"></script>
+    <div id="app">
+        <div class="main-menu" id="mainMenu">
+            <h1>Global Heroes</h1>
+            <button id="startPve" class="menu-btn">Играть PVE</button>
+        </div>
+        
+        <div class="game-container" id="gameContainer" style="display: none;">
+            <div class="hero-select" id="heroSelect"></div>
+            <div class="battle-field" id="battleField"></div>
+            <div class="combat-log" id="combatLog"></div>
+        </div>
+    </div>
+    <script src="gameClient.js"></script>
 </body>
 </html>
