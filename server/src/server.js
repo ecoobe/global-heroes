@@ -48,7 +48,24 @@ app.get("/health", (req, res) => {
 const redisClient = new Redis({
 	host: 'redis',
 	port: 6379,
-	retryStrategy: (times) => Math.min(times * 100, 3000)
+	retryStrategy: (times) => Math.min(times * 100, 3000),
+	enableOfflineQueue: false,
+	maxRetriesPerRequest: 3
+});
+  
+// Добавим проверку подключения перед запуском сервера
+redisClient.on('ready', async () => {
+	try {
+	  await redisClient.ping();
+	  isReady = true;
+	  console.log('Redis connection verified');
+	  server.listen(3000, '0.0.0.0', () => {
+		console.log('Game server started on port 3000');
+	  });
+	} catch (err) {
+	  console.error('Redis ping failed:', err);
+	  process.exit(1);
+	}
 });
 
 redisClient.on('error', (err) => console.error('Redis Error:', err));
