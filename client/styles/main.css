@@ -1,25 +1,80 @@
+/* Базовые стили */
+body {
+    margin: 0;
+    background: #1a1a1a;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    min-height: 100vh;
+}
+
+#error-message {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff4444;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    z-index: 1000;
+    max-width: 80%;
+    text-align: center;
+}
+
 #connection-status {
     position: fixed;
     top: 10px;
     right: 10px;
-    padding: 10px 20px;
-    border-radius: 25px;
+    padding: 8px 15px;
+    border-radius: 20px;
     font-weight: bold;
-    transition: all 0.3s ease;
-    z-index: 1000;
 }
 
-.online {
+#connection-status.online {
     background: #4CAF50;
-    color: white;
 }
 
-.offline {
+#connection-status.offline {
     background: #f44336;
+}
+
+.menu-btn {
+    background: #27ae60;
     color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.menu-btn:hover {
+    background: #219651;
+    transform: translateY(-2px);
+}
+
+.hero-card {
+    background: #2a2a2a;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .hero-card.selected {
     border: 3px solid #4CAF50;
     transform: scale(1.05);
+}
+
+.main-menu {
+    text-align: center;
+    padding: 2rem;
+}
+
+.game-container {
+    display: none;
+    padding: 2rem;
 }

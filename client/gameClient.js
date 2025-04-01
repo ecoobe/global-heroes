@@ -1,76 +1,96 @@
 class GameClient {
     constructor() {
+        // Инициализация сокета
         this.socket = io('https://coobe.ru', {
             path: '/socket.io/',
             transports: ['websocket'],
-            withCredentials: true
+            withCredentials: true,
+            reconnectionAttempts: 3
         });
 
+        // DOM элементы
         this.statusEl = document.getElementById('connection-status');
         this.startButton = document.getElementById('startPve');
-        
+        this.heroSelectEl = document.getElementById('heroSelect');
+        this.selectedHeroes = new Set();
+
+        // Обработчики событий
         this.socket.on('connect', this.handleConnect.bind(this));
         this.socket.on('disconnect', this.handleDisconnect.bind(this));
         this.socket.on('error', this.handleError.bind(this));
 
-        this.heroes = [];
-        this.initEventListeners();
+        // Инициализация
         this.loadHeroes();
+        this.initEventListeners();
     }
 
     handleConnect() {
-        this.statusEl.classList.remove('offline');
-        this.statusEl.classList.add('online');
+        this.statusEl.className = 'online';
         this.statusEl.textContent = 'Online';
         this.startButton.disabled = false;
-        console.log('Connected to server');
+        console.log('Connected:', this.socket.id);
     }
 
-    handleDisconnect() {
-        this.statusEl.classList.remove('online');
-        this.statusEl.classList.add('offline');
+    handleDisconnect(reason) {
+        this.statusEl.className = 'offline';
         this.statusEl.textContent = 'Offline';
         this.startButton.disabled = true;
-        console.log('Disconnected from server');
+        console.log('Disconnected:', reason);
     }
 
     handleError(err) {
         console.error('Socket error:', err);
-        this.statusEl.textContent = 'Connection Error';
-        this.statusEl.style.background = '#ff9900';
+        alert(`Ошибка соединения: ${err.message}`);
     }
 
     async loadHeroes() {
         try {
             const response = await fetch('/assets/heroes/heroes.json');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             this.heroes = await response.json();
             this.renderHeroSelect();
-        } catch (error) {
-            console.error('Failed to load heroes:', error);
+        } catch (err) {
+            console.error('Hero loading failed:', err);
+            alert('Не удалось загрузить героев');
         }
     }
 
     renderHeroSelect() {
-        const container = document.getElementById('heroSelect');
-        container.innerHTML = this.heroes.map(hero => `
-            <div class="hero-card" data-id="${hero.id}">
+        this.heroSelectEl.innerHTML = this.heroes.map(hero => `
+            <div class="hero-card" 
+                 data-id="${hero.id}"
+                 onclick="gameClient.toggleHero(${hero.id})">
                 <h3>${hero.name}</h3>
-                <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
+                <p>⚔️${hero.strength} ❤️${hero.health}</p>
             </div>
         `).join('');
     }
 
+    toggleHero(heroId) {
+        const card = document.querySelector(`[data-id="${heroId}"]`);
+        
+        if (this.selectedHeroes.has(heroId)) {
+            this.selectedHeroes.delete(heroId);
+            card.classList.remove('selected');
+        } else {
+            if (this.selectedHeroes.size >= 5) {
+                alert('Максимум 5 героев!');
+                return;
+            }
+            this.selectedHeroes.add(heroId);
+            card.classList.add('selected');
+        }
+    }
+
     initEventListeners() {
         this.startButton.addEventListener('click', () => {
-            const selectedCards = Array.from(document.querySelectorAll('.hero-card.selected'))
-                .map(card => card.dataset.id);
-            
-            if (selectedCards.length !== 5) {
+            if (this.selectedHeroes.size !== 5) {
                 alert('Выберите 5 героев!');
                 return;
             }
 
-            this.socket.emit('startPve', selectedCards, (response) => {
+            const numericDeck = Array.from(this.selectedHeroes).map(Number);
+            this.socket.emit('startPve', numericDeck, response => {
                 if (response.status === 'success') {
                     document.getElementById('mainMenu').style.display = 'none';
                     document.getElementById('gameContainer').style.display = 'block';
@@ -82,6 +102,5 @@ class GameClient {
     }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    new GameClient();
-});
+// Инициализация после загрузки
+window.gameClient = new GameClient();
