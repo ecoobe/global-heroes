@@ -7,8 +7,14 @@ const promBundle = require("express-prom-bundle");
 const SessionManager = require('../game/session-manager');
 const sessionManager = new SessionManager();
 
+// Инициализация приложения
 const app = express();
 const server = createServer(app);
+
+// Явное указание IP для прослушивания
+server.listen(3000, '0.0.0.0', () => {
+    console.log('Game server running on 0.0.0.0:3000');
+});
 
 // Улучшенная конфигурация Socket.IO
 const io = new Server(server, {
