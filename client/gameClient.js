@@ -54,7 +54,7 @@ class GameClient {
 
     async loadHeroes() {
         try {
-            const response = await fetch('/assets/heroes/heroes.json');
+            const response = await fetch('/client/assets/heroes/heroes.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             this.heroes = await response.json();
             this.renderHeroSelect();
