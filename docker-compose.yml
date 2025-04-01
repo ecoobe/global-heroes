@@ -1,12 +1,14 @@
 services:
   game-server:
-    build: ./server
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
     environment:
       - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
       - SESSION_SECRET=${SESSION_SECRET}
     networks:
-      game-network:
+      - game-network
     volumes:
       - game-sessions:/app/sessions
     healthcheck:
@@ -53,7 +55,8 @@ services:
       - /etc/letsencrypt/:/etc/letsencrypt/:ro
       - ./nginx/secrets/.htpasswd-prometheus:/etc/nginx/.htpasswd-prometheus:ro
     depends_on:
-      - game-server
+      game-server:
+        condition: service_healthy
     restart: unless-stopped
 
   prometheus:
