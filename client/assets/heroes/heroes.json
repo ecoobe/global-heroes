@@ -1,0 +1,29 @@
+[
+    {
+        "id": 1,
+        "name": "Артас",
+        "class": "Рыцарь",
+        "strength": 15,
+        "health": 100,
+        "abilities": ["Щит", "Удар мечом"],
+        "image": "/assets/images/arthas.png"
+    },
+    {
+        "id": 2,
+        "name": "Джайна",
+        "class": "Маг",
+        "strength": 25,
+        "health": 80,
+        "abilities": ["Ледяная стрела", "Буря"],
+        "image": "/assets/images/jaina.png"
+    },
+    {
+        "id": 3,
+        "name": "Силвана",
+        "class": "Охотник",
+        "strength": 18,
+        "health": 90,
+        "abilities": ["Снайперский выстрел", "Ловушка"],
+        "image": "/assets/images/sylvanas.png"
+    }
+]
