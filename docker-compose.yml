@@ -62,6 +62,7 @@ services:
     volumes:
       - ./monitoring/prometheus:/etc/prometheus
       - prometheus_data:/prometheus
+      - ./nginx/secrets/.htpasswd-prometheus:/etc/nginx/.htpasswd-prometheus:ro
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
