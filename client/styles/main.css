@@ -9,13 +9,6 @@
     z-index: 1000;
 }
 
-body {
-    margin: 0;
-    background: #1a1a1a;
-    font-family: 'Arial', sans-serif;
-    color: white;
-}
-
 .online {
     background: #4CAF50;
     color: white;
