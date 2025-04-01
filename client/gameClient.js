@@ -13,6 +13,7 @@ class GameClient {
         this.startButton = document.getElementById('startPve');
         this.heroSelectEl = document.getElementById('heroSelect');
         this.selectedHeroes = new Set();
+        this.heroes = []; // Явная инициализация
 
         // Обработчики событий
         this.socket.on('connect', this.handleConnect.bind(this));
@@ -21,16 +22,16 @@ class GameClient {
 
         // Инициализация
         this.initEventListeners();
-		this.loadHeroes()
-      .then(heroes => {
-        this.heroes = heroes;
-        console.log('Герои загружены:', heroes); // Логирование данных
-        this.renderHeroSelect();
-      })
-      .catch(err => {
-        console.error('Ошибка загрузки:', err);
-        this.showError('Не удалось загрузить героев');
-      });
+        this.loadHeroes()
+            .then(heroes => {
+                this.heroes = heroes;
+                console.log('Герои загружены:', heroes);
+                this.renderHeroSelect();
+            })
+            .catch(err => {
+                console.error('Ошибка загрузки:', err);
+                this.showError('Не удалось загрузить героев');
+            });
     }
 
     handleConnect() {
@@ -54,31 +55,30 @@ class GameClient {
 
     async loadHeroes() {
         try {
-            const response = await fetch('/client/assets/heroes/heroes.json');
+            const response = await fetch('/assets/heroes/heroes.json'); // Исправлен путь
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            this.heroes = await response.json();
-            this.renderHeroSelect();
+            return await response.json(); // Возвращаем результат
         } catch (err) {
-            console.error('Hero loading failed:', err);
-            alert('Не удалось загрузить героев');
+            throw new Error('Ошибка загрузки данных');
         }
     }
 
     renderHeroSelect() {
-		if (!this.heroes || this.heroes.length === 0) {
-		  console.error('Нет данных для рендеринга');
-		  return;
-		}
-	
-		this.heroSelectEl.innerHTML = this.heroes
-		  .map(hero => `
-			<div class="hero-card" data-id="${hero.id}">
-			  <h3>${hero.name}</h3>
-			  <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
-			</div>
-		  `)
-		  .join('');
-	}
+        if (!this.heroes || this.heroes.length === 0) {
+            console.error('Нет данных для рендеринга');
+            this.heroSelectEl.innerHTML = '<div class="error">Нет доступных героев</div>';
+            return;
+        }
+
+        this.heroSelectEl.innerHTML = this.heroes
+            .map(hero => `
+                <div class="hero-card" data-id="${hero.id}">
+                    <h3>${hero.name}</h3>
+                    <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
+                </div>
+            `)
+            .join('');
+    }
 
     toggleHero(heroId) {
         const card = document.querySelector(`[data-id="${heroId}"]`);
