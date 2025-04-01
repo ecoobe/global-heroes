@@ -1,3 +1,5 @@
+let isReady = false;
+
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
@@ -36,10 +38,11 @@ const metricsMiddleware = promBundle({
 app.use(metricsMiddleware);
 
 app.get("/health", (req, res) => {
-  res.status(200).json({ 
-    status: "OK",
-    redis: redisClient.isReady
-  });
+	if (isReady && redisClient.isReady) {
+	  res.status(200).json({ status: "OK" });
+	} else {
+	  res.status(503).json({ status: "Service Unavailable" });
+	}
 });
 
 const redisClient = redis.createClient({ 
@@ -54,13 +57,14 @@ redisClient.on('connect', () => console.log('Redis connected successfully'));
 redisClient.on('reconnecting', () => console.log('Redis reconnecting...'));
 
 (async () => {
-  try {
-    await redisClient.connect();
-    console.log('Redis connection established');
-  } catch (err) {
-    console.error('Redis connection failed:', err);
-    process.exit(1);
-  }
+	try {
+	  await redisClient.connect();
+	  console.log('Redis connection established');
+	  isReady = true; // Устанавливаем флаг готовности
+	} catch (err) {
+	  console.error('Redis connection failed:', err);
+	  process.exit(1);
+	}
 })();
 
 io.engine.on("connection", (socket) => {
