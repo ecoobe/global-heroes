@@ -4,13 +4,16 @@ services:
     environment:
       - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
+      - SESSION_SECRET=${SESSION_SECRET}
     networks:
       - game-network
     depends_on:
       redis:
         condition: service_healthy
+    volumes:
+      - game-sessions:/app/sessions
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/socket.io', res => process.exit(res.statusCode === 400 ? 0 : 1))"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', res => process.exit(res.statusCode === 200 ? 0 : 1))"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -41,14 +44,51 @@ services:
       - /etc/letsencrypt/:/etc/letsencrypt/:ro
     depends_on:
       - game-server
-      - redis
+
+  prometheus:
+    image: prom/prometheus:v2.47.2
+    ports: []
+    networks:
+      - game-network
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    networks:
+      - game-network
+    volumes:
+      - /:/host:ro,rslave
+    pid: host
+    privileged: true
+    command:
+      - '--path.rootfs=/host'
+
+  grafana:
+    image: grafana/grafana:10.1.5
+    ports: []
+    networks:
+      - game-network
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SERVER_ROOT_URL=https://grafana.coobe.ru
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
 
 volumes:
   redis_data:
+  game-sessions:
+  prometheus_data:
+  grafana_data:
 
 networks:
   game-network:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.22.0.0/24
+        - subnet: 172.25.0.0/24
