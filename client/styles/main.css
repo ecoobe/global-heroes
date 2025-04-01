@@ -55,18 +55,40 @@ body {
     transform: translateY(-2px);
 }
 
+.hero-select {
+    position: relative;
+    z-index: 10; /* Убедимся что контейнер поверх других элементов */
+    padding: 20px;
+}
+
 .hero-card {
-    background: #2a2a2a;
+    background: #2d2d2d !important; /* Явно задаём цвет */
+    border: 1px solid #4CAF50;
     border-radius: 10px;
     padding: 15px;
     margin: 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    color: white !important;
+    position: relative;
+    z-index: 20; /* Карточки поверх контейнера */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
-.hero-card.selected {
-    border: 3px solid #4CAF50;
-    transform: scale(1.05);
+#connection-status {
+    z-index: 100; /* Статус подключения поверх карточек */
+}
+
+#error-message {
+    z-index: 99; /* Ошибки под статусом подключения */
+}
+
+/* Добавим анимацию появления */
+@keyframes cardAppear {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-card {
+    animation: cardAppear 0.3s ease-out;
 }
 
 .main-menu {
