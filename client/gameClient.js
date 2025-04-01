@@ -20,8 +20,17 @@ class GameClient {
         this.socket.on('error', this.handleError.bind(this));
 
         // Инициализация
-        this.loadHeroes();
         this.initEventListeners();
+		this.loadHeroes()
+      .then(heroes => {
+        this.heroes = heroes;
+        console.log('Герои загружены:', heroes); // Логирование данных
+        this.renderHeroSelect();
+      })
+      .catch(err => {
+        console.error('Ошибка загрузки:', err);
+        this.showError('Не удалось загрузить героев');
+      });
     }
 
     handleConnect() {
@@ -56,15 +65,20 @@ class GameClient {
     }
 
     renderHeroSelect() {
-        this.heroSelectEl.innerHTML = this.heroes.map(hero => `
-            <div class="hero-card" 
-                 data-id="${hero.id}"
-                 onclick="gameClient.toggleHero(${hero.id})">
-                <h3>${hero.name}</h3>
-                <p>⚔️${hero.strength} ❤️${hero.health}</p>
-            </div>
-        `).join('');
-    }
+		if (!this.heroes || this.heroes.length === 0) {
+		  console.error('Нет данных для рендеринга');
+		  return;
+		}
+	
+		this.heroSelectEl.innerHTML = this.heroes
+		  .map(hero => `
+			<div class="hero-card" data-id="${hero.id}">
+			  <h3>${hero.name}</h3>
+			  <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
+			</div>
+		  `)
+		  .join('');
+	}
 
     toggleHero(heroId) {
         const card = document.querySelector(`[data-id="${heroId}"]`);
