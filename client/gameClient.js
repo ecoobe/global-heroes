@@ -81,19 +81,26 @@ class GameClient {
             return;
         }
 
-        this.heroSelectEl.innerHTML = this.heroes
-            .map(hero => `
-                <div class="hero-card" data-id="${hero.id}">
-                    <div class="hero-image" style="background-image: url('${hero.image}')"></div>
-                    <h3>${hero.name}</h3>
-                    <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
-                </div>
-            `).join('');
+        // Очищаем предыдущий контент
+        this.heroSelectEl.innerHTML = '';
 
-        // Добавляем обработчики после рендера
-        this.heroSelectEl.querySelectorAll('.hero-card').forEach(card => {
+        // Создаем фрагмент документа для оптимизации
+        const fragment = document.createDocumentFragment();
+        
+        this.heroes.forEach(hero => {
+            const card = document.createElement('div');
+            card.className = 'hero-card';
+            card.dataset.id = hero.id;
+            card.innerHTML = `
+                <div class="hero-image" style="background-image: url('${hero.image}')"></div>
+                <h3>${hero.name}</h3>
+                <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
+            `;
             card.addEventListener('click', this.handleHeroClick);
+            fragment.appendChild(card);
         });
+
+        this.heroSelectEl.appendChild(fragment);
     }
 
     handleHeroClick(event) {
