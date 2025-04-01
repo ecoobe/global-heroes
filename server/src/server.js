@@ -107,37 +107,38 @@ io.on('connection', (socket) => {
 
   socket.on('startPve', async (deck, callback) => {
     try {
-      if (!deck || !Array.isArray(deck)) {
-        throw new Error("Invalid deck format: expected array");
-      }
+        if (!deck || !Array.isArray(deck)) {
+            throw new Error("Invalid deck format: expected array of hero IDs");
+        }
 
-      const game = new PveGame(deck);
-      await game.saveToRedis(redisClient);
-      
-      const sessionId = sessionManager.createSession(deck);
-      await socket.join(sessionId);
-      
-      const gameState = game.getPublicState();
-      console.log(`New PVE game started (${sessionId})`);
-      socket.emit('gameState', gameState);
-      
-      if (typeof callback === 'function') {
-        callback({ status: 'success', sessionId });
-      }
-    } catch (err) {
-      console.error(`PVE Error [${socket.id}]:`, err);
-      socket.emit('error', { 
-        code: "GAME_INIT_FAILED",
-        message: err.message 
-      });
-      
-      if (typeof callback === 'function') {
+        // Проверка валидности всех ID героев
+        const invalidIds = deck.filter(id => !abilities[id]);
+        if (invalidIds.length > 0) {
+            throw new Error(`Invalid hero IDs: ${invalidIds.join(', ')}`);
+        }
+
+        const game = new PveGame(deck);
+        await game.saveToRedis(redisClient);
+        
+        const sessionId = sessionManager.createSession(game.id);
+        await socket.join(sessionId);
+        
+        const gameState = game.getPublicState();
+        socket.emit('gameState', gameState);
+        
         callback({ 
-          status: 'error',
-          code: "GAME_INIT_FAILED",
-          message: err.message 
+            status: 'success', 
+            sessionId,
+            gameState 
         });
-      }
+        
+    } catch (err) {
+        console.error(`PVE Error [${socket.id}]:`, err);
+        callback({ 
+            status: 'error',
+            code: "GAME_INIT_FAILED",
+            message: err.message 
+        });
     }
   });
 });
