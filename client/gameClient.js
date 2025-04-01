@@ -1,14 +1,18 @@
 class GameClient {
     constructor() {
-        this.socket = io({
-            transports: ['websocket'],
-            secure: true,
-            path: '/socket.io'
+        this.isConnected = false;
+        
+        this.socket.on('connect', () => {
+            this.isConnected = true;
+            document.getElementById('connection-status').textContent = "Online";
         });
-
-        this.initEventListeners();
-        this.loadHeroes();
+        
+        this.socket.on('disconnect', () => {
+            this.isConnected = false;
+            document.getElementById('connection-status').textContent = "Offline";
+        });
     }
+
 
     async loadHeroes() {
         const response = await fetch('/assets/heroes/heroes.json');
