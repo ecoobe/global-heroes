@@ -1,0 +1,56 @@
+.game-container {
+    display: none;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    z-index: 800;
+    position: relative;
+}
+
+.game-container.active {
+    display: block;
+    z-index: 850;
+}
+
+.game-state {
+    background: #2c3e50;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 30px;
+}
+
+.combat-ui {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.player-side, .ai-side {
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 15px;
+}
+
+.battlefield {
+    min-height: 200px;
+    border: 2px dashed var(--primary-color);
+    margin-top: 20px;
+    padding: 15px;
+}
+
+.turn-indicator {
+    text-align: center;
+    padding: 20px;
+}
+
+.timer {
+    font-size: 1.5em;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.current-turn {
+    font-size: 1.2em;
+    color: #FFF;
+}

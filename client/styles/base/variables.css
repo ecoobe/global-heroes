@@ -1,0 +1,8 @@
+:root {
+    --bg-color: #1a1a1a;
+    --primary-color: #4CAF50;
+    --danger-color: #ff4444;
+    --gradient-btn: linear-gradient(135deg, #27ae60 0%, #219651 100%);
+    --card-bg: #2d2d2d;
+    --transition-duration: 0.3s;
+}

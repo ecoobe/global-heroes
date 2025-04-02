@@ -1,0 +1,29 @@
+.menu-btn {
+    background: var(--gradient-btn);
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    transform: translateZ(0);
+    min-width: 200px;
+    margin: 10px auto;
+    display: block;
+}
+
+.menu-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+}
+
+.menu-btn:disabled {
+    background: #555;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+    box-shadow: none;
+}
