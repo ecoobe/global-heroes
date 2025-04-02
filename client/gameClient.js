@@ -76,16 +76,26 @@ class GameClient {
     }
 
     updateGameInterface(state) {
-        // Обновляем игровой интерфейс
-        this.elements.gameId.textContent = `Игра #${state.id}`;
-        this.elements.playerHealth.textContent = state.players.human.health;
-        this.elements.playerDeck.textContent = state.players.human.deckSize;
-        this.elements.aiHealth.textContent = state.players.ai.health;
-        
-        // Переключаем контейнеры
-        this.elements.heroSelectContainer.classList.remove('active');
-        this.elements.gameContainer.classList.add('active');
-    }
+		// Обновляем основные показатели
+		this.elements.gameId.textContent = `Игра #${state.id}`;
+		this.elements.playerHealth.textContent = state.players.human.health;
+		this.elements.playerDeck.textContent = state.players.human.deckSize;
+		this.elements.aiHealth.textContent = state.players.ai.health;
+		this.elements.aiDeck.textContent = state.players.ai.deckSize;
+		
+		// Обновляем индикатор хода
+		document.getElementById('currentTurn').textContent = 
+			state.turn === 'human' ? 'Ваш ход' : 'Ход противника';
+		
+		// Переключаем контейнеры
+		this.elements.heroSelectContainer.classList.remove('active');
+		this.elements.gameContainer.classList.add('active');
+		
+		// Форсируем перерисовку
+		setTimeout(() => {
+			this.elements.gameContainer.style.opacity = 1;
+		}, 50);
+	}
 
     handleHeroClick(event) {
         const card = event.currentTarget;
@@ -146,7 +156,9 @@ class GameClient {
             card.className = 'hero-card';
             card.dataset.id = hero.id;
             card.innerHTML = `
-                <div class="hero-image" style="background-image: url('${hero.image}')"></div>
+                <div class="hero-image" 
+                    style="background-image: url('/assets/heroes/images/${hero.image}')">
+                </div>
                 <h3>${hero.name}</h3>
                 <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
             `;
