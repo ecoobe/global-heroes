@@ -6,6 +6,7 @@ const { Server } = require('socket.io');
 const Redis = require('ioredis');
 const { PveGame } = require('../game/pve-engine');
 const promBundle = require("express-prom-bundle");
+const { abilities } = require('../heroes/abilities')
 const SessionManager = require('../game/session-manager');
 const sessionManager = new SessionManager();
 
@@ -111,8 +112,9 @@ io.on('connection', (socket) => {
             throw new Error("Invalid deck format: expected array of hero IDs");
         }
 
-        // Проверка валидности всех ID героев
+        // Теперь abilities доступен
         const invalidIds = deck.filter(id => !abilities[id]);
+        
         if (invalidIds.length > 0) {
             throw new Error(`Invalid hero IDs: ${invalidIds.join(', ')}`);
         }
