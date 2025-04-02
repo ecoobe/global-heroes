@@ -65,10 +65,14 @@ body {
     align-items: center;
     background: radial-gradient(circle at center, rgba(42,42,42,0.95) 0%, rgba(26,26,26,0.95) 100%);
     z-index: 1000;
-    pointer-events: all;
     opacity: 1;
     visibility: visible;
-	transition: opacity 0.3s;
+    transition: opacity 0.3s ease;
+}
+
+.main-menu:not(.active) {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .menu-content {
@@ -85,11 +89,9 @@ body {
     margin-bottom: 2rem;
     text-shadow: 0 4px 8px rgba(0,0,0,0.3);
     color: #4CAF50;
-    position: relative;
-    z-index: 1002;
 }
 
-/* Кнопка меню */
+/* Кнопки меню */
 .menu-btn {
     background: linear-gradient(135deg, #27ae60 0%, #219651 100%);
     color: white;
@@ -100,11 +102,11 @@ body {
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    z-index: 1002;
     overflow: hidden;
     transform: translateZ(0);
     min-width: 200px;
-    margin-top: 20px;
+    margin: 10px auto;
+    display: block;
 }
 
 .menu-btn:hover {
@@ -120,7 +122,7 @@ body {
     box-shadow: none;
 }
 
-/* Контейнер выбора героев */
+/* Выбор героев */
 .hero-select-container {
     position: fixed;
     top: 0;
@@ -136,10 +138,9 @@ body {
 }
 
 .hero-select-container.active {
-    display: block;
     opacity: 1;
     visibility: visible;
-    z-index: 1001; /* Выше главного меню */
+    z-index: 950;
 }
 
 .hero-select-wrapper {
@@ -148,7 +149,6 @@ body {
     padding: 2rem 1rem;
 }
 
-/* Сетка карточек */
 .hero-select {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -158,7 +158,7 @@ body {
     padding: 20px 0;
 }
 
-/* Карточка героя */
+/* Карточки героев */
 .hero-card {
     background: #2d2d2d;
     border: 1px solid #4CAF50;
@@ -201,8 +201,6 @@ body {
     padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
-    opacity: 1;
-    transition: opacity 0.3s;
     z-index: 800;
     position: relative;
 }
@@ -219,24 +217,7 @@ body {
     margin-top: 30px;
 }
 
-/* Сообщения об ошибках */
-#error-message {
-    display: none;
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #ff4444;
-    color: white;
-    padding: 15px;
-    border-radius: 5px;
-    z-index: 2100;
-    max-width: 80%;
-    text-align: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-}
-
-/* Игровая механика */
+/* Боевой интерфейс */
 .combat-ui {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -273,25 +254,21 @@ body {
     color: #FFF;
 }
 
-.action-buttons {
-    text-align: center;
-    margin-top: 30px;
-}
-
-.end-turn-btn {
-    background: #4CAF50;
+/* Сообщения об ошибках */
+#error-message {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff4444;
     color: white;
-    padding: 15px 40px;
-    border: none;
-    border-radius: 50px;
-    font-size: 1.1em;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.end-turn-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    padding: 15px;
+    border-radius: 5px;
+    z-index: 2100;
+    max-width: 80%;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
 /* Анимации */

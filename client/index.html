@@ -13,7 +13,7 @@
     <div class="root-container">
         <div id="app">
             <!-- Главное меню -->
-            <div class="main-menu" id="mainMenu">
+            <div class="main-menu active" id="mainMenu">
                 <div class="menu-content">
                     <h1 class="game-title">Global Heroes</h1>
                     <button id="startPve" class="menu-btn">
@@ -26,6 +26,9 @@
             <div class="hero-select-container" id="heroSelectContainer">
                 <div class="hero-select-wrapper">
                     <div class="hero-select" id="heroSelect"></div>
+                    <button id="confirmSelection" class="menu-btn" disabled>
+                        <span class="btn-text">Подтвердить выбор (5/5)</span>
+                    </button>
                 </div>
             </div>
             
