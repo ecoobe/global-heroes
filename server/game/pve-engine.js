@@ -46,7 +46,7 @@ class PveGame {
     }
 
     async saveToRedis(redisClient) {
-        await redisClient.hmset('games', this.id, JSON.stringify(this));
+        await redisClient.hSet('games', this.id, JSON.stringify(this));
     }
 
     getPublicState() {
