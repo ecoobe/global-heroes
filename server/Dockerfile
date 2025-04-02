@@ -10,7 +10,6 @@ COPY package*.json ./
 
 # Устанавливаем зависимости через npm install с production флагом
 RUN npm install --production --no-package-lock --no-audit --fund=false
-RUN chmod -R 755 /usr/share/nginx/html/assets
 
 COPY . .
 
