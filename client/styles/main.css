@@ -103,15 +103,19 @@ body {
 
 /* Кнопка меню */
 .menu-btn {
-    box-shadow: 0 0 15px rgba(76,175,80,0.8) !important;
-    border: 2px solid #4CAF50 !important;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    background: linear-gradient(135deg, #27ae60 0%, #219651 100%);
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+	z-index: 2200;
+    overflow: hidden;
+    transform: translateZ(0);
+    min-width: 200px;
 }
 
 .menu-btn::before {
