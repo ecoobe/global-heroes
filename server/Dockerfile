@@ -7,8 +7,6 @@ RUN apk add --no-cache curl python3 make g++
 RUN npm install redis@^4.6.13 @redis/client@^1.5.7
 
 COPY package*.json ./
-COPY client/ /usr/share/nginx/html/
-COPY client/assets/heroes /usr/share/nginx/html/assets/heroes
 
 # Устанавливаем зависимости через npm install с production флагом
 RUN npm install --production --no-package-lock --no-audit --fund=false
