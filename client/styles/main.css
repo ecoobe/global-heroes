@@ -60,20 +60,14 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    display: none;
+    display: flex;
     justify-content: center;
     align-items: center;
     background: radial-gradient(circle at center, rgba(42,42,42,0.95) 0%, rgba(26,26,26,0.95) 100%);
     z-index: 1000;
     pointer-events: all;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.main-menu.active {
-    display: flex;
     opacity: 1;
-    animation: fadeIn 0.5s forwards;
+    visibility: visible;
 }
 
 .menu-content {

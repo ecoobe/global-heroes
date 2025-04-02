@@ -20,8 +20,8 @@ class GameClient {
             playerHealth: document.getElementById('playerHealth'),
             playerDeck: document.getElementById('playerDeck'),
             aiHealth: document.getElementById('aiHealth'),
-            aiDeck: document.getElementById('aiDeck'), // Добавлен отсутствующий элемент
-            currentTurn: document.getElementById('currentTurn'), // Добавлен отсутствующий элемент
+            aiDeck: document.getElementById('aiDeck'),
+            currentTurn: document.getElementById('currentTurn'),
             gameId: document.querySelector('.game-id')
         };
 
@@ -31,11 +31,6 @@ class GameClient {
         // Привязка контекста
         this.handleHeroClick = this.handleHeroClick.bind(this);
 
-        // Инициализация состояний
-        this.elements.mainMenu.classList.add('active');
-        this.elements.heroSelectContainer.classList.remove('active');
-        this.elements.gameContainer.classList.remove('active');
-
         // Инициализация
         this.initSocketHandlers();
         this.initEventListeners();
@@ -43,7 +38,6 @@ class GameClient {
             .then(heroes => {
                 this.heroes = heroes;
                 console.log('Герои загружены:', heroes);
-                this.renderHeroSelect();
             })
             .catch(err => {
                 console.error('Ошибка загрузки:', err);
@@ -78,26 +72,21 @@ class GameClient {
     }
 
     updateGameInterface(state) {
-		console.log('Updating game interface...');
-		console.log('Game container classes:', this.elements.gameContainer.className);
-		
-		// Обновление данных
-		this.elements.gameId.textContent = `Игра #${state.id}`;
-		this.elements.playerHealth.textContent = state.players.human.health;
-		this.elements.playerDeck.textContent = state.players.human.deckSize;
-		this.elements.aiHealth.textContent = state.players.ai.health;
-		this.elements.aiDeck.textContent = state.players.ai.deckSize;
-		this.elements.currentTurn.textContent = 
-			state.turn === 'human' ? 'Ваш ход' : 'Ход противника';
-	
-		// Принудительное обновление DOM
-		this.elements.heroSelectContainer.classList.remove('active');
-		this.elements.gameContainer.classList.add('active');
-		console.log('Updated classes:', {
-			heroSelectContainer: this.elements.heroSelectContainer.className,
-			gameContainer: this.elements.gameContainer.className
-		});
-	}
+        console.log('Updating game interface...');
+        
+        // Обновление данных
+        this.elements.gameId.textContent = `Игра #${state.id}`;
+        this.elements.playerHealth.textContent = state.players.human.health;
+        this.elements.playerDeck.textContent = state.players.human.deckSize;
+        this.elements.aiHealth.textContent = state.players.ai.health;
+        this.elements.aiDeck.textContent = state.players.ai.deckSize;
+        this.elements.currentTurn.textContent = 
+            state.turn === 'human' ? 'Ваш ход' : 'Ход противника';
+    
+        // Переключение интерфейса
+        this.elements.heroSelectContainer.classList.remove('active');
+        this.elements.gameContainer.classList.add('active');
+    }
 
     handleHeroClick(event) {
         const card = event.currentTarget;
@@ -123,13 +112,12 @@ class GameClient {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const heroes = await response.json();
             
-            // Валидация и преобразование данных
             return heroes.map(hero => ({
                 ...hero,
                 id: Number(hero.id),
                 strength: Number(hero.strength),
                 health: Number(hero.health),
-                image: `/assets/heroes/images/${hero.image}` // Исправленный путь
+                image: `/assets/heroes/images/${hero.image}`
             }));
         } catch (err) {
             throw new Error('Ошибка загрузки данных');
@@ -142,14 +130,10 @@ class GameClient {
             return;
         }
 
-        // Переключаем контейнеры
-        this.elements.mainMenu.classList.remove('active');
         this.elements.heroSelectContainer.classList.add('active');
-
-        // Очищаем и рендерим карточки
         this.elements.heroSelect.innerHTML = '';
-        const fragment = document.createDocumentFragment();
         
+        const fragment = document.createDocumentFragment();
         this.heroes.forEach(hero => {
             const card = document.createElement('div');
             card.className = 'hero-card';
@@ -170,6 +154,11 @@ class GameClient {
 
     initEventListeners() {
         this.elements.startButton.addEventListener('click', () => {
+            if (!this.socket.connected) {
+                this.showError('Нет подключения к серверу!');
+                return;
+            }
+
             if (this.selectedHeroes.size !== 5) {
                 this.showError('Выберите 5 героев!');
                 return;
@@ -177,12 +166,11 @@ class GameClient {
 
             const numericDeck = Array.from(this.selectedHeroes);
             this.socket.emit('startPve', numericDeck, response => {
-				console.log('Server response:', response);
                 if (response.status !== 'success') {
                     this.showError(response.message || 'Ошибка сервера');
-				} else {
-					console.log('Game started successfully');
-				}
+                } else {
+                    this.renderHeroSelect();
+                }
             });
         });
     }
