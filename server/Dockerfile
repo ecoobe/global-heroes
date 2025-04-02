@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Устанавливаем curl для healthcheck и python3 для сборки native модулей
 RUN apk add --no-cache curl python3 make g++
-RUN npm install redis@4.6.13
+RUN npm install redis@^4.6.13 @redis/client@^1.5.7
 
 COPY package*.json ./
 
