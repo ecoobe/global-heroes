@@ -1,6 +1,5 @@
 class GameClient {
     constructor() {
-        // Инициализация сокета
         this.socket = io('https://coobe.ru', {
             path: '/socket.io/',
             transports: ['websocket'],
@@ -8,33 +7,63 @@ class GameClient {
             reconnectionAttempts: 3
         });
 
-        // DOM элементы
-        this.statusEl = document.getElementById('connection-status');
-        this.startButton = document.getElementById('startPve');
-        this.heroSelectEl = document.getElementById('heroSelect');
+        // Элементы управления
+        this.elements = {
+            status: document.getElementById('connection-status'),
+            startButton: document.getElementById('startPve'),
+            heroSelect: document.getElementById('heroSelect'),
+            mainMenu: document.getElementById('mainMenu'),
+            gameContainer: document.getElementById('gameContainer'),
+            playerHealth: document.getElementById('playerHealth'),
+            playerDeck: document.getElementById('playerDeck'),
+            aiHealth: document.getElementById('aiHealth'),
+            gameId: document.querySelector('.game-id')
+        };
+
         this.selectedHeroes = new Set();
         this.heroes = [];
 
         // Привязка контекста
         this.handleHeroClick = this.handleHeroClick.bind(this);
 
-        // Обработчики событий
-        this.socket.on('connect', this.handleConnect.bind(this));
-        this.socket.on('disconnect', this.handleDisconnect.bind(this));
-        this.socket.on('error', this.handleError.bind(this));
-
         // Инициализация
+        this.initSocketHandlers();
         this.initEventListeners();
-        this.loadHeroes()
-            .then(heroes => {
-                this.heroes = heroes;
-                console.log('Герои загружены:', heroes);
-                this.renderHeroSelect();
-            })
-            .catch(err => {
-                console.error('Ошибка загрузки:', err);
-                this.showError('Не удалось загрузить героев');
-            });
+        this.loadHeroes();
+    }
+
+    initSocketHandlers() {
+        this.socket.on('connect', () => {
+            this.elements.status.className = 'online';
+            this.elements.status.textContent = 'Online';
+            this.elements.startButton.disabled = false;
+        });
+
+        this.socket.on('disconnect', (reason) => {
+            this.elements.status.className = 'offline';
+            this.elements.status.textContent = 'Offline';
+            this.elements.startButton.disabled = true;
+        });
+
+        this.socket.on('error', (err) => {
+            console.error('Socket error:', err);
+            alert(`Ошибка соединения: ${err.message}`);
+        });
+
+        this.socket.on('gameState', (state) => {
+            this.updateGameState(state);
+        });
+    }
+
+    updateGameState(state) {
+        this.elements.gameId.textContent = `Игра #${state.id}`;
+        this.elements.playerHealth.textContent = state.players.human.health;
+        this.elements.playerDeck.textContent = state.players.human.deckSize;
+        this.elements.aiHealth.textContent = state.players.ai.health;
+        
+        // Показываем игровой интерфейс
+        this.elements.mainMenu.style.display = 'none';
+        this.elements.gameContainer.style.display = 'block';
     }
 
     handleConnect() {
@@ -122,8 +151,8 @@ class GameClient {
         console.log('Выбрано героев:', this.selectedHeroes.size);
     }
 
-    initEventListeners() {
-        this.startButton.addEventListener('click', () => {
+	initEventListeners() {
+        this.elements.startButton.addEventListener('click', () => {
             if (this.selectedHeroes.size !== 5) {
                 this.showError('Выберите 5 героев!');
                 return;
@@ -131,10 +160,7 @@ class GameClient {
 
             const numericDeck = Array.from(this.selectedHeroes);
             this.socket.emit('startPve', numericDeck, response => {
-                if (response.status === 'success') {
-                    document.getElementById('mainMenu').style.display = 'none';
-                    document.getElementById('gameContainer').style.display = 'block';
-                } else {
+                if (response.status !== 'success') {
                     this.showError(response.message || 'Ошибка сервера');
                 }
             });
@@ -151,7 +177,6 @@ class GameClient {
     }
 }
 
-// Инициализация
 window.addEventListener('DOMContentLoaded', () => {
     window.gameClient = new GameClient();
 });

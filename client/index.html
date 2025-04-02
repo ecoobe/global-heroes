@@ -15,8 +15,23 @@
             <button id="startPve" class="menu-btn" disabled>Играть PVE</button>
         </div>
         
-        <div class="game-container" id="gameContainer" style="display: block">
+        <div class="game-container" id="gameContainer" style="display: none">
             <div class="hero-select" id="heroSelect"></div>
+            <div id="gameState" class="game-state">
+                <!-- Сюда будет вставляться игровое состояние -->
+                <div class="game-id"></div>
+                <div class="players">
+                    <div class="player human">
+                        <h3>Ваш герой</h3>
+                        <div class="health">❤️ <span id="playerHealth">-</span></div>
+                        <div class="deck">Карт в колоде: <span id="playerDeck">-</span></div>
+                    </div>
+                    <div class="player ai">
+                        <h3>Противник</h3>
+                        <div class="health">❤️ <span id="aiHealth">-</span></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
