@@ -225,13 +225,61 @@ class GameClient {
     /* --------------------------
        Публичные методы для UI
        -------------------------- */
-    handleStartGame() {
-        if(!this.socket.connected) {
+	   handleStartGame() {
+        if (!this.socket.connected) {
             this.showError('Нет подключения к серверу!');
             return;
         }
         this.toggleInterface('heroSelect');
-        this.renderHeroSelection();
+        this.renderHeroSelect(); // Исправленное имя метода
+    }
+
+    renderHeroSelect() {
+        if (!this.heroes?.length) {
+            this.showError('Нет доступных героев');
+            return;
+        }
+
+        this.elements.heroSelect.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        
+        this.heroes.forEach(hero => {
+            const card = document.createElement('div');
+            card.className = 'hero-card';
+            card.dataset.id = hero.id;
+            card.innerHTML = `
+                <div class="hero-image" 
+                     style="background-image: url('${hero.image}')">
+                </div>
+                <h3>${hero.name}</h3>
+                <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
+            `;
+            card.addEventListener('click', (e) => this.handleHeroClick(e));
+            fragment.appendChild(card);
+        });
+
+        this.elements.heroSelect.appendChild(fragment);
+    }
+
+    handleHeroClick(event) {
+        const card = event.currentTarget;
+        const heroId = Number(card.dataset.id);
+        
+        if (this.selectedHeroes.has(heroId)) {
+            this.selectedHeroes.delete(heroId);
+            card.classList.remove('selected');
+        } else {
+            if (this.selectedHeroes.size >= 5) {
+                this.showError('Максимум 5 героев!');
+                return;
+            }
+            this.selectedHeroes.add(heroId);
+            card.classList.add('selected');
+        }
+        
+        this.elements.confirmButton.disabled = this.selectedHeroes.size !== 5;
+        this.elements.confirmButton.querySelector('.btn-text').textContent = 
+            `Подтвердить выбор (${this.selectedHeroes.size}/5)`;
     }
 
     handleDeckConfirmation() {
