@@ -20,6 +20,8 @@ class GameClient {
             playerHealth: document.getElementById('playerHealth'),
             playerDeck: document.getElementById('playerDeck'),
             aiHealth: document.getElementById('aiHealth'),
+            aiDeck: document.getElementById('aiDeck'), // Добавлен отсутствующий элемент
+            currentTurn: document.getElementById('currentTurn'), // Добавлен отсутствующий элемент
             gameId: document.querySelector('.game-id')
         };
 
@@ -76,26 +78,27 @@ class GameClient {
     }
 
     updateGameInterface(state) {
-		// Обновляем основные показатели
-		this.elements.gameId.textContent = `Игра #${state.id}`;
-		this.elements.playerHealth.textContent = state.players.human.health;
-		this.elements.playerDeck.textContent = state.players.human.deckSize;
-		this.elements.aiHealth.textContent = state.players.ai.health;
-		this.elements.aiDeck.textContent = state.players.ai.deckSize;
-		
-		// Обновляем индикатор хода
-		document.getElementById('currentTurn').textContent = 
-			state.turn === 'human' ? 'Ваш ход' : 'Ход противника';
-		
-		// Переключаем контейнеры
-		this.elements.heroSelectContainer.classList.remove('active');
-		this.elements.gameContainer.classList.add('active');
-		
-		// Форсируем перерисовку
-		setTimeout(() => {
-			this.elements.gameContainer.style.opacity = 1;
-		}, 50);
-	}
+        // Проверка наличия элементов
+        if (!this.elements.aiDeck || !this.elements.currentTurn) {
+            console.error('Критическая ошибка: отсутствуют элементы интерфейса!');
+            return;
+        }
+
+        // Обновляем основные показатели
+        this.elements.gameId.textContent = `Игра #${state.id}`;
+        this.elements.playerHealth.textContent = state.players.human.health;
+        this.elements.playerDeck.textContent = state.players.human.deckSize;
+        this.elements.aiHealth.textContent = state.players.ai.health;
+        this.elements.aiDeck.textContent = state.players.ai.deckSize;
+        
+        // Обновляем индикатор хода
+        this.elements.currentTurn.textContent = 
+            state.turn === 'human' ? 'Ваш ход' : 'Ход противника';
+        
+        // Переключаем контейнеры
+        this.elements.heroSelectContainer.classList.remove('active');
+        this.elements.gameContainer.classList.add('active');
+    }
 
     handleHeroClick(event) {
         const card = event.currentTarget;
@@ -112,7 +115,6 @@ class GameClient {
             this.selectedHeroes.add(heroId);
             card.classList.add('selected');
         }
-        
         console.log('Выбрано героев:', this.selectedHeroes.size);
     }
 
@@ -122,13 +124,13 @@ class GameClient {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const heroes = await response.json();
             
-            // Валидация данных
-            if (!Array.isArray(heroes)) throw new Error("Неверный формат данных");
+            // Валидация и преобразование данных
             return heroes.map(hero => ({
                 ...hero,
                 id: Number(hero.id),
                 strength: Number(hero.strength),
-                health: Number(hero.health)
+                health: Number(hero.health),
+                image: `/assets/heroes/images/${hero.image}` // Исправленный путь
             }));
         } catch (err) {
             throw new Error('Ошибка загрузки данных');
@@ -145,10 +147,8 @@ class GameClient {
         this.elements.mainMenu.classList.remove('active');
         this.elements.heroSelectContainer.classList.add('active');
 
-        // Очищаем предыдущий контент
+        // Очищаем и рендерим карточки
         this.elements.heroSelect.innerHTML = '';
-
-        // Создаем фрагмент документа для оптимизации
         const fragment = document.createDocumentFragment();
         
         this.heroes.forEach(hero => {
@@ -157,7 +157,7 @@ class GameClient {
             card.dataset.id = hero.id;
             card.innerHTML = `
                 <div class="hero-image" 
-                    style="background-image: url('/assets/heroes/images/${hero.image}')">
+                     style="background-image: url('${hero.image}')">
                 </div>
                 <h3>${hero.name}</h3>
                 <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
