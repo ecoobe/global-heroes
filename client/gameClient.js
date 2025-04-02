@@ -176,9 +176,12 @@ class GameClient {
 
             const numericDeck = Array.from(this.selectedHeroes);
             this.socket.emit('startPve', numericDeck, response => {
+				console.log('Server response:', response);
                 if (response.status !== 'success') {
                     this.showError(response.message || 'Ошибка сервера');
-                }
+				} else {
+					console.log('Game started successfully');
+				}
             });
         });
     }
