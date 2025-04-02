@@ -1,6 +1,5 @@
 class GameClient {
     constructor() {
-        // Инициализация WebSocket соединения
         this.socket = io('https://coobe.ru', {
             path: '/socket.io/',
             transports: ['websocket'],
@@ -28,23 +27,24 @@ class GameClient {
             errorMessage: document.getElementById('error-message')
         };
 
-        // Состояние клиента
         this.selectedHeroes = new Set();
         this.heroes = [];
         this.turnTimer = null;
         this.currentGameState = null;
 
-        // Инициализация
+        this.validateDOMElements();
         this.initSocketHandlers();
         this.initEventListeners();
         this.loadGameAssets();
     }
 
-    /* --------------------------
-       Инициализация компонентов
-       -------------------------- */
+    validateDOMElements() {
+        Object.entries(this.elements).forEach(([name, element]) => {
+            if (!element) throw new Error(`DOM element not found: ${name}`);
+        });
+    }
+
     initSocketHandlers() {
-        // Обработчики событий WebSocket
         this.socket
             .on('connect', this.handleConnect.bind(this))
             .on('disconnect', this.handleDisconnect.bind(this))
@@ -57,29 +57,38 @@ class GameClient {
     }
 
     initEventListeners() {
-        // UI обработчики
         this.elements.startButton.addEventListener('click', this.handleStartGame.bind(this));
         this.elements.confirmButton.addEventListener('click', this.handleDeckConfirmation.bind(this));
     }
 
-    /* --------------------------
-       Обработчики сетевых событий
-       -------------------------- */
+    async loadGameAssets() {
+        try {
+            const response = await fetch('/assets/heroes/heroes.json');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            this.heroes = await response.json();
+            if (!Array.isArray(this.heroes)) throw new Error('Invalid heroes data');
+            console.log('Heroes loaded:', this.heroes);
+        } catch (error) {
+            this.showError('Не удалось загрузить героев');
+            console.error('Asset loading error:', error);
+        }
+    }
+
     handleConnect() {
         this.updateConnectionStatus('online', 'Online');
         this.elements.startButton.disabled = false;
-        console.log('WebSocket connected:', this.socket.id);
+        console.log('Connected:', this.socket.id);
     }
 
     handleDisconnect(reason) {
         this.updateConnectionStatus('offline', 'Offline');
         this.elements.startButton.disabled = true;
-        console.log('WebSocket disconnected:', reason);
+        console.log('Disconnected:', reason);
     }
 
     handleSocketError(err) {
-        console.error('WebSocket error:', err);
-        this.showError(`Connection error: ${err.message}`);
+        console.error('Socket error:', err);
+        this.showError(`Ошибка соединения: ${err.message}`);
     }
 
     handleGameState(state) {
@@ -109,58 +118,12 @@ class GameClient {
         this.resetGameInterface();
     }
 
-    /* --------------------------
-       Игровая логика
-       -------------------------- */
-    async loadGameAssets() {
-        try {
-            this.heroes = await this.fetchHeroes();
-            console.log('Heroes loaded:', this.heroes);
-        } catch (error) {
-            this.showError('Failed to load game assets');
-            console.error('Asset loading error:', error);
-        }
-    }
-
-    startTurnTimer(seconds) {
-        this.clearExistingTimer();
-        let timeLeft = seconds;
-        
-        this.turnTimer = setInterval(() => {
-            this.elements.turnTimer.textContent = --timeLeft;
-            if(timeLeft <= 0) this.forceEndTurn();
-        }, 1000);
-    }
-
-    processCardPlay(cardId) {
-        if(!this.validateCardPlay(cardId)) return;
-        
-        this.socket.emit('playerAction', {
-            type: 'playCard',
-            cardId: cardId,
-            target: 'ai'
-        });
-    }
-
-    validateCardPlay(cardId) {
-        return this.currentGameState?.turn === 'human' && 
-               this.currentGameState.players.human.hand.some(c => c.id === cardId);
-    }
-
-    /* --------------------------
-       UI методы
-       -------------------------- */
     updateGameInterface(state) {
-        // Основные показатели
-        this.elements.gameId.textContent = `Game #${state.id}`;
+        this.elements.gameId.textContent = `Игра #${state.id}`;
         this.elements.playerHealth.textContent = state.players.human.health;
         this.elements.aiHealth.textContent = state.players.ai.health;
-        
-        // Колоды
         this.elements.playerDeck.textContent = state.players.human.deck.length;
         this.elements.aiDeck.textContent = state.players.ai.deck.length;
-
-        // Карты в руке
         this.renderPlayerHand(state.players.human.hand);
     }
 
@@ -172,7 +135,7 @@ class GameClient {
 
     createCardElement(card) {
         return `
-            <div class="hand-card" data-id="${card.id}" onclick="gameClient.processCardPlay(${card.id})">
+            <div class="hand-card" data-id="${card.id}">
                 <div class="card-header">
                     <span class="card-cost">${card.cost}⚡</span>
                     <span class="card-name">${card.name}</span>
@@ -183,55 +146,20 @@ class GameClient {
     }
 
     toggleInterface(screen) {
-        const interfaces = {
-            main: this.elements.mainMenu,
-            heroSelect: this.elements.heroSelectContainer,
-            game: this.elements.gameContainer
-        };
-
-        Object.values(interfaces).forEach(el => el.classList.remove('active'));
-        interfaces[screen]?.classList.add('active');
+        ['main', 'heroSelect', 'game'].forEach(ui => 
+            this.elements[`${ui}${ui === 'main' ? 'Menu' : 'Container'}`]?.classList.remove('active')
+        );
+        if (screen === 'main') this.elements.mainMenu.classList.add('active');
+        else this.elements[`${screen}Container`]?.classList.add('active');
     }
 
-    /* --------------------------
-       Вспомогательные методы
-       -------------------------- */
-    async fetchHeroes() {
-        const response = await fetch('/assets/heroes/heroes.json');
-        if(!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-    }
-
-    clearExistingTimer() {
-        if(this.turnTimer) {
-            clearInterval(this.turnTimer);
-            this.turnTimer = null;
-        }
-    }
-
-    updateConnectionStatus(status, text) {
-        this.elements.status.className = status;
-        this.elements.status.textContent = text;
-    }
-
-    showError(message) {
-        this.elements.errorMessage.textContent = message;
-        this.elements.errorMessage.style.display = 'block';
-        setTimeout(() => {
-            this.elements.errorMessage.style.display = 'none';
-        }, 5000);
-    }
-
-    /* --------------------------
-       Публичные методы для UI
-       -------------------------- */
-	   handleStartGame() {
+    handleStartGame() {
         if (!this.socket.connected) {
             this.showError('Нет подключения к серверу!');
             return;
         }
         this.toggleInterface('heroSelect');
-        this.renderHeroSelect(); // Исправленное имя метода
+        this.renderHeroSelect();
     }
 
     renderHeroSelect() {
@@ -248,13 +176,11 @@ class GameClient {
             card.className = 'hero-card';
             card.dataset.id = hero.id;
             card.innerHTML = `
-                <div class="hero-image" 
-                     style="background-image: url('${hero.image}')">
-                </div>
+                <div class="hero-image" style="background-image: url('${hero.image}')"></div>
                 <h3>${hero.name}</h3>
                 <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
             `;
-            card.addEventListener('click', (e) => this.handleHeroClick(e));
+            card.addEventListener('click', this.handleHeroClick.bind(this));
             fragment.appendChild(card);
         });
 
@@ -277,25 +203,48 @@ class GameClient {
             card.classList.add('selected');
         }
         
-        this.elements.confirmButton.disabled = this.selectedHeroes.size !== 5;
-        this.elements.confirmButton.querySelector('.btn-text').textContent = 
-            `Подтвердить выбор (${this.selectedHeroes.size}/5)`;
+        this.updateConfirmButton();
+    }
+
+    updateConfirmButton() {
+        const count = this.selectedHeroes.size;
+        this.elements.confirmButton.disabled = count !== 5;
+        this.elements.confirmButton.innerHTML = `
+            <span class="btn-text">Подтвердить выбор (${count}/5)</span>
+        `;
     }
 
     handleDeckConfirmation() {
-        if(this.selectedHeroes.size !== 5) {
+        if (this.selectedHeroes.size !== 5) {
             this.showError('Выберите ровно 5 героев!');
             return;
         }
         
         const deck = Array.from(this.selectedHeroes);
-        this.socket.emit('startPve', deck, this.handleStartGameResponse.bind(this));
+        this.socket.emit('startPve', deck, (response) => {
+            if (response.status === 'success') {
+                this.toggleInterface('game');
+            } else {
+                this.showError(response.message || 'Ошибка сервера');
+                this.toggleInterface('main');
+            }
+        });
     }
 
-    handleStartGameResponse(response) {
-        if(response.status !== 'success') {
-            this.showError(response.message || 'Ошибка сервера');
-            this.toggleInterface('main');
+    startTurnTimer(seconds) {
+        this.clearExistingTimer();
+        let timeLeft = seconds;
+        
+        this.turnTimer = setInterval(() => {
+            this.elements.turnTimer.textContent = --timeLeft;
+            if (timeLeft <= 0) this.forceEndTurn();
+        }, 1000);
+    }
+
+    clearExistingTimer() {
+        if (this.turnTimer) {
+            clearInterval(this.turnTimer);
+            this.turnTimer = null;
         }
     }
 
@@ -311,9 +260,46 @@ class GameClient {
             card.style.pointerEvents = enabled ? 'all' : 'none';
         });
     }
+
+    showAiAnimation() {
+        const aiSide = document.querySelector('.ai-side');
+        const animation = document.createElement('div');
+        animation.className = 'attack-animation';
+        aiSide.appendChild(animation);
+        setTimeout(() => animation.remove(), 1000);
+    }
+
+    showGameResult(result) {
+        const resultText = result === 'human' ? 'Победа!' : 'Поражение!';
+        alert(resultText);
+        this.resetGameInterface();
+    }
+
+    resetGameInterface() {
+        this.toggleInterface('main');
+        this.selectedHeroes.clear();
+        this.elements.heroSelect.innerHTML = '';
+        this.updateConfirmButton();
+    }
+
+    updateConnectionStatus(status, text) {
+        this.elements.status.className = status;
+        this.elements.status.textContent = text;
+    }
+
+    showError(message) {
+        this.elements.errorMessage.textContent = message;
+        this.elements.errorMessage.style.display = 'block';
+        setTimeout(() => {
+            this.elements.errorMessage.style.display = 'none';
+        }, 5000);
+    }
+
+    updateTurnDisplay(text) {
+        this.elements.currentTurn.textContent = text;
+    }
 }
 
-// Инициализация при загрузке
 window.addEventListener('DOMContentLoaded', () => {
     window.gameClient = new GameClient();
 });
