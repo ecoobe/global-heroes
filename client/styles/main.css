@@ -7,7 +7,12 @@ body {
     min-height: 100vh;
 }
 
-/* Контейнеры и слои */
+/* Основные контейнеры */
+#app {
+    position: relative;
+    min-height: 100vh;
+}
+
 .main-menu {
     text-align: center;
     padding: 2rem;
@@ -15,21 +20,35 @@ body {
     z-index: 10;
 }
 
-.game-container {
+/* Контейнер выбора героев */
+.hero-select-container {
     display: none;
-    padding: 2rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
 }
 
+.hero-select-container.active {
+    display: block;
+}
+
+/* Сетка карточек */
 .hero-select {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 20px;
-    padding: 20px;
-    position: relative;
-    z-index: 20;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 0;
 }
 
-/* Карточки героев */
+/* Карточка героя */
 .hero-card {
     background: #2d2d2d;
     border: 1px solid #4CAF50;
@@ -39,7 +58,9 @@ body {
     position: relative;
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     transition: all 0.3s ease;
-    min-height: 150px;
+    min-height: 200px;
+    cursor: pointer;
+    animation: cardAppear 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .hero-card:hover {
@@ -62,6 +83,25 @@ body {
     color: #4CAF50;
     font-size: 24px;
     text-shadow: 0 0 5px rgba(76,175,80,0.5);
+}
+
+/* Игровой интерфейс */
+.game-container {
+    display: none;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.game-container.active {
+    display: block;
+}
+
+.game-state {
+    background: #2c3e50;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 30px;
 }
 
 /* Статус подключения */
@@ -125,82 +165,46 @@ body {
     opacity: 0.7;
 }
 
-.game-state {
-    background: #2c3e50;
-    padding: 20px;
-    border-radius: 10px;
-    color: white;
-    margin-top: 20px;
+/* Элементы игрового состояния */
+.game-id {
+    font-size: 1.5rem;
+    color: #3498db;
+    margin-bottom: 20px;
+    text-align: center;
 }
 
-.game-state .players {
+.players {
     display: flex;
     gap: 30px;
     justify-content: center;
-}
-
-.game-state .player {
-    background: #34495e;
-    padding: 15px;
-    border-radius: 8px;
-    min-width: 200px;
-}
-
-.game-state .health {
-    font-size: 24px;
-    color: #e74c3c;
-}
-
-.error {
-    color: #ff4444;
-    text-align: center;
-    padding: 20px;
-    font-size: 1.2em;
-}
-
-/* Анимации */
-@keyframes cardAppear {
-    from { 
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-    }
-    to { 
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-.hero-card {
-    animation: cardAppear 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-.game-id {
-    font-size: 1.2rem;
-    color: #3498db;
-    margin-bottom: 15px;
+    flex-wrap: wrap;
 }
 
 .player {
-    background: #2c3e50;
-    padding: 15px;
+    background: #34495e;
+    padding: 20px;
     border-radius: 10px;
-    min-width: 200px;
+    min-width: 250px;
+    text-align: center;
 }
 
 .player h3 {
-    margin: 0 0 10px 0;
+    margin: 0 0 15px 0;
     color: #ecf0f1;
+    font-size: 1.3em;
 }
 
 .health {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: bold;
     color: #e74c3c;
+    margin: 10px 0;
 }
 
 .deck {
     color: #bdc3c7;
-    font-size: 0.9rem;
+    font-size: 1em;
+    margin-top: 10px;
 }
 
 /* Адаптивность */
@@ -213,5 +217,26 @@ body {
     .hero-card {
         margin: 5px;
         padding: 10px;
+        min-height: 180px;
+    }
+
+    .players {
+        gap: 15px;
+    }
+
+    .player {
+        min-width: 200px;
+        padding: 15px;
+    }
+}
+
+@keyframes cardAppear {
+    from { 
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 }
