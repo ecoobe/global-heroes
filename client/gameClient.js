@@ -1,5 +1,6 @@
 class GameClient {
     constructor() {
+        // Инициализация сокета
         this.socket = io('https://coobe.ru', {
             path: '/socket.io/',
             transports: ['websocket'],
@@ -7,13 +8,14 @@ class GameClient {
             reconnectionAttempts: 3
         });
 
-        // Элементы управления
+        // DOM элементы
         this.elements = {
             status: document.getElementById('connection-status'),
             startButton: document.getElementById('startPve'),
             heroSelect: document.getElementById('heroSelect'),
             mainMenu: document.getElementById('mainMenu'),
             gameContainer: document.getElementById('gameContainer'),
+            gameState: document.getElementById('gameState'),
             playerHealth: document.getElementById('playerHealth'),
             playerDeck: document.getElementById('playerDeck'),
             aiHealth: document.getElementById('aiHealth'),
@@ -29,7 +31,16 @@ class GameClient {
         // Инициализация
         this.initSocketHandlers();
         this.initEventListeners();
-        this.loadHeroes();
+        this.loadHeroes()
+            .then(heroes => {
+                this.heroes = heroes;
+                console.log('Герои загружены:', heroes);
+                this.renderHeroSelect();
+            })
+            .catch(err => {
+                console.error('Ошибка загрузки:', err);
+                this.showError('Не удалось загрузить героев');
+            });
     }
 
     initSocketHandlers() {
@@ -37,12 +48,14 @@ class GameClient {
             this.elements.status.className = 'online';
             this.elements.status.textContent = 'Online';
             this.elements.startButton.disabled = false;
+            console.log('Connected:', this.socket.id);
         });
 
         this.socket.on('disconnect', (reason) => {
             this.elements.status.className = 'offline';
             this.elements.status.textContent = 'Offline';
             this.elements.startButton.disabled = true;
+            console.log('Disconnected:', reason);
         });
 
         this.socket.on('error', (err) => {
@@ -51,38 +64,40 @@ class GameClient {
         });
 
         this.socket.on('gameState', (state) => {
-            this.updateGameState(state);
+            console.log('Received game state:', state);
+            this.updateGameInterface(state);
         });
     }
 
-    updateGameState(state) {
+    updateGameInterface(state) {
+        // Обновляем игровой интерфейс
         this.elements.gameId.textContent = `Игра #${state.id}`;
         this.elements.playerHealth.textContent = state.players.human.health;
         this.elements.playerDeck.textContent = state.players.human.deckSize;
         this.elements.aiHealth.textContent = state.players.ai.health;
         
-        // Показываем игровой интерфейс
+        // Показываем игровое поле
         this.elements.mainMenu.style.display = 'none';
         this.elements.gameContainer.style.display = 'block';
     }
 
-    handleConnect() {
-        this.statusEl.className = 'online';
-        this.statusEl.textContent = 'Online';
-        this.startButton.disabled = false;
-        console.log('Connected:', this.socket.id);
-    }
-
-    handleDisconnect(reason) {
-        this.statusEl.className = 'offline';
-        this.statusEl.textContent = 'Offline';
-        this.startButton.disabled = true;
-        console.log('Disconnected:', reason);
-    }
-
-    handleError(err) {
-        console.error('Socket error:', err);
-        alert(`Ошибка соединения: ${err.message}`);
+    handleHeroClick(event) {
+        const card = event.currentTarget;
+        const heroId = Number(card.dataset.id);
+        
+        if (this.selectedHeroes.has(heroId)) {
+            this.selectedHeroes.delete(heroId);
+            card.classList.remove('selected');
+        } else {
+            if (this.selectedHeroes.size >= 5) {
+                this.showError('Максимум 5 героев!');
+                return;
+            }
+            this.selectedHeroes.add(heroId);
+            card.classList.add('selected');
+        }
+        
+        console.log('Выбрано героев:', this.selectedHeroes.size);
     }
 
     async loadHeroes() {
@@ -106,12 +121,12 @@ class GameClient {
 
     renderHeroSelect() {
         if (!this.heroes || this.heroes.length === 0) {
-            this.heroSelectEl.innerHTML = '<div class="error">Нет доступных героев</div>';
+            this.elements.heroSelect.innerHTML = '<div class="error">Нет доступных героев</div>';
             return;
         }
 
         // Очищаем предыдущий контент
-        this.heroSelectEl.innerHTML = '';
+        this.elements.heroSelect.innerHTML = '';
 
         // Создаем фрагмент документа для оптимизации
         const fragment = document.createDocumentFragment();
@@ -129,29 +144,10 @@ class GameClient {
             fragment.appendChild(card);
         });
 
-        this.heroSelectEl.appendChild(fragment);
+        this.elements.heroSelect.appendChild(fragment);
     }
 
-    handleHeroClick(event) {
-        const card = event.currentTarget;
-        const heroId = Number(card.dataset.id);
-        
-        if (this.selectedHeroes.has(heroId)) {
-            this.selectedHeroes.delete(heroId);
-            card.classList.remove('selected');
-        } else {
-            if (this.selectedHeroes.size >= 5) {
-                this.showError('Максимум 5 героев!');
-                return;
-            }
-            this.selectedHeroes.add(heroId);
-            card.classList.add('selected');
-        }
-        
-        console.log('Выбрано героев:', this.selectedHeroes.size);
-    }
-
-	initEventListeners() {
+    initEventListeners() {
         this.elements.startButton.addEventListener('click', () => {
             if (this.selectedHeroes.size !== 5) {
                 this.showError('Выберите 5 героев!');
