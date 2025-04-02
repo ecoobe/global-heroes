@@ -53,11 +53,11 @@ class PveGame {
     }
 
     async saveToRedis(redisClient) {
-        if (!redisClient?.hSet) {
-            throw new Error('Redis client incompatible - hSet method not found');
+        if (!redisClient?.hset) {
+            throw new Error('Redis client incompatible - hset method not found');
         }
 
-        await redisClient.hSet(
+        await redisClient.hset(
             'games', 
             this.id, 
             JSON.stringify(this, (key, value) => {
