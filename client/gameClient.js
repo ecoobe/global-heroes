@@ -15,6 +15,7 @@ class GameClient {
             heroSelect: document.getElementById('heroSelect'),
             mainMenu: document.getElementById('mainMenu'),
             gameContainer: document.getElementById('gameContainer'),
+            heroSelectContainer: document.getElementById('heroSelectContainer'),
             gameState: document.getElementById('gameState'),
             playerHealth: document.getElementById('playerHealth'),
             playerDeck: document.getElementById('playerDeck'),
@@ -27,6 +28,11 @@ class GameClient {
 
         // Привязка контекста
         this.handleHeroClick = this.handleHeroClick.bind(this);
+
+        // Инициализация состояний
+        this.elements.mainMenu.classList.add('active');
+        this.elements.heroSelectContainer.classList.remove('active');
+        this.elements.gameContainer.classList.remove('active');
 
         // Инициализация
         this.initSocketHandlers();
@@ -76,9 +82,9 @@ class GameClient {
         this.elements.playerDeck.textContent = state.players.human.deckSize;
         this.elements.aiHealth.textContent = state.players.ai.health;
         
-        // Показываем игровое поле
-        this.elements.mainMenu.style.display = 'none';
-        this.elements.gameContainer.style.display = 'block';
+        // Переключаем контейнеры
+        this.elements.heroSelectContainer.classList.remove('active');
+        this.elements.gameContainer.classList.add('active');
     }
 
     handleHeroClick(event) {
@@ -124,6 +130,10 @@ class GameClient {
             this.elements.heroSelect.innerHTML = '<div class="error">Нет доступных героев</div>';
             return;
         }
+
+        // Переключаем контейнеры
+        this.elements.mainMenu.classList.remove('active');
+        this.elements.heroSelectContainer.classList.add('active');
 
         // Очищаем предыдущий контент
         this.elements.heroSelect.innerHTML = '';
