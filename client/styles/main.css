@@ -5,6 +5,7 @@ body {
     color: white;
     font-family: 'Arial', sans-serif;
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
 /* Основные контейнеры */
@@ -14,10 +15,15 @@ body {
 }
 
 .main-menu {
+    display: block;
     text-align: center;
     padding: 2rem;
     position: relative;
     z-index: 10;
+}
+
+.main-menu:not(.active) {
+    display: none;
 }
 
 /* Контейнер выбора героев */
@@ -28,7 +34,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.95);
+    background: rgba(0,0,0,0.97);
     z-index: 1000;
     overflow-y: auto;
     padding: 20px;
@@ -91,10 +97,19 @@ body {
     padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
+    opacity: 1;
+    transition: opacity 0.3s;
 }
 
 .game-container.active {
     display: block;
+    animation: fadeIn 0.5s;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .game-state {

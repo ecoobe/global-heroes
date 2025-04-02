@@ -78,27 +78,25 @@ class GameClient {
     }
 
     updateGameInterface(state) {
-        // Проверка наличия элементов
-        if (!this.elements.aiDeck || !this.elements.currentTurn) {
-            console.error('Критическая ошибка: отсутствуют элементы интерфейса!');
-            return;
-        }
-
-        // Обновляем основные показатели
-        this.elements.gameId.textContent = `Игра #${state.id}`;
-        this.elements.playerHealth.textContent = state.players.human.health;
-        this.elements.playerDeck.textContent = state.players.human.deckSize;
-        this.elements.aiHealth.textContent = state.players.ai.health;
-        this.elements.aiDeck.textContent = state.players.ai.deckSize;
-        
-        // Обновляем индикатор хода
-        this.elements.currentTurn.textContent = 
-            state.turn === 'human' ? 'Ваш ход' : 'Ход противника';
-        
-        // Переключаем контейнеры
-        this.elements.heroSelectContainer.classList.remove('active');
-        this.elements.gameContainer.classList.add('active');
-    }
+		// Принудительное обновление DOM
+		requestAnimationFrame(() => {
+			// Обновляем данные
+			this.elements.gameId.textContent = `Игра #${state.id}`;
+			this.elements.playerHealth.textContent = state.players.human.health;
+			this.elements.playerDeck.textContent = state.players.human.deckSize;
+			this.elements.aiHealth.textContent = state.players.ai.health;
+			this.elements.aiDeck.textContent = state.players.ai.deckSize;
+			this.elements.currentTurn.textContent = 
+				state.turn === 'human' ? 'Ваш ход' : 'Ход противника';
+	
+			// Переключаем видимость
+			this.elements.heroSelectContainer.classList.remove('active');
+			this.elements.gameContainer.classList.add('active');
+			
+			// Форсируем рефлоу
+			void this.elements.gameContainer.offsetHeight;
+		});
+	}
 
     handleHeroClick(event) {
         const card = event.currentTarget;
