@@ -46,8 +46,18 @@ class PveGame {
     }
 
     async saveToRedis(redisClient) {
-        await redisClient.hSet('games', this.id, JSON.stringify(this));
-    }
+		if (!redisClient?.hset) {
+		  throw new Error('Redis client incompatible - hset method not found');
+		}
+	
+		await redisClient.hset(
+		  'games', 
+		  this.id, 
+		  JSON.stringify(this, (key, value) => {
+			return typeof value === 'bigint' ? value.toString() : value;
+		  }
+		))
+	}
 
     getPublicState() {
         return {
