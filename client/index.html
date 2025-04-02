@@ -4,58 +4,69 @@
     <meta charset="UTF-8">
     <title>Global Heroes</title>
     <link rel="stylesheet" href="/styles/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
     <div id="error-message"></div>
     <div id="connection-status" class="offline">Подключение...</div>
     
-    <div id="app">
-        <!-- Главное меню -->
-        <div class="main-menu active" id="mainMenu">
-            <h1>Global Heroes</h1>
-            <button id="startPve" class="menu-btn" disabled>Играть PVE</button>
-        </div>
-        
-        <!-- Выбор героев -->
-        <div class="hero-select-container" id="heroSelectContainer">
-            <div class="hero-select" id="heroSelect"></div>
-        </div>
-        
-        <!-- Игровой интерфейс -->
-        <div class="game-container" id="gameContainer">
-            <div id="gameState" class="game-state">
-                <div class="game-id"></div>
-                <div class="combat-ui">
-                    <div class="player-side">
-                        <div class="hero-stats">
-                            <div class="health">❤️ <span id="playerHealth">-</span></div>
-                            <div class="deck-count">🃏 <span id="playerDeck">-</span></div>
-                        </div>
-                        <div class="battlefield"></div>
-                    </div>
-                    
-                    <div class="turn-indicator">
-                        <div class="timer">Ход: <span id="turnTimer">30</span>s</div>
-                        <div class="current-turn">Сейчас ходит: <span id="currentTurn">-</span></div>
-                    </div>
-            
-                    <div class="ai-side">
-                        <div class="hero-stats">
-                            <div class="health">❤️ <span id="aiHealth">-</span></div>
-                            <div class="deck-count">🃏 <span id="aiDeck">-</span></div>
-                        </div>
-                        <div class="battlefield"></div>
-                    </div>
-                </div>
-                
-                <div class="action-buttons">
-                    <button class="end-turn-btn">Завершить ход</button>
+    <div class="root-container">
+        <div id="app">
+            <!-- Главное меню -->
+            <div class="main-menu active" id="mainMenu">
+                <div class="menu-content">
+                    <h1 class="game-title">Global Heroes</h1>
+                    <button id="startPve" class="menu-btn" disabled>
+                        <span class="btn-text">Играть PVE</span>
+                    </button>
                 </div>
             </div>
-        </div>
-    </div>
+            
+            <!-- Выбор героев -->
+            <div class="hero-select-container" id="heroSelectContainer">
+                <div class="hero-select-wrapper">
+                    <div class="hero-select" id="heroSelect"></div>
+                </div>
+            </div>
+            
+            <!-- Игровой интерфейс -->
+            <div class="game-container" id="gameContainer">
+                <div id="gameState" class="game-state">
+                    <div class="game-id-container">
+                        <div class="game-id"></div>
+                    </div>
+                    <div class="combat-ui">
+                        <div class="player-side">
+                            <div class="hero-stats">
+                                <div class="health">❤️ <span id="playerHealth">-</span></div>
+                                <div class="deck-count">🃏 <span id="playerDeck">-</span></div>
+                            </div>
+                            <div class="battlefield"></div>
+                        </div>
+                        
+                        <div class="turn-indicator">
+                            <div class="timer">Ход: <span id="turnTimer">30</span>s</div>
+                            <div class="current-turn">Сейчас ходит: <span id="currentTurn">-</span></div>
+                        </div>
+                
+                        <div class="ai-side">
+                            <div class="hero-stats">
+                                <div class="health">❤️ <span id="aiHealth">-</span></div>
+                                <div class="deck-count">🃏 <span id="aiDeck">-</span></div>
+                            </div>
+                            <div class="battlefield"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="end-turn-btn">Завершить ход</button>
+                </div>
+			</div>
+		</div>
+	</div>
+</div>
 
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="/gameClient.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="/gameClient.js"></script>
 </body>
 </html>
