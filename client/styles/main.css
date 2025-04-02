@@ -68,6 +68,7 @@ body {
     pointer-events: all;
     opacity: 1;
     visibility: visible;
+	transition: opacity 0.3s;
 }
 
 .menu-content {
@@ -135,9 +136,10 @@ body {
 }
 
 .hero-select-container.active {
+    display: block;
     opacity: 1;
     visibility: visible;
-    z-index: 950;
+    z-index: 1001; /* Выше главного меню */
 }
 
 .hero-select-wrapper {
