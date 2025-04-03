@@ -104,17 +104,17 @@ export class UIManager {
   }
 
   renderBattlefield(playerField, aiField) {
-    this.clearBattlefield();
-    
-    playerField.forEach(unit => 
-      this.elements.playerBattlefield.appendChild(
-        DOMHelper.createUnitElement(unit, 'player'))
-    );
-    
-    aiField.forEach(unit => 
-      this.elements.aiBattlefield.appendChild(
-        DOMHelper.createUnitElement(unit, 'ai'))
-    );
+	this.clearBattlefield();
+  
+	playerField.forEach(unit => {
+	  const element = DOMHelper.createUnitElement(unit, 'player');
+	  this.elements.playerBattlefield.appendChild(element);
+	});
+  
+	aiField.forEach(unit => {
+	  const element = DOMHelper.createUnitElement(unit, 'ai');
+	  this.elements.aiBattlefield.appendChild(element);
+	});
   }
 
   clearBattlefield() {

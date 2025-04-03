@@ -58,6 +58,7 @@ class GameClient {
       this.ui.elements.status.textContent = 'Offline';
       this.ui.elements.startButton.disabled = true;
       console.log('Disconnected:', reason);
+      this.ui.showError(`Соединение потеряно: ${reason}`);
     });
 
     this.socket.on('gameState', (state) => this.handleGameState(state));
@@ -76,7 +77,7 @@ class GameClient {
       this.state.heroes = await GameLogic.loadHeroes();
       console.log('Heroes loaded:', this.state.heroes);
     } catch (error) {
-      this.showError('Не удалось загрузить героев');
+      this.ui.showError('Не удалось загрузить героев');
       console.error('Asset loading error:', error);
     }
   }
@@ -91,14 +92,14 @@ class GameClient {
     const state = this.state.currentGameState;
     if (!state) return;
 
-    // Основные показатели
+    // Обновление основных показателей
     this.ui.elements.gameId.textContent = `Игра #${state.id}`;
     this.ui.elements.playerHealth.textContent = state.human.health;
     this.ui.elements.aiHealth.textContent = state.ai.health;
     this.ui.elements.playerDeck.textContent = state.human.deck?.length || 0;
     this.ui.elements.aiDeck.textContent = state.ai.deck?.length || 0;
 
-    // Рендер интерфейса
+    // Обновление интерфейса
     this.renderPlayerHand(state.human.hand);
     this.renderBattlefield(state.human.field, state.ai.field);
   }
@@ -110,63 +111,110 @@ class GameClient {
   }
 
   renderBattlefield(playerField = [], aiField = []) {
-    this.ui.elements.playerBattlefield.innerHTML = playerField
-      .map(unit => DOMHelper.createUnitElement(unit, 'player'))
-      .join('');
+    this.ui.clearBattlefield();
     
-    this.ui.elements.aiBattlefield.innerHTML = aiField
-      .map(unit => DOMHelper.createUnitElement(unit, 'ai'))
-      .join('');
+    playerField.forEach(unit => {
+      const element = DOMHelper.createUnitElement(unit, 'player');
+      this.ui.elements.playerBattlefield.appendChild(element);
+    });
+    
+    aiField.forEach(unit => {
+      const element = DOMHelper.createUnitElement(unit, 'ai');
+      this.ui.elements.aiBattlefield.appendChild(element);
+    });
   }
 
   handleStartGame() {
-    if (!this.socket.connected) {
-      this.showError('Нет подключения к серверу!');
+    console.log('[DEBUG] StartGame:', {
+      heroes: this.state.heroes?.length,
+      socketStatus: this.socket.isConnected
+    });
+    
+    if (!this.socket.isConnected) {
+      this.ui.showError('Соединение не установлено!');
       return;
     }
+    
+    if (!this.state.heroes?.length) {
+      this.ui.showError('Герои ещё не загружены');
+      return;
+    }
+    
     this.ui.toggleInterface('heroSelect');
     this.renderHeroSelect();
   }
 
   renderHeroSelect() {
-    if (!this.state.heroes?.length) {
-      this.showError('Нет доступных героев');
-      return;
+    try {
+      this.ui.renderHeroCards(this.state.heroes, (e) => this.handleHeroClick(e));
+    } catch (error) {
+      this.ui.showError('Ошибка отображения героев');
+      console.error('Hero render error:', error);
     }
-    
-    this.ui.elements.heroSelect.innerHTML = this.state.heroes
-      .map(hero => DOMHelper.createHeroCard(hero))
-      .join('');
+  }
+
+  handleHeroClick(event) {
+    try {
+      const card = event.currentTarget;
+      const heroId = parseInt(card.dataset.id);
+      
+      card.classList.toggle('selected');
+      const newSelection = new Set(this.state.selectedHeroes);
+      
+      if (newSelection.has(heroId)) {
+        newSelection.delete(heroId);
+      } else {
+        if (newSelection.size >= 5) return;
+        newSelection.add(heroId);
+      }
+      
+      this.state.selectedHeroes = newSelection;
+      this.ui.updateHeroSelection(newSelection.size);
+    } catch (error) {
+      this.ui.showError('Ошибка выбора героя');
+      console.error('Hero selection error:', error);
+    }
   }
 
   handleDeckConfirmation() {
-    const selected = document.querySelectorAll('.hero-card.selected');
-    if (selected.length !== 5) {
-      this.showError('Выберите ровно 5 героев!');
-      return;
-    }
-
-    const deck = Array.from(selected).map(card => 
-      parseInt(card.dataset.id)
-    );
-    
-    this.socket.emit('startPve', deck, (response) => {
-      if (response.status === 'success') {
-        this.handleGameState(response.gameState);
-      } else {
-        this.showError(response.message || 'Ошибка сервера');
+    try {
+      if (this.state.selectedHeroes.size !== 5) {
+        throw new Error('Выберите ровно 5 героев!');
       }
-    });
+      
+      const deck = Array.from(this.state.selectedHeroes);
+      this.socket.emit('startPve', deck)
+        .then(response => {
+          if (response.status === 'success') {
+            this.handleGameState(response.gameState);
+          } else {
+            throw new Error(response.message || 'Ошибка сервера');
+          }
+        })
+        .catch(error => {
+          this.ui.showError(error.message);
+          console.error('PVE start error:', error);
+        });
+        
+    } catch (error) {
+      this.ui.showError(error.message);
+      console.error('Deck confirmation error:', error);
+    }
   }
 
   endTurn() {
     if (!this.state.currentGameState) return;
-    this.socket.emit('endTurn', this.state.currentGameState.id);
+    
+    this.socket.emit('endTurn', this.state.currentGameState.id)
+      .catch(error => {
+        this.ui.showError('Ошибка завершения хода');
+        console.error('End turn error:', error);
+      });
   }
 
   handleTurnStart({ timeLeft }) {
     this.startTurnTimer(timeLeft);
-    this.toggleActions(true);
+    this.ui.toggleActionButtons(true);
   }
 
   startTurnTimer(seconds) {
@@ -183,15 +231,8 @@ class GameClient {
 
   forceEndTurn() {
     this.state.clearTimer();
-    this.toggleActions(false);
+    this.ui.toggleActionButtons(false);
     this.endTurn();
-  }
-
-  toggleActions(enabled) {
-    this.ui.elements.endTurnBtn.disabled = !enabled;
-    document.querySelectorAll('.hand-card').forEach(card => {
-      card.style.pointerEvents = enabled ? 'all' : 'none';
-    });
   }
 
   handleGameOver(result) {
@@ -202,10 +243,8 @@ class GameClient {
   resetGame() {
     this.state.reset();
     this.ui.toggleInterface('main');
-  }
-
-  showError(message) {
-    ErrorHandler.show(this.ui.elements.errorMessage, message);
+    this.ui.clearBattlefield();
+    this.ui.clearHand();
   }
 }
 
