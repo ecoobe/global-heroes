@@ -7,10 +7,6 @@ services:
       - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
       - SESSION_SECRET=${SESSION_SECRET}
-      - REDIS_HOST=redis
-    depends_on: # Добавляем зависимость
-      redis:
-        condition: service_healthy
     networks:
       - game-network
     volumes:
@@ -20,7 +16,7 @@ services:
       interval: 20s
       timeout: 10s
       retries: 5
-      start_period: 90s # Увеличиваем время на инициализацию
+      start_period: 45s
     restart: unless-stopped
 
   redis:
