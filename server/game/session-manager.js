@@ -1,9 +1,24 @@
 const { v4: uuidv4 } = require('uuid');
+const { abilities } = require('../heroes/abilities'); // Добавлен импорт способностей
 
 class SessionManager {
   constructor() {
     this.sessions = new Map(); // sessionId -> gameId
     this.games = new Map();    // gameId -> gameData
+  }
+
+  // Генерация колоды AI (новый метод)
+  generateAiDeck() {
+    const availableIds = Object.keys(abilities).map(Number);
+    const deck = [];
+    
+    while (deck.length < 5) {
+      const randomId = availableIds[Math.floor(Math.random() * availableIds.length)];
+      if (!deck.includes(randomId)) {
+        deck.push(randomId);
+      }
+    }
+    return deck;
   }
 
   // Создание новой игры и сессии
@@ -16,7 +31,7 @@ class SessionManager {
     this.games.set(gameId, {
       players: {
         human: { deck: playerDeck },
-        ai: this.generateAiDeck() // Ваш метод генерации колоды AI
+        ai: this.generateAiDeck() // Используем новый метод
       },
       state: 'active'
     });
