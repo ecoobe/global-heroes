@@ -119,19 +119,33 @@ class GameClient {
   /* --------------------------
      Основная игровая логика
      -------------------------- */
-  updateGameInterface() {
-    const { human, ai } = this.state.currentGameState.players;
-    
-    // Обновление основных показателей
-    this.ui.elements.gameId.textContent = `Игра #${this.state.currentGameState.id}`;
-    this.ui.elements.playerHealth.textContent = human.health;
-    this.ui.elements.aiHealth.textContent = ai.health;
-    this.ui.elements.playerDeck.textContent = human.deck.length;
-    this.ui.elements.aiDeck.textContent = ai.deck.length;
-
-    // Обновление карт в руке
-    this.renderPlayerHand(human.hand);
-  }
+	 updateGameInterface() {
+		const state = this.state.currentGameState;
+		
+		// Защитные проверки
+		if (!state || !state.human?.deck || !state.ai?.deck) {
+		  ErrorHandler.showError("Некорректное состояние игры");
+		  console.error("Invalid state:", state);
+		  return;
+		}
+	  
+		// Основные показатели
+		this.ui.elements.gameId.textContent = `Игра #${state.id || "???"}`;
+		this.ui.elements.playerHealth.textContent = state.human.health ?? 0;
+		this.ui.elements.aiHealth.textContent = state.ai.health ?? 0;
+		this.ui.elements.playerDeck.textContent = state.human.deck.length;
+		this.ui.elements.aiDeck.textContent = state.ai.deck.length;
+	  
+		// Рендер руки игрока
+		if (state.human.hand) {
+		  this.renderPlayerHand(state.human.hand);
+		} else {
+		  this.ui.clearHand();
+		}
+	  
+		// Рендер поля боя
+		this.renderBattlefield(state.human.field, state.ai.field);
+	}
 
   renderPlayerHand(hand) {
     this.ui.elements.playerHand.innerHTML = hand

@@ -102,40 +102,44 @@ io.on('connection', (socket) => {
   });
 
   socket.on('startPve', async (deck, callback) => {
-    try {
-      if (!deck || !Array.isArray(deck)) {
-        throw new Error("Invalid deck format: expected array of hero IDs");
-      }
-
-      const invalidIds = deck.filter(id => !abilities[id]);
-      
-      if (invalidIds.length > 0) {
-        throw new Error(`Invalid hero IDs: ${invalidIds.join(', ')}`);
-      }
-
-      const game = new PveGame(deck);
-      await game.saveToRedis(redisClient);
-      
-      const sessionId = sessionManager.createSession(game.id);
-      await socket.join(sessionId);
-      
-      const gameState = game.getPublicState();
-      socket.emit('gameState', gameState);
-      
-      callback({ 
-        status: 'success', 
-        sessionId,
-        gameState 
-      });
-      
-    } catch (err) {
-      console.error(`PVE Error [${socket.id}]:`, err);
-      callback({ 
-        status: 'error',
-        code: "GAME_INIT_FAILED",
-        message: err.message 
-      });
-    }
+	try {
+	  // Валидация колоды
+	  if (!Array.isArray(deck) || deck.length !== 5) {
+		throw new Error("Колода должна содержать ровно 5 героев");
+	  }
+  
+	  // Проверка ID героев
+	  const invalid = deck.filter(id => !abilities[id]);
+	  if (invalid.length > 0) {
+		throw new Error(`Некорректные ID героев: ${invalid.join(", ")}`);
+	  }
+  
+	  // Создание игры
+	  const game = new PveGame(deck);
+	  await game.saveToRedis(redisClient);
+	  
+	  // Создание сессии
+	  const sessionId = sessionManager.createSession(game.id);
+	  await socket.join(sessionId);
+	  
+	  // Отправка состояния
+	  const gameState = game.getPublicState();
+	  socket.emit('gameState', gameState);
+	  
+	  callback({ 
+		status: 'success',
+		sessionId,
+		gameState 
+	  });
+  
+	} catch (err) {
+	  console.error(`[PVE] ${socket.id}:`, err);
+	  callback({
+		status: 'error',
+		code: "INIT_FAILED",
+		message: err.message
+	  });
+	}
   });
 });
 
