@@ -6,10 +6,11 @@ import { DOMHelper, ErrorHandler } from './modules/utils.js';
 
 class GameClient {
   constructor() {
-    // Инициализация основных компонентов
     this.state = new GameState();
-    this.socket = new SocketManager('https://coobe.ru');
     this.ui = new UIManager(this.getDOMElements());
+    this.socket = new SocketManager('https://coobe.ru');
+    this.gameLogic = new GameLogic();
+
     this.initialize();
   }
 
@@ -29,8 +30,11 @@ class GameClient {
       currentTurn: document.getElementById('currentTurn'),
       gameId: document.querySelector('.game-id'),
       playerHand: document.getElementById('playerHand'),
-      endTurnBtn: document.querySelector('.end-turn-btn'),
-      errorMessage: document.getElementById('error-message')
+      endTurnBtn: document.getElementById('endTurnBtn'),
+      errorMessage: document.getElementById('error-message'),
+      playerBattlefield: document.querySelector('.player-side .battlefield'),
+      aiBattlefield: document.querySelector('.ai-side .battlefield'),
+      turnTimer: document.getElementById('turnTimer')
     };
   }
 
@@ -42,19 +46,29 @@ class GameClient {
   }
 
   setupSocketHandlers() {
-    this.socket.on('connect', this.handleConnect.bind(this));
-    this.socket.on('disconnect', this.handleDisconnect.bind(this));
-    this.socket.on('error', this.handleSocketError.bind(this));
-    this.socket.on('gameState', this.handleGameState.bind(this));
-    this.socket.on('turnStart', this.handleTurnStart.bind(this));
-    this.socket.on('actionResult', this.handleActionResult.bind(this));
-    this.socket.on('aiAction', this.handleAiAction.bind(this));
-    this.socket.on('gameOver', this.handleGameOver.bind(this));
+    this.socket.on('connect', () => {
+      this.ui.elements.status.className = 'online';
+      this.ui.elements.status.textContent = 'Online';
+      this.ui.elements.startButton.disabled = false;
+      console.log('Connected:', this.socket.id);
+    });
+
+    this.socket.on('disconnect', (reason) => {
+      this.ui.elements.status.className = 'offline';
+      this.ui.elements.status.textContent = 'Offline';
+      this.ui.elements.startButton.disabled = true;
+      console.log('Disconnected:', reason);
+    });
+
+    this.socket.on('gameState', (state) => this.handleGameState(state));
+    this.socket.on('turnStart', (data) => this.handleTurnStart(data));
+    this.socket.on('gameOver', (result) => this.handleGameOver(result));
   }
 
   setupEventListeners() {
     this.ui.elements.startButton.addEventListener('click', () => this.handleStartGame());
     this.ui.elements.confirmButton.addEventListener('click', () => this.handleDeckConfirmation());
+    this.ui.elements.endTurnBtn.addEventListener('click', () => this.endTurn());
   }
 
   async loadGameAssets() {
@@ -62,31 +76,9 @@ class GameClient {
       this.state.heroes = await GameLogic.loadHeroes();
       console.log('Heroes loaded:', this.state.heroes);
     } catch (error) {
-      ErrorHandler.show(this.ui.elements.errorMessage, 'Не удалось загрузить героев');
+      this.showError('Не удалось загрузить героев');
       console.error('Asset loading error:', error);
     }
-  }
-
-  /* --------------------------
-     Обработчики сокет-событий
-     -------------------------- */
-  handleConnect() {
-    this.ui.elements.status.className = 'online';
-    this.ui.elements.status.textContent = 'Online';
-    this.ui.elements.startButton.disabled = false;
-    console.log('Connected:', this.socket.socket.id);
-  }
-
-  handleDisconnect(reason) {
-    this.ui.elements.status.className = 'offline';
-    this.ui.elements.status.textContent = 'Offline';
-    this.ui.elements.startButton.disabled = true;
-    console.log('Disconnected:', reason);
-  }
-
-  handleSocketError(err) {
-    console.error('Socket error:', err);
-    ErrorHandler.show(this.ui.elements.errorMessage, `Ошибка соединения: ${err.message}`);
   }
 
   handleGameState(state) {
@@ -95,82 +87,41 @@ class GameClient {
     this.ui.toggleInterface('game');
   }
 
-  handleTurnStart({ timeLeft }) {
-    this.startTurnTimer(timeLeft);
-    this.toggleActionButtons(true);
-    this.updateTurnDisplay('Ваш ход');
+  updateGameInterface() {
+    const state = this.state.currentGameState;
+    if (!state) return;
+
+    // Основные показатели
+    this.ui.elements.gameId.textContent = `Игра #${state.id}`;
+    this.ui.elements.playerHealth.textContent = state.human.health;
+    this.ui.elements.aiHealth.textContent = state.ai.health;
+    this.ui.elements.playerDeck.textContent = state.human.deck?.length || 0;
+    this.ui.elements.aiDeck.textContent = state.ai.deck?.length || 0;
+
+    // Рендер интерфейса
+    this.renderPlayerHand(state.human.hand);
+    this.renderBattlefield(state.human.field, state.ai.field);
   }
 
-  handleActionResult(result) {
-    this.processGameResult(result);
-    this.updateGameInterface();
-  }
-
-  handleAiAction(action) {
-    this.showAiAnimation();
-    this.updateTurnDisplay('Противник атакует...');
-  }
-
-  handleGameOver(result) {
-    this.showGameResult(result);
-    this.resetGameInterface();
-  }
-
-  /* --------------------------
-     Основная игровая логика
-     -------------------------- */
-	 updateGameInterface() {
-		const state = this.state.currentGameState;
-		
-		// Защитные проверки
-		if (!state || !state.human?.deck || !state.ai?.deck) {
-		  ErrorHandler.showError("Некорректное состояние игры");
-		  console.error("Invalid state:", state);
-		  return;
-		}
-	  
-		// Основные показатели
-		this.ui.elements.gameId.textContent = `Игра #${state.id || "???"}`;
-		this.ui.elements.playerHealth.textContent = state.human.health ?? 0;
-		this.ui.elements.aiHealth.textContent = state.ai.health ?? 0;
-		this.ui.elements.playerDeck.textContent = state.human.deck.length;
-		this.ui.elements.aiDeck.textContent = state.ai.deck.length;
-	  
-		// Рендер руки игрока
-		if (state.human.hand) {
-		  this.renderPlayerHand(state.human.hand);
-		} else {
-		  this.ui.clearHand();
-		}
-	  
-		// Рендер поля боя
-		this.renderBattlefield(state.human.field, state.ai.field);
-	}
-
-  renderPlayerHand(hand) {
+  renderPlayerHand(hand = []) {
     this.ui.elements.playerHand.innerHTML = hand
-      .map(card => this.createCardElement(card))
+      .map(card => DOMHelper.createCardElement(card))
       .join('');
   }
 
-  createCardElement(card) {
-    return `
-      <div class="hand-card" data-id="${card.id}">
-        <div class="card-header">
-          <span class="card-cost">${card.cost}⚡</span>
-          <span class="card-name">${card.name}</span>
-        </div>
-        <div class="card-description">${card.effect}</div>
-      </div>
-    `;
+  renderBattlefield(playerField = [], aiField = []) {
+    this.ui.elements.playerBattlefield.innerHTML = playerField
+      .map(unit => DOMHelper.createUnitElement(unit, 'player'))
+      .join('');
+    
+    this.ui.elements.aiBattlefield.innerHTML = aiField
+      .map(unit => DOMHelper.createUnitElement(unit, 'ai'))
+      .join('');
   }
 
-  /* --------------------------
-     Логика выбора героев
-     -------------------------- */
   handleStartGame() {
-    if (!this.socket.socket.connected) {
-      ErrorHandler.show(this.ui.elements.errorMessage, 'Нет подключения к серверу!');
+    if (!this.socket.connected) {
+      this.showError('Нет подключения к серверу!');
       return;
     }
     this.ui.toggleInterface('heroSelect');
@@ -179,114 +130,82 @@ class GameClient {
 
   renderHeroSelect() {
     if (!this.state.heroes?.length) {
-      ErrorHandler.show(this.ui.elements.errorMessage, 'Нет доступных героев');
+      this.showError('Нет доступных героев');
       return;
     }
-    this.ui.renderHeroCards(this.state.heroes, (e) => this.handleHeroClick(e));
-  }
-
-  handleHeroClick(event) {
-    const card = event.currentTarget;
-    const heroId = Number(card.dataset.id);
     
-    if (this.state.selectedHeroes.has(heroId)) {
-      this.state.selectedHeroes.delete(heroId);
-      card.classList.remove('selected');
-    } else {
-      if (this.state.selectedHeroes.size >= 5) {
-        ErrorHandler.show(this.ui.elements.errorMessage, 'Максимум 5 героев!');
-        return;
-      }
-      this.state.selectedHeroes.add(heroId);
-      card.classList.add('selected');
-    }
-    
-    this.ui.updateHeroSelection(this.state.selectedHeroes.size);
+    this.ui.elements.heroSelect.innerHTML = this.state.heroes
+      .map(hero => DOMHelper.createHeroCard(hero))
+      .join('');
   }
 
   handleDeckConfirmation() {
-    if (!GameLogic.validateDeck(this.state.selectedHeroes)) {
-      ErrorHandler.show(this.ui.elements.errorMessage, 'Выберите ровно 5 героев!');
+    const selected = document.querySelectorAll('.hero-card.selected');
+    if (selected.length !== 5) {
+      this.showError('Выберите ровно 5 героев!');
       return;
     }
+
+    const deck = Array.from(selected).map(card => 
+      parseInt(card.dataset.id)
+    );
     
-    const deck = Array.from(this.state.selectedHeroes);
     this.socket.emit('startPve', deck, (response) => {
       if (response.status === 'success') {
-        this.ui.toggleInterface('game');
+        this.handleGameState(response.gameState);
       } else {
-        ErrorHandler.show(this.ui.elements.errorMessage, response.message || 'Ошибка сервера');
-        this.ui.toggleInterface('main');
+        this.showError(response.message || 'Ошибка сервера');
       }
     });
   }
 
-  /* --------------------------
-     Система ходов и времени
-     -------------------------- */
+  endTurn() {
+    if (!this.state.currentGameState) return;
+    this.socket.emit('endTurn', this.state.currentGameState.id);
+  }
+
+  handleTurnStart({ timeLeft }) {
+    this.startTurnTimer(timeLeft);
+    this.toggleActions(true);
+  }
+
   startTurnTimer(seconds) {
     this.state.clearTimer();
-    let timeLeft = seconds;
+    let remaining = seconds;
     
+    this.ui.elements.turnTimer.textContent = remaining;
     this.state.turnTimer = setInterval(() => {
-      this.ui.elements.turnTimer.textContent = --timeLeft;
-      if (timeLeft <= 0) this.forceEndTurn();
+      remaining--;
+      this.ui.elements.turnTimer.textContent = remaining;
+      if (remaining <= 0) this.forceEndTurn();
     }, 1000);
   }
 
   forceEndTurn() {
     this.state.clearTimer();
-    this.toggleActionButtons(false);
-    this.socket.emit('endTurn');
+    this.toggleActions(false);
+    this.endTurn();
   }
 
-  toggleActionButtons(enabled) {
+  toggleActions(enabled) {
     this.ui.elements.endTurnBtn.disabled = !enabled;
     document.querySelectorAll('.hand-card').forEach(card => {
       card.style.pointerEvents = enabled ? 'all' : 'none';
     });
   }
 
-  /* --------------------------
-     Вспомогательные методы
-     -------------------------- */
-  showAiAnimation() {
-    const animation = document.createElement('div');
-    animation.className = 'attack-animation';
-    this.ui.elements.aiSide.appendChild(animation);
-    setTimeout(() => animation.remove(), 1000);
+  handleGameOver(result) {
+    alert(result === 'human' ? 'Победа!' : 'Поражение!');
+    this.resetGame();
   }
 
-  showGameResult(result) {
-    const resultText = result === 'human' ? 'Победа!' : 'Поражение!';
-    alert(resultText);
-    this.resetGameInterface();
-  }
-
-  resetGameInterface() {
+  resetGame() {
     this.state.reset();
     this.ui.toggleInterface('main');
-    this.ui.updateHeroSelection(0);
   }
 
-  updateTurnDisplay(text) {
-    this.ui.elements.currentTurn.textContent = text;
-  }
-
-  processGameResult(result) {
-    // Логика обработки результатов действий
-    if (result.damage) {
-      this.showDamageEffect(result.target, result.amount);
-    }
-  }
-
-  showDamageEffect(target, amount) {
-    const element = target === 'human' 
-      ? this.ui.elements.playerHealth 
-      : this.ui.elements.aiHealth;
-    
-    element.classList.add('damage-effect');
-    setTimeout(() => element.classList.remove('damage-effect'), 500);
+  showError(message) {
+    ErrorHandler.show(this.ui.elements.errorMessage, message);
   }
 }
 
