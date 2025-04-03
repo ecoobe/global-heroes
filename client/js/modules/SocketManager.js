@@ -3,7 +3,8 @@ export class SocketManager {
 	  this.url = url;
 	  this.socket = null;
 	  this.reconnectTimeout = null;
-	  this.connectionPromise = null;
+	  this.reconnectAttempts = 0;
+	  this.maxReconnectAttempts = 5;
 	  this.init();
 	}
   
@@ -11,11 +12,14 @@ export class SocketManager {
 	  this.socket = io(this.url, {
 		path: '/socket.io/',
 		transports: ['websocket'],
-		reconnectionAttempts: 5,
-		reconnectionDelay: 3000,
+		reconnectionAttempts: this.maxReconnectAttempts,
+		reconnectionDelay: 5000,
+		randomizationFactor: 0.5,
 		secure: true,
 		withCredentials: true,
-		timeout: 10000
+		timeout: 15000,
+		pingTimeout: 20000,
+		pingInterval: 10000
 	  });
   
 	  this.setupEventHandlers();
@@ -24,12 +28,17 @@ export class SocketManager {
 	setupEventHandlers() {
 	  this.socket.on('connect', () => {
 		console.log('WebSocket connected:', this.socket.id);
+		this.reconnectAttempts = 0;
 		this.clearReconnectTimeout();
 	  });
   
 	  this.socket.on('connect_error', (err) => {
 		console.error('Connection error:', err.message);
 		this.handleReconnection();
+	  });
+  
+	  this.socket.on('reconnect_attempt', (attempt) => {
+		console.log(`Reconnection attempt ${attempt}/${this.maxReconnectAttempts}`);
 	  });
   
 	  this.socket.on('disconnect', (reason) => {
@@ -41,12 +50,13 @@ export class SocketManager {
 	}
   
 	handleReconnection() {
-	  if (!this.reconnectTimeout) {
+	  if (!this.reconnectTimeout && this.reconnectAttempts < this.maxReconnectAttempts) {
+		this.reconnectAttempts++;
 		this.reconnectTimeout = setTimeout(() => {
 		  console.log('Attempting manual reconnection...');
 		  this.socket.connect();
 		  this.reconnectTimeout = null;
-		}, 5000);
+		}, Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000));
 	  }
 	}
   
@@ -68,7 +78,7 @@ export class SocketManager {
 		  return;
 		}
   
-		const timeout = options.timeout || 10000;
+		const timeout = options.timeout || 20000;
 		const timer = setTimeout(() => {
 		  reject(new Error(`Request timeout (${timeout}ms)`));
 		}, timeout);
@@ -78,6 +88,7 @@ export class SocketManager {
 		  if (response?.error) {
 			const err = new Error(response.error.message || 'Unknown error');
 			err.code = response.error.code;
+			err.details = response.error.details;
 			reject(err);
 		  } else {
 			resolve(response);
@@ -93,6 +104,7 @@ export class SocketManager {
 	disconnect() {
 	  if (this.socket) {
 		this.socket.disconnect();
+		console.log('Socket disconnected by client');
 	  }
 	}
 }
