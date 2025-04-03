@@ -108,22 +108,20 @@ io.on('connection', (socket) => {
   websocketConnections.inc();
 
   socket.on('startPve', async (deck, callback) => {
+	let invalidIds = []; // Объявляем переменную в правильной области видимости
+	
 	try {
 	  console.log('Received deck from client:', deck);
 	  
-	  // Подробная валидация
-	  const invalidIds = deck.filter(id => {
-		if (!Number.isInteger(id)) {
-		  console.error('Non-integer ID:', id);
-		  return true;
-		}
-		return !abilities[id];
+	  // Валидация колоды
+	  invalidIds = deck.filter(id => {
+		const exists = abilities[id];
+		if (!exists) console.error(`Invalid ability ID: ${id}`);
+		return !exists;
 	  });
   
 	  if (invalidIds.length > 0) {
-		const errorMessage = `Неверные ID героев: ${invalidIds.join(', ')}`;
-		console.error(errorMessage);
-		throw new Error(errorMessage);
+		throw new Error(`Invalid hero IDs: ${invalidIds.join(', ')}`);
 	  }
   
 	  // Создание игры
@@ -142,7 +140,7 @@ io.on('connection', (socket) => {
 		status: 'error',
 		code: "GAME_INIT_FAILURE",
 		message: err.message,
-		invalidIds: invalidIds || []
+		invalidIds // Теперь переменная доступна
 	  });
 	}
   });

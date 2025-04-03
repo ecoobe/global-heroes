@@ -26,6 +26,11 @@ class SessionManager {
     const gameId = uuidv4();
     const sessionId = uuidv4();
 
+	const missingAbilities = playerDeck.filter(id => !abilities[id]);
+    if (missingAbilities.length > 0) {
+      throw new Error(`Missing abilities: ${missingAbilities.join(', ')}`);
+    }
+
     this.sessions.set(sessionId, gameId);
     
     this.games.set(gameId, {

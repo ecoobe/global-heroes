@@ -122,9 +122,16 @@ export class GameLogic {
 	}
   
 	static validateDeck(selectedHeroes, availableHeroes) {
-		const deckArray = Array.from(selectedHeroes);
+		const deckArray = Array.from(selectedHeroes).map(Number); // Приводим ID к числу
 		const errors = [];
+		
+		// Проверяем наличие числовых ID
+		const invalidNumbers = deckArray.filter(id => isNaN(id));
+		if (invalidNumbers.length > 0) {
+		  errors.push(`Некорректные ID: ${invalidNumbers.join(', ')}`);
+		}
 	  
+		// Остальные проверки
 		if (deckArray.length !== this.DECK_SIZE) {
 		  errors.push(`Нужно выбрать ровно ${this.DECK_SIZE} героев`);
 		}
@@ -134,8 +141,9 @@ export class GameLogic {
 		  errors.push('В колоде есть повторяющиеся герои');
 		}
 	  
+		const availableIds = availableHeroes.map(h => h.id);
 		const invalidIds = deckArray.filter(id => 
-		  !availableHeroes.some(h => h.id === id)
+		  !availableIds.includes(id)
 		);
 	  
 		if (invalidIds.length > 0) {
