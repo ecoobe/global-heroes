@@ -2,6 +2,8 @@ export class SocketManager {
 	constructor(url) {
 	  this.url = url;
 	  this.socket = null;
+	  this.reconnectTimeout = null;
+	  this.connectionPromise = null;
 	  this.init();
 	}
   
@@ -12,38 +14,85 @@ export class SocketManager {
 		reconnectionAttempts: 5,
 		reconnectionDelay: 3000,
 		secure: true,
-		withCredentials: true
+		withCredentials: true,
+		timeout: 10000
 	  });
   
+	  this.setupEventHandlers();
+	}
+  
+	setupEventHandlers() {
 	  this.socket.on('connect', () => {
 		console.log('WebSocket connected:', this.socket.id);
+		this.clearReconnectTimeout();
 	  });
   
 	  this.socket.on('connect_error', (err) => {
 		console.error('Connection error:', err.message);
+		this.handleReconnection();
 	  });
+  
+	  this.socket.on('disconnect', (reason) => {
+		console.log('Disconnected:', reason);
+		if (reason === 'io server disconnect') {
+		  this.socket.connect();
+		}
+	  });
+	}
+  
+	handleReconnection() {
+	  if (!this.reconnectTimeout) {
+		this.reconnectTimeout = setTimeout(() => {
+		  console.log('Attempting manual reconnection...');
+		  this.socket.connect();
+		  this.reconnectTimeout = null;
+		}, 5000);
+	  }
+	}
+  
+	clearReconnectTimeout() {
+	  if (this.reconnectTimeout) {
+		clearTimeout(this.reconnectTimeout);
+		this.reconnectTimeout = null;
+	  }
 	}
   
 	on(event, handler) {
 	  this.socket?.on(event, handler);
 	}
   
-	emit(event, data) {
+	emit(event, data, options = {}) {
 	  return new Promise((resolve, reject) => {
 		if (!this.socket?.connected) {
 		  reject(new Error('Connection not established'));
 		  return;
 		}
   
+		const timeout = options.timeout || 10000;
+		const timer = setTimeout(() => {
+		  reject(new Error(`Request timeout (${timeout}ms)`));
+		}, timeout);
+  
 		this.socket.emit(event, data, (response) => {
-		  response?.error 
-			? reject(new Error(response.error)) 
-			: resolve(response);
+		  clearTimeout(timer);
+		  if (response?.error) {
+			const err = new Error(response.error.message || 'Unknown error');
+			err.code = response.error.code;
+			reject(err);
+		  } else {
+			resolve(response);
+		  }
 		});
 	  });
 	}
   
 	get isConnected() {
 	  return this.socket?.connected || false;
+	}
+  
+	disconnect() {
+	  if (this.socket) {
+		this.socket.disconnect();
+	  }
 	}
 }

@@ -108,46 +108,43 @@ io.on('connection', (socket) => {
   websocketConnections.inc();
 
   socket.on('startPve', async (deck, callback) => {
-    try {
-      // Валидация колоды
-      const { error } = deckSchema.validate(deck);
-      if (error) throw new Error(error.details[0].message);
-
-      // Проверка ID героев
-      const invalidIds = deck.filter(id => !abilities[id]);
-      if (invalidIds.length > 0) {
-        throw new Error(`Неверные ID героев: ${invalidIds.join(', ')}`);
-      }
-
-      // Создание игры
-      const game = new PveGame(deck);
-      game.id = crypto.randomUUID();
-
-      // Сохранение в Redis
-      await redisClient.hset(
-        'active_games',
-        game.id,
-        JSON.stringify(game.getPublicState())
-      );
-
-      // Создание сессии
-      const { sessionId } = sessionManager.createGameSession(deck);
-      await socket.join(sessionId);
-
-      callback({
-        status: 'success',
-        sessionId,
-        gameState: game.getPublicState()
-      });
-
-    } catch (err) {
-      console.error(`[PVE] ${socket.id}:`, err.message);
-      callback({
-        status: 'error',
-        code: "GAME_INIT_FAILURE",
-        message: err.message
-      });
-    }
+	try {
+	  console.log('Received deck from client:', deck);
+	  
+	  // Подробная валидация
+	  const invalidIds = deck.filter(id => {
+		if (!Number.isInteger(id)) {
+		  console.error('Non-integer ID:', id);
+		  return true;
+		}
+		return !abilities[id];
+	  });
+  
+	  if (invalidIds.length > 0) {
+		const errorMessage = `Неверные ID героев: ${invalidIds.join(', ')}`;
+		console.error(errorMessage);
+		throw new Error(errorMessage);
+	  }
+  
+	  // Создание игры
+	  const game = new PveGame(deck);
+	  const { sessionId } = sessionManager.createGameSession(deck);
+	  
+	  callback({
+		status: 'success',
+		sessionId,
+		gameState: game.getPublicState()
+	  });
+  
+	} catch (err) {
+	  console.error(`[PVE] ${socket.id}:`, err.message);
+	  callback({
+		status: 'error',
+		code: "GAME_INIT_FAILURE",
+		message: err.message,
+		invalidIds: invalidIds || []
+	  });
+	}
   });
 
   socket.on('disconnect', () => {

@@ -183,17 +183,36 @@ class GameClient {
 	  }
   
 	  const deck = Array.from(this.state.selectedHeroes);
-	  const response = await this.socket.emit('startPve', deck);
-	  
-	  if (response?.status === 'success') {
+	  console.log('Sending deck to server:', deck); // Логирование отправляемых данных
+  
+	  // Добавляем обработку ошибок сети и таймаутов
+	  const response = await Promise.race([
+		this.socket.emit('startPve', deck),
+		new Promise((_, reject) => 
+		  setTimeout(() => reject(new Error('Таймаут соединения')), 5000)
+		)
+	  ]).catch(error => {
+		throw new Error(error.message || 'Ошибка соединения с сервером');
+	  });
+  
+	  if (!response) {
+		throw new Error('Не получен ответ от сервера');
+	  }
+  
+	  if (response.status === 'success') {
 		this.handleGameState(response.gameState);
 	  } else {
-		throw new Error(response?.message || 'Неизвестная ошибка сервера');
+		throw new Error(response.message || 'Неизвестная ошибка сервера');
 	  }
 	  
 	} catch (error) {
 	  this.ui.showError(error.message);
-	  console.error('Ошибка подтверждения колоды:', error);
+	  console.error('Ошибка подтверждения колоды:', {
+		error: error.message,
+		stack: error.stack,
+		selectedHeroes: Array.from(this.state.selectedHeroes),
+		heroesData: this.state.heroes
+	  });
 	}
   }
 
