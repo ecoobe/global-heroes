@@ -1,173 +1,72 @@
 [
-    {
-        "id": 1,
-        "name": "Кайто",
-        "class": "Воин",
-        "strength": 4,
-        "health": 6,
-        "abilities": ["Месть клинка"],
-        "image": "kaito.png"
-    },
-    {
-        "id": 2,
-        "name": "Ханзо",
-        "class": "Стрелок",
-        "strength": 5,
-        "health": 5,
-        "abilities": ["Невидимость"],
-        "image": "hanzo.png"
-    },
-    {
-        "id": 3,
-        "name": "Токугава",
-        "class": "Тактик",
-        "strength": 3,
-        "health": 9,
-        "abilities": ["Тактик"],
-        "image": "tokugawa.png"
-    },
-    {
-        "id": 4,
-        "name": "Айя",
-        "class": "Стрелок",
-        "strength": 4,
-        "health": 5,
-        "abilities": ["Стрела Луны"],
-        "image": "aya.png"
-    },
-    {
-        "id": 5,
-        "name": "Фрейя",
-        "class": "Танк",
-        "strength": 3,
-        "health": 8,
-        "abilities": ["Щит предков"],
-        "image": "freya.png"
-    },
-    {
-        "id": 6,
-        "name": "Рагнар",
-        "class": "Воин",
-        "strength": 6,
-        "health": 4,
-        "abilities": ["Ярость Вальгаллы"],
-        "image": "ragnar.png"
-    },
-    {
-        "id": 7,
-        "name": "Амара",
-        "class": "Лекарь",
-        "strength": 1,
-        "health": 9,
-        "abilities": ["Крылья света"],
-        "image": "amara.png"
-    },
-    {
-        "id": 8,
-        "name": "Вальтер",
-        "class": "Танк",
-        "strength": 5,
-        "health": 7,
-        "abilities": ["Непробиваемый доспех"],
-        "image": "walter.png"
-    },
-    {
-        "id": 9,
-        "name": "Нейтхани",
-        "class": "Шаман",
-        "strength": 3,
-        "health": 7,
-        "abilities": ["Песчаная ловушка"],
-        "image": "neytani.png"
-    },
-    {
-        "id": 10,
-        "name": "Горо",
-        "class": "Стрелок",
-        "strength": 4,
-        "health": 7,
-        "abilities": ["Меткий бросок"],
-        "image": "goro.png"
-    },
-    {
-        "id": 11,
-        "name": "Зигги",
-        "class": "Инженер",
-        "strength": 1,
-        "health": 5,
-        "abilities": ["Взрывной коктейль"],
-        "image": "ziggy.png"
-    },
-    {
-        "id": 12,
-        "name": "Искра",
-        "class": "Маг",
-        "strength": 3,
-        "health": 6,
-        "abilities": ["Огненный шторм"],
-        "image": "iskra.png"
-    },
-    {
-        "id": 13,
-        "name": "Даркул",
-        "class": "Некромант",
-        "strength": 7,
-        "health": 3,
-        "abilities": ["Тёмное воскрешение"],
-        "image": "darkul.png"
-    },
-    {
-        "id": 14,
-        "name": "Эльмира",
-        "class": "Шаман",
-        "strength": 2,
-        "health": 8,
-        "abilities": ["Корни Мироздания"],
-        "image": "elmira.png"
-    },
-    {
-        "id": 15,
-        "name": "Мако",
-        "class": "Шаман",
-        "strength": 3,
-        "health": 7,
-        "abilities": ["Приливная Волна"],
-        "image": "mako.png"
-    },
-    {
-        "id": 16,
-        "name": "Любава",
-        "class": "Шаман",
-        "strength": 3,
-        "health": 6,
-        "abilities": ["Родство с Зверем"],
-        "image": "lyubava.png"
-    },
-    {
-        "id": 17,
-        "name": "Светозар",
-        "class": "Танк",
-        "strength": 3,
-        "health": 10,
-        "abilities": ["Щит Перуна"],
-        "image": "svetozar.png"
-    },
-    {
-        "id": 18,
-        "name": "Волхв Мирослав",
-        "class": "Некромант",
-        "strength": 5,
-        "health": 4,
-        "abilities": ["Обряд Перерождения"],
-        "image": "miroslav.png"
-    },
-    {
-        "id": 19,
-        "name": "Ли Вэй",
-        "class": "Воин",
-        "strength": 3,
-        "health": 10,
-        "abilities": ["Энергетический щит"],
-        "image": "liwei.png"
-    }
+	{
+	  "id": 1,
+	  "name": "Кайто",
+	  "class": "Воин",
+	  "strength": 4,
+	  "health": 6,
+	  "ability": {
+		"name": "Месть клинка",
+		"description": "При смерти наносит 4 урона случайному врагу",
+		"cost": 2,
+		"charges": 1
+	  },
+	  "image": "/images/heroes/kaito.png"
+	},
+	{
+	  "id": 2,
+	  "name": "Ханзо",
+	  "class": "Стрелок",
+	  "strength": 5,
+	  "health": 5,
+	  "ability": {
+		"name": "Невидимость",
+		"description": "Избегает первой атаки в бою",
+		"cost": 1,
+		"charges": 2
+	  },
+	  "image": "/images/heroes/hanzo.png"
+	},
+	{
+	  "id": 3,
+	  "name": "Токугава",
+	  "class": "Тактик",
+	  "strength": 3,
+	  "health": 9,
+	  "ability": {
+		"name": "Тактик",
+		"description": "Увеличивает силу всех союзников на 1",
+		"cost": 3,
+		"charges": 1
+	  },
+	  "image": "/images/heroes/tokugawa.png"
+	},
+	{
+	  "id": 4,
+	  "name": "Айя",
+	  "class": "Стрелок",
+	  "strength": 4,
+	  "health": 5,
+	  "ability": {
+		"name": "Стрела Луны",
+		"description": "Атакует самого слабого врага, игнорируя защиту",
+		"cost": 2,
+		"charges": 3
+	  },
+	  "image": "/images/heroes/aya.png"
+	},
+	{
+	  "id": 5,
+	  "name": "Фрейя",
+	  "class": "Танк",
+	  "strength": 3,
+	  "health": 8,
+	  "ability": {
+		"name": "Щит предков",
+		"description": "Получает на 2 меньше урона от атак",
+		"cost": 2,
+		"charges": 2
+	  },
+	  "image": "/images/heroes/freya.png"
+	}
 ]
