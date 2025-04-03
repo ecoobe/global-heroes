@@ -38,3 +38,5 @@ class SessionManager {
     this.games.delete(gameId);
   }
 }
+
+module.exports = SessionManager;
