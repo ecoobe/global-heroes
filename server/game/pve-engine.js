@@ -241,7 +241,7 @@ class PveGame {
       }
     });
     
-    await redisClient.hSet('games', this.id, serialized);
+    await redisClient.hset('games', this.id, serialized);
   }
 
   serializePlayer(player) {
