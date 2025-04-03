@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
@@ -37,6 +39,7 @@ const redisClient = new Redis({
   host: process.env.REDIS_HOST || 'redis',
   port: 6379,
   retryStrategy: (times) => Math.min(times * 150, 5000),
+  lazyConnect: true,
   maxRetriesPerRequest: null,
   enableReadyCheck: true
 });
