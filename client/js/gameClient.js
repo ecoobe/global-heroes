@@ -176,40 +176,40 @@ class GameClient {
     }
   }
 
-  handleDeckConfirmation() {
-    try {
-      if (this.state.selectedHeroes.size !== 5) {
-        throw new Error('Выберите ровно 5 героев!');
-      }
-      
-      const deck = Array.from(this.state.selectedHeroes);
-      this.socket.emit('startPve', deck)
-        .then(response => {
-          if (response.status === 'success') {
-            this.handleGameState(response.gameState);
-          } else {
-            throw new Error(response.message || 'Ошибка сервера');
-          }
-        })
-        .catch(error => {
-          this.ui.showError(error.message);
-          console.error('PVE start error:', error);
-        });
-        
-    } catch (error) {
-      this.ui.showError(error.message);
-      console.error('Deck confirmation error:', error);
-    }
+  async handleDeckConfirmation() {
+	try {
+	  if (this.state.selectedHeroes.size !== 5) {
+		throw new Error('Выберите ровно 5 героев!');
+	  }
+  
+	  const deck = Array.from(this.state.selectedHeroes);
+	  const response = await this.socket.emit('startPve', deck);
+	  
+	  if (response?.status === 'success') {
+		this.handleGameState(response.gameState);
+	  } else {
+		throw new Error(response?.message || 'Неизвестная ошибка сервера');
+	  }
+	  
+	} catch (error) {
+	  this.ui.showError(error.message);
+	  console.error('Ошибка подтверждения колоды:', error);
+	}
   }
 
-  endTurn() {
-    if (!this.state.currentGameState) return;
-    
-    this.socket.emit('endTurn', this.state.currentGameState.id)
-      .catch(error => {
-        this.ui.showError('Ошибка завершения хода');
-        console.error('End turn error:', error);
-      });
+  async endTurn() {
+	try {
+	  if (!this.state.currentGameState?.id) {
+		throw new Error('Игра не найдена');
+	  }
+  
+	  await this.socket.emit('endTurn', this.state.currentGameState.id);
+	  console.log('Ход успешно завершён');
+	  
+	} catch (error) {
+	  this.ui.showError(error.message || 'Ошибка завершения хода');
+	  console.error('Ошибка завершения хода:', error);
+	}
   }
 
   handleTurnStart({ timeLeft }) {
