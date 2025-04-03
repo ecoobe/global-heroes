@@ -9,6 +9,7 @@ const SessionManager = require('../game/session-manager');
 const { v4: uuidv4 } = require('uuid');
 const Joi = require('joi');
 const crypto = require('crypto');
+const { Gauge } = require('prom-client');
 
 const app = express();
 const server = createServer(app);
@@ -30,16 +31,22 @@ const metricsMiddleware = promBundle({
   }
 });
 
+// Кастомные метрики
+const redisStatus = new Gauge({
+  name: 'redis_status',
+  help: 'Redis connection status (1 = connected, 0 = disconnected)',
+  labelNames: ['service']
+});
+
+const websocketConnections = new Gauge({
+  name: 'websocket_connections',
+  help: 'Active WebSocket connections count'
+});
+
 app.use(metricsMiddleware);
 
 // 3. Конфигурация Redis
-const redisClient = new Redis({
-  host: process.env.REDIS_HOST || 'redis',
-  port: 6379,
-  retryStrategy: (times) => Math.min(times * 150, 5000),
-  maxRetriesPerRequest: null,
-  enableReadyCheck: true
-});
+const redisClient = new Redis(process.env.REDIS_URL || 'redis://redis:6379');
 
 // 4. Инициализация Socket.IO
 const io = new Server(server, {
@@ -97,46 +104,41 @@ const startServer = async () => {
 // 8. Обработчики Redis
 redisClient.on('ready', () => {
   console.log('✅ Redis connection established');
-  metricsMiddleware.promClient.register.getSingleMetric('redis_status').set(1);
+  redisStatus.set({ service: 'main' }, 1);
 });
 
 redisClient.on('error', (err) => {
   console.error('⛔ Redis Error:', err.message);
-  metricsMiddleware.promClient.register.getSingleMetric('redis_status').set(0);
+  redisStatus.set({ service: 'main' }, 0);
 });
 
 // 9. Socket.IO логика
 io.on('connection', (socket) => {
   console.log(`🎮 New connection: ${socket.id}`);
+  websocketConnections.inc();
 
   socket.on('startPve', async (deck, callback) => {
     try {
-      // Валидация колоды
       const { error } = deckSchema.validate(deck);
       if (error) throw new Error(error.details[0].message);
 
-      // Проверка героев
       const invalidIds = deck.filter(id => !abilities[id]);
       if (invalidIds.length > 0) {
         throw new Error(`Invalid hero IDs: ${invalidIds.join(', ')}`);
       }
 
-      // Создание игры
       const game = new PveGame(deck);
-      game.id = crypto.randomUUID(); // Генерация UUID
-  
-      // Сохранение в Redis
+      game.id = crypto.randomUUID();
+
       await redisClient.hset(
         'active_games',
         game.id,
         JSON.stringify(game.getPublicState())
       );
 
-      // Создание сессии
       const sessionId = sessionManager.createSession(game.id);
       await socket.join(sessionId);
 
-      // Ответ клиенту
       callback({
         status: 'success',
         sessionId,
@@ -155,7 +157,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', (reason) => {
     console.log(`⚠️  Disconnected: ${socket.id} (${reason})`);
-    metricsMiddleware.promClient.register.getSingleMetric('websocket_connections').dec();
+    websocketConnections.dec();
   });
 
   socket.on('error', (err) => {
@@ -168,11 +170,9 @@ const shutdown = async () => {
   console.log('\n🛑 Starting graceful shutdown...');
   
   try {
-    // Закрытие Redis
     await redisClient.quit();
     console.log('✅ Redis connection closed');
 
-    // Закрытие сервера
     await new Promise((resolve) => {
       server.close(resolve);
       setTimeout(resolve, 5000).unref();
