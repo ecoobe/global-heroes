@@ -2,6 +2,7 @@ import { GameState } from './modules/GameState.js';
 import { SocketManager } from './modules/SocketManager.js';
 import { UIManager } from './modules/UIManager.js';
 import { GameLogic } from './modules/GameLogic.js';
+const GL = GameLogic;
 import { DOMHelper, ErrorHandler } from './modules/utils.js';
 
 class GameClient {
