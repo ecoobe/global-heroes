@@ -1,10 +1,11 @@
+const path = require('path');
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const Redis = require('ioredis');
 const { PveGame } = require('../game/modes/pve-engine');
 const promBundle = require("express-prom-bundle");
-const { abilities } = require('../game/abilities');
+const abilities = require(path.resolve(__dirname, '../game/abilities'));
 const SessionManager = require('../game/session-manager');
 const { v4: uuidv4 } = require('uuid');
 const Joi = require('joi');
