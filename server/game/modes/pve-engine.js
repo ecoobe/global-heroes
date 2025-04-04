@@ -2,150 +2,34 @@ const { BaseGame } = require('../core/base-game');
 const { CombatSystem } = require('../core/combat-system');
 
 class PveGame extends BaseGame {
-	constructor(playerDeck, abilities) {
-		if (!abilities) throw new Error('Abilities not provided');
-		console.log('[PvE] Initializing with deck:', playerDeck, 'abilities count:', Object.keys(abilities).length);
-	  
-		// Правильный единый вызов super()
-		super({ human: playerDeck, ai: [] }, 'pve');
-	  
-		this.combatSystem = new CombatSystem();
-		this.abilities = abilities;
-	  
-		console.log('[PvE] Abilities keys:', Object.keys(this.abilities));
-	}
+  constructor(playerDeck, abilities) {
+    if (!abilities) throw new Error('Abilities not provided');
+    
+    const numericDeck = this.normalizeDeck(playerDeck);
+    super({ 
+      human: numericDeck,
+      ai: [] 
+    }, 'pve');
+    
+    this.combatSystem = new CombatSystem();
+    this.abilities = abilities;
 
+    console.log('[PvE] Initialized:', {
+      deck: numericDeck,
+      abilities: Object.keys(this.abilities)
+    });
+  }
+
+  //region Core Methods
   getRequiredDecks() {
-	  return ['human']; // Требуется только колода игрока
+    return ['human'];
   }
 
   initializePlayers(decks) {
     this.players = {
       human: this.createPlayer(decks.human, 'human'),
-      ai: this.createAI() // Генерация AI
+      ai: this.createAI()
     };
-  }
-
-  validateDeck(deck) {
-	console.log('[DEBUG] Starting deck validation with abilities:', this.abilities);
-	
-	return deck.map(id => {
-	  console.log('[DEBUG] Processing card ID:', id, 'Type:', typeof id);
-	  
-	  const abilityKey = String(id);
-	  const ability = this.abilities[abilityKey];
-	  
-	  console.log('[DEBUG] Ability data:', ability);
-  
-	  if (!ability) {
-		throw new Error(`Ability not found for ID: ${id} (key: ${abilityKey})`);
-	  }
-  
-	  if (typeof ability !== 'object' || Array.isArray(ability)) {
-		throw new Error(`Invalid ability type for ID ${id}: ${typeof ability}`);
-	  }
-  
-	  const requiredFields = ['name', 'cost', 'effectType'];
-	  const missingFields = requiredFields.filter(field => !(field in ability));
-	  
-	  if (missingFields.length > 0) {
-		throw new Error(`Missing fields in ability ${id}: ${missingFields.join(', ')}`);
-	  }
-  
-	  // Возвращаем структуру, совместимую с серверными ожиданиями
-	  return {
-		id: Number(id),
-		name: ability.name,
-		cost: Number(ability.cost) || 1,
-		charges: Number(ability.charges) || 1,
-		effectType: ability.effectType,
-		target: ability.target || 'NONE',
-		// Используем прямые поля вместо stats
-		strength: Number(ability.strength) || 0,
-		health: Number(ability.health) || 1,
-		// Добавляем специфичные для сервера поля
-		...(ability.value !== undefined && { value: ability.value }),
-		...(ability.modifier !== undefined && { modifier: ability.modifier }),
-		...(ability.pierce !== undefined && { pierce: ability.pierce })
-	  };
-	});
-  }
-
-  createAI() {
-    return {
-      deck: this.generateAIDeck(),
-      hand: [],
-      field: [],
-      health: 30,
-      energy: 0,
-      energyPerTurn: 1,
-      type: 'ai'
-    };
-  }
-
-  generateAIDeck() {
-	// Получаем все доступные ID способностей
-	const availableIds = Object.keys(this.abilities).map(Number);
-	
-	// Базовые правила для AI:
-	const aiDeckRules = {
-	  minCost: 1,
-	  maxCost: 3,
-	  preferredTypes: ['ATTACK', 'DEFENSE'],
-	  deckSize: 5
-	};
-  
-	// Фильтруем подходящие способности
-	const suitableAbilities = availableIds.filter(id => {
-	  const ability = this.abilities[id];
-	  return ability.cost >= aiDeckRules.minCost && 
-			 ability.cost <= aiDeckRules.maxCost &&
-			 aiDeckRules.preferredTypes.includes(ability.effectType);
-	});
-  
-	// Если подходящих недостаточно - добавляем любые
-	if (suitableAbilities.length < aiDeckRules.deckSize) {
-	  const remainingIds = availableIds.filter(id => !suitableAbilities.includes(id));
-	  suitableAbilities.push(...remainingIds.slice(0, aiDeckRules.deckSize - suitableAbilities.length));
-	}
-  
-	// Выбираем случайные карты
-	const selectedCards = [];
-	while (selectedCards.length < aiDeckRules.deckSize && suitableAbilities.length > 0) {
-	  const randomIndex = Math.floor(Math.random() * suitableAbilities.length);
-	  selectedCards.push(suitableAbilities[randomIndex]);
-	  suitableAbilities.splice(randomIndex, 1); // Удаляем чтобы не дублировать
-	}
-  
-	// Дополняем колоду если всё ещё не хватает
-	while (selectedCards.length < aiDeckRules.deckSize) {
-	  selectedCards.push(availableIds[Math.floor(Math.random() * availableIds.length)]);
-	}
-  
-	return selectedCards.slice(0, aiDeckRules.deckSize);
-  }
-
-  getDifficultyLevel() {
-    return ['easy', 'normal', 'hard'][this.aiDifficulty - 1];
-  }
-
-  selectCards(preferred, all, size) {
-    const deck = [];
-    
-    // Пытаемся взять предпочитаемые карты
-    while (deck.length < size && preferred.length > 0) {
-      const idx = Math.floor(Math.random() * preferred.length);
-      deck.push(preferred.splice(idx, 1)[0]);
-    }
-
-    // Добираем из общих
-    while (deck.length < size && all.length > 0) {
-      const idx = Math.floor(Math.random() * all.length);
-      const card = all.splice(idx, 1)[0];
-      if (!deck.includes(card)) deck.push(card);
-    }
-
-    return deck.slice(0, size);
   }
 
   createPlayer(deck, type) {
@@ -160,10 +44,127 @@ class PveGame extends BaseGame {
     };
   }
 
-  onTurnEnd() {
-    if (this.players[this.turnSystem.currentTurn].type === 'ai') {
-      this.processAITurn();
+  createAI() {
+    return {
+      deck: this.generateAIDeck(),
+      hand: [],
+      field: [],
+      health: 30,
+      energy: 0,
+      energyPerTurn: 1,
+      type: 'ai'
+    };
+  }
+  //endregion
+
+  //region Deck Validation
+  normalizeDeck(deck) {
+    if (!Array.isArray(deck)) {
+      throw new Error(`Invalid deck format: ${typeof deck}`);
     }
+
+    return deck.map(item => {
+      if (typeof item === 'object' && item.id) {
+        return Number(item.id);
+      }
+      if (typeof item === 'string' && !isNaN(item)) {
+        return parseInt(item, 10);
+      }
+      if (typeof item !== 'number') {
+        throw new Error(`Invalid card ID type: ${typeof item} (${item})`);
+      }
+      return item;
+    });
+  }
+
+  validateDeck(deck) {
+    console.log('[VALIDATE] Starting validation. Abilities:', Object.keys(this.abilities));
+    
+    return deck.map(item => {
+      const rawId = typeof item === 'object' ? item.id : item;
+      const id = Number(rawId);
+      
+      if (isNaN(id)) {
+        throw new Error(`Invalid card ID: ${rawId}`);
+      }
+
+      const abilityKey = String(id);
+      const ability = this.abilities[abilityKey];
+      
+      if (!ability) {
+        throw new Error(`Ability ${id} (key: ${abilityKey}) not found`);
+      }
+
+      if (typeof ability !== 'object' || Array.isArray(ability)) {
+        console.error('Corrupted ability:', ability);
+        throw new Error(`Invalid ability structure for ID ${id}`);
+      }
+
+      const requiredFields = ['name', 'cost', 'effectType'];
+      const missingFields = requiredFields.filter(f => !(f in ability));
+      if (missingFields.length > 0) {
+        throw new Error(`Missing fields for ${id}: ${missingFields.join(', ')}`);
+      }
+
+      return this.buildCardData(id, ability);
+    });
+  }
+
+  buildCardData(id, ability) {
+    const cardData = {
+      id: id,
+      name: ability.name || 'Unnamed Card',
+      cost: Math.max(1, Number(ability.cost)),
+      effectType: ability.effectType,
+      target: ability.target || 'NONE',
+      charges: Math.max(1, Number(ability.charges || 1)),
+      health: Math.max(1, Number(ability.health || 1)),
+      strength: Math.max(0, Number(ability.strength || 0)),
+      ...(ability.value !== undefined && { value: ability.value }),
+      ...(ability.modifier !== undefined && { modifier: ability.modifier }),
+      ...(ability.pierce !== undefined && { pierce: ability.pierce }),
+      ...(ability.stat !== undefined && { stat: ability.stat })
+    };
+
+    console.log('[VALIDATE] Processed card:', cardData);
+    return cardData;
+  }
+  //endregion
+
+  //region AI Logic
+  generateAIDeck() {
+    const availableIds = Object.keys(this.abilities).map(Number);
+    const aiDeckRules = {
+      minCost: 1,
+      maxCost: 3,
+      preferredTypes: ['ATTACK', 'DEFENSE'],
+      deckSize: 5
+    };
+
+    let suitableAbilities = availableIds.filter(id => {
+      const ability = this.abilities[id];
+      return ability.cost >= aiDeckRules.minCost && 
+             ability.cost <= aiDeckRules.maxCost &&
+             aiDeckRules.preferredTypes.includes(ability.effectType);
+    });
+
+    if (suitableAbilities.length < aiDeckRules.deckSize) {
+      const remainingIds = availableIds.filter(id => !suitableAbilities.includes(id));
+      suitableAbilities.push(...remainingIds.slice(0, aiDeckRules.deckSize - suitableAbilities.length));
+    }
+
+    const selectedCards = [];
+    while (selectedCards.length < aiDeckRules.deckSize && suitableAbilities.length > 0) {
+      const randomIndex = Math.floor(Math.random() * suitableAbilities.length);
+      selectedCards.push(suitableAbilities[randomIndex]);
+      suitableAbilities.splice(randomIndex, 1);
+    }
+
+    while (selectedCards.length < aiDeckRules.deckSize) {
+      selectedCards.push(availableIds[Math.floor(Math.random() * availableIds.length)]);
+    }
+
+    return selectedCards.slice(0, aiDeckRules.deckSize);
   }
 
   processAITurn() {
@@ -206,24 +207,9 @@ class PveGame extends BaseGame {
       target: this.selectTarget(this.abilities[bestCard.cardId])
     };
   }
+  //endregion
 
-  selectTarget(ability) {
-    switch(ability.target) {
-      case 'WEAKEST_ENEMY':
-        return this.findWeakestEnemy();
-      case 'RANDOM_ENEMY':
-        return this.findRandomEnemy();
-      default:
-        return null;
-    }
-  }
-
-  findWeakestEnemy() {
-    return this.players.human.field
-      .reduce((weakest, current) => 
-        current.health < (weakest?.health || Infinity) ? current : weakest, null)?.id;
-  }
-
+  //region Game Actions
   playCard(playerId, cardId) {
     const player = this.players[playerId];
     const cardIndex = player.hand.findIndex(c => c.id === cardId);
@@ -237,6 +223,19 @@ class PveGame extends BaseGame {
     
     this.abilitySystem.activateAbility(this, playerId, card.id);
   }
+
+  findWeakestEnemy() {
+    return this.players.human.field
+      .reduce((weakest, current) => 
+        current.health < (weakest?.health || Infinity) ? current : weakest, null)?.id;
+  }
+
+  onTurnEnd() {
+    if (this.players[this.turnSystem.currentTurn].type === 'ai') {
+      this.processAITurn();
+    }
+  }
+  //endregion
 }
 
 module.exports = { PveGame };
