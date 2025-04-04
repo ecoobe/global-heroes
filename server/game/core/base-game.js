@@ -5,53 +5,73 @@ const { CombatSystem } = require('./combat-system');
 
 class BaseGame {
   constructor(playerDecks, gameType) {
-    this.validateDecks(playerDecks);
-    
-    this.id = uuidv4();
-    this.gameType = gameType;
-    this.status = 'active';
-    this.players = {};
-    
-    this.abilitySystem = new AbilitySystem();
-    this.turnSystem = new TurnSystem(this);
-    this.combatSystem = new CombatSystem();
-    
-    this.initializePlayers(playerDecks);
+    // 1. Убираем общую валидацию из конструктора
+    try {
+      this.id = uuidv4();
+      this.gameType = gameType;
+      this.status = 'active';
+      
+      // 2. Переносим валидацию в отдельный метод
+      this.normalizedDecks = this.normalizeDecks(playerDecks);
+      
+      this.abilitySystem = new AbilitySystem();
+      this.turnSystem = new TurnSystem(this);
+      this.combatSystem = new CombatSystem();
+      
+      // 3. Унифицированная инициализация игроков
+      this.initializePlayers(this.normalizedDecks);
+
+    } catch (error) {
+      console.error('Game initialization failed:', error);
+      throw error;
+    }
   }
 
-  // Метод для получения требуемых ключей для колод (например, player1, player2)
-  getRequiredDecks() {
-    // Это зависит от количества игроков в игре
-    return ['player1', 'player2'];  // Для двух игроков
-  }
-
-  // Метод для проверки корректности формата колод
-  validateDecks(decks) {
-    if (!decks || typeof decks !== 'object') {
-      throw new Error('Invalid decks format');
+  normalizeDecks(decks) {
+    console.log('Normalizing decks:', JSON.stringify(decks));
+    
+    // 4. Обработка разных форматов
+    if (Array.isArray(decks)) {
+      return { 
+        player: decks.map(item => 
+          typeof item === 'object' ? item.id : item
+        ) 
+      };
     }
     
-    const requiredDecks = this.getRequiredDecks();  // Получаем ключи, которые нужны
-    requiredDecks.forEach(deckKey => {
-      if (!decks[deckKey] || !Array.isArray(decks[deckKey])) {
-        throw new Error(`Missing or invalid ${deckKey} deck`);
+    // 5. Валидация для multiplayer
+    const required = this.getRequiredDecks();
+    required.forEach(key => {
+      if (!decks[key] || !Array.isArray(decks[key])) {
+        throw new Error(`Missing deck: ${key}`);
       }
     });
+    
+    return decks;
   }
 
-  // Метод для инициализации игроков и их колод
-  initializePlayers(decks) {
-    const requiredDecks = this.getRequiredDecks();
-    requiredDecks.forEach((deckKey, index) => {
-      this.players[deckKey] = {
-        deck: decks[deckKey],
-        health: 100,  // Примерная инициализация здоровья
-        energy: 0,    // Примерная инициализация энергии
-        hand: [],     // Примерная инициализация карт в руке
-        field: [],    // Примерная инициализация юнитов на поле
-        effects: []   // Примерная инициализация эффектов
-      };
-    });
+  getRequiredDecks() {
+    // 6. Динамическое определение по типу игры
+    return this.gameType === 'pve' ? ['player'] : ['player1', 'player2'];
+  }
+
+  initializePlayers(normalizedDecks) {
+    // 7. Гибкая инициализация игроков
+    this.players = Object.entries(normalizedDecks).reduce((acc, [key, deck]) => {
+      acc[key] = this.createPlayer(deck);
+      return acc;
+    }, {});
+  }
+
+  createPlayer(deck) {
+    return {
+      deck: deck,
+      health: 100,
+      energy: 0,
+      hand: [],
+      field: [],
+      effects: []
+    };
   }
 
   getPublicState() {
