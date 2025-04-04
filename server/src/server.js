@@ -108,48 +108,47 @@ io.on('connection', (socket) => {
   websocketConnections.inc();
 
   socket.on('startPve', async (deck, callback) => {
-    let invalidIds = []; // Объявлено во внешней области видимости
-    
-    try {
-      console.log('Received deck from client:', deck);
-      
-      // Преобразование и валидация ID
-      const numericDeck = deck.map(id => {
-        const numId = Number(id);
-        if (isNaN(numId)) throw new Error(`Invalid ID format: ${id}`);
-        return numId;
-      });
-
-      // Проверка существования способностей
-      invalidIds = numericDeck.filter(id => {
-        const exists = abilities.hasOwnProperty(id);
-        if (!exists) console.error('Ability ID not found:', id);
-        return !exists;
-      });
-
-      if (invalidIds.length > 0) {
-        throw new Error(`Неверные ID героев: ${invalidIds.join(', ')}`);
-      }
-
-      // Создание игры
-      const game = new PveGame(numericDeck);
-      const { sessionId } = sessionManager.createGameSession(numericDeck);
-      
-      callback({
-        status: 'success',
-        sessionId,
-        gameState: game.getPublicState()
-      });
-
-    } catch (err) {
-      console.error(`[PVE ERROR] ${socket.id}:`, err.message);
-      callback({
-        status: 'error',
-        code: "GAME_INIT_FAILURE",
-        message: err.message,
-        invalidIds: invalidIds // Теперь переменная доступна
-      });
-    }
+	let invalidIds = [];
+	
+	try {
+	  console.log('Received deck from client:', deck);
+	  
+	  // Проверяем загружены ли способности
+	  if (!abilities || typeof abilities !== 'object') {
+		throw new Error('Ошибка загрузки данных героев');
+	  }
+  
+	  // Преобразование ID в числа
+	  const numericDeck = deck.map(id => Number(id));
+	  
+	  // Проверка существования способностей
+	  invalidIds = numericDeck.filter(id => {
+		return !abilities.hasOwnProperty(id); // Теперь безопасно
+	  });
+  
+	  if (invalidIds.length > 0) {
+		throw new Error(`Неверные ID: ${invalidIds.join(', ')}`);
+	  }
+  
+	  // Создание игры
+	  const game = new PveGame(numericDeck);
+	  const { sessionId } = sessionManager.createGameSession(numericDeck);
+	  
+	  callback({
+		status: 'success',
+		sessionId,
+		gameState: game.getPublicState()
+	  });
+  
+	} catch (err) {
+	  console.error(`[PVE ERROR] ${socket.id}:`, err.message);
+	  callback({
+		status: 'error',
+		code: "GAME_INIT_FAILURE",
+		message: err.message,
+		invalidIds
+	  });
+	}
   });
 
   socket.on('disconnect', () => {
