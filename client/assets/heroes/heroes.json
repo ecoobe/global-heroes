@@ -6,6 +6,7 @@
 	  "strength": 4,
 	  "health": 6,
 	  "ability": {
+		"id": 1,
 		"name": "Месть клинка",
 		"description": "При смерти наносит 4 урона случайному врагу",
 		"cost": 2,
@@ -20,6 +21,7 @@
 	  "strength": 5,
 	  "health": 5,
 	  "ability": {
+		"id": 2,
 		"name": "Невидимость",
 		"description": "Избегает первой атаки в бою",
 		"cost": 1,
@@ -34,6 +36,7 @@
 	  "strength": 3,
 	  "health": 9,
 	  "ability": {
+		"id": 3,
 		"name": "Тактик",
 		"description": "Увеличивает силу всех союзников на 1",
 		"cost": 3,
@@ -48,6 +51,7 @@
 	  "strength": 4,
 	  "health": 5,
 	  "ability": {
+		"id": 4,
 		"name": "Стрела Луны",
 		"description": "Атакует самого слабого врага, игнорируя защиту",
 		"cost": 2,
@@ -62,6 +66,7 @@
 	  "strength": 3,
 	  "health": 8,
 	  "ability": {
+		"id": 5,
 		"name": "Щит предков",
 		"description": "Получает на 2 меньше урона от атак",
 		"cost": 2,
