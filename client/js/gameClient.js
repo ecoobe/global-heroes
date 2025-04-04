@@ -182,37 +182,41 @@ class GameClient {
 		throw new Error('Выберите ровно 5 героев!');
 	  }
   
-	  const deck = Array.from(this.state.selectedHeroes);
-	  console.log('Sending deck to server:', deck); // Логирование отправляемых данных
-  
-	  // Добавляем обработку ошибок сети и таймаутов
-	  const response = await Promise.race([
-		this.socket.emit('startPve', deck),
-		new Promise((_, reject) => 
-		  setTimeout(() => reject(new Error('Таймаут соединения')), 5000)
-		)
-	  ]).catch(error => {
-		throw new Error(error.message || 'Ошибка соединения с сервером');
+	  // Преобразуем ID в числа и проверяем их
+	  const deck = Array.from(this.state.selectedHeroes).map(id => {
+		const numId = Number(id);
+		if (isNaN(numId)) {
+		  throw new Error(`Некорректный ID героя: ${id}`);
+		}
+		return numId;
 	  });
   
-	  if (!response) {
-		throw new Error('Не получен ответ от сервера');
+	  console.log('Sanitized deck:', deck);
+  
+	  // Проверка колоды перед отправкой
+	  const validation = GameLogic.validateDeck(deck, this.state.heroes);
+	  if (!validation.isValid) {
+		throw new Error(validation.errors.join('\n'));
 	  }
+  
+	  // Отправка на сервер с таймаутом
+	  const response = await this.socket.emit('startPve', deck, { 
+		timeout: 15000 
+	  });
   
 	  if (response.status === 'success') {
 		this.handleGameState(response.gameState);
 	  } else {
-		throw new Error(response.message || 'Неизвестная ошибка сервера');
+		throw new Error(response.message || 'Ошибка сервера');
 	  }
-	  
+  
 	} catch (error) {
-	  this.ui.showError(error.message);
-	  console.error('Ошибка подтверждения колоды:', {
+	  console.error('Deck Error:', {
 		error: error.message,
-		stack: error.stack,
-		selectedHeroes: Array.from(this.state.selectedHeroes),
-		heroesData: this.state.heroes
+		rawDeck: Array.from(this.state.selectedHeroes),
+		validatedDeck: deck
 	  });
+	  this.ui.showError(error.message);
 	}
   }
 
