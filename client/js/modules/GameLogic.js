@@ -119,50 +119,54 @@ export class GameLogic {
 	  }
 	}
   
-	static validateDeck(deckArray, availableHeroes) {
-		// Убираем проверку на Set, принимаем готовый массив
-		if (!Array.isArray(deckArray)) {
-		  return {
-			isValid: false,
-			errors: ['Некорректный формат данных колоды'],
-			deck: []
-		  };
-		}
-	  
-		const errors = [];
-		const availableIds = availableHeroes?.map(h => h.id) || [];
-	  
-		// Проверка числовых ID
-		const invalidNumbers = deckArray.filter(id => 
-		  typeof id !== 'number' || isNaN(id)
-		);
-		if (invalidNumbers.length > 0) {
-		  errors.push(`Некорректные ID: ${invalidNumbers.join(', ')}`);
-		}
-	  
-		// Проверка размера колоды
-		if (deckArray.length !== this.DECK_SIZE) {
-		  errors.push(`Требуется ${this.DECK_SIZE} героев (выбрано ${deckArray.length})`);
-		}
-	  
-		// Проверка уникальности
-		const uniqueIds = new Set(deckArray);
-		if (uniqueIds.size !== deckArray.length) {
-		  errors.push('Обнаружены дубликаты ID');
-		}
-	  
-		// Проверка существования героев
-		if (availableIds.length > 0) {
-		  const invalidIds = deckArray.filter(id => !availableIds.includes(id));
-		  if (invalidIds.length > 0) {
-			errors.push(`Несуществующие ID: ${invalidIds.join(', ')}`);
-		  }
-		}
-	  
+	static validateDeck(selectedHeroes, availableHeroes) {
+	  if (!(selectedHeroes instanceof Set)) {
 		return {
-		  isValid: errors.length === 0,
-		  errors,
-		  deck: deckArray
+		  isValid: false,
+		  errors: ['Некорректный формат данных колоды'],
+		  deck: []
 		};
 	  }
+  
+	  const deckArray = Array.from(selectedHeroes).map(id => {
+		const numId = Number(id);
+		return isNaN(numId) ? null : numId;
+	  });
+  
+	  const errors = [];
+	  const availableIds = availableHeroes?.map(h => h.id) || [];
+  
+	  // Проверка преобразования ID
+	  const invalidNumbers = deckArray.filter(id => id === null);
+	  if (invalidNumbers.length > 0) {
+		errors.push(`Некорректные ID: ${invalidNumbers.join(', ')}`);
+	  }
+  
+	  // Проверка размера колоды
+	  if (deckArray.length !== this.DECK_SIZE) {
+		errors.push(`Требуется ${this.DECK_SIZE} героев (выбрано ${deckArray.length})`);
+	  }
+  
+	  // Проверка уникальности
+	  const uniqueIds = new Set(deckArray);
+	  if (uniqueIds.size !== deckArray.length) {
+		errors.push('Обнаружены дубликаты ID');
+	  }
+  
+	  // Проверка существования героев
+	  if (availableIds.length > 0) {
+		const invalidIds = deckArray.filter(id => !availableIds.includes(id));
+		if (invalidIds.length > 0) {
+		  errors.push(`Несуществующие ID: ${invalidIds.join(', ')}`);
+		}
+	  } else {
+		errors.push('Данные героев не загружены');
+	  }
+  
+	  return {
+		isValid: errors.length === 0,
+		errors,
+		deck: deckArray.filter(id => id !== null)
+	  };
+	}
 }
