@@ -108,28 +108,45 @@ io.on('connection', (socket) => {
   websocketConnections.inc();
 
   socket.on('startPve', async (deck, callback) => {
+	let invalidIds = [];
+	
 	try {
+	  console.log('Received deck from client:', deck);
+	  
+	  // Проверяем загружены ли способности
+	  if (!abilities || typeof abilities !== 'object') {
+		throw new Error('Ошибка загрузки данных героев');
+	  }
+  
+	  // Преобразование ID в числа
 	  const numericDeck = deck.map(id => Number(id));
-	  const invalidIds = numericDeck.filter(id => !abilities[id]);
+	  
+	  // Проверка существования способностей
+	  invalidIds = numericDeck.filter(id => {
+		return !abilities.hasOwnProperty(id); // Теперь безопасно
+	  });
   
 	  if (invalidIds.length > 0) {
 		throw new Error(`Неверные ID: ${invalidIds.join(', ')}`);
 	  }
   
-	  const heroesData = numericDeck.map(id => ({ id, ...abilities[id] }));
-	  const game = new PveGame(heroesData);
-	  const { sessionId } = sessionManager.createGameSession(heroesData);
-  
+	  // Создание игры
+	  const game = new PveGame(numericDeck);
+	  const { sessionId } = sessionManager.createGameSession(numericDeck);
+	  
 	  callback({
 		status: 'success',
 		sessionId,
 		gameState: game.getPublicState()
 	  });
+  
 	} catch (err) {
+	  console.error(`[PVE ERROR] ${socket.id}:`, err.message);
 	  callback({
 		status: 'error',
 		code: "GAME_INIT_FAILURE",
-		message: err.message
+		message: err.message,
+		invalidIds
 	  });
 	}
   });
