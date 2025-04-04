@@ -3,6 +3,8 @@ const { CombatSystem } = require('../core/combat-system');
 
 class PveGame extends BaseGame {
 	constructor(playerDeck, abilities) {
+	  console.log('Initializing PvE with abilities:', abilities);
+	  super({ human: playerDeck }, 'pve');
 	  if (!abilities) throw new Error('Abilities not provided');
 	  console.log('Abilities on PvE init:', Object.keys(abilities));
 	  super({ human: playerDeck, ai: [] }, 'pve'); // AI deck пустой
@@ -21,26 +23,46 @@ class PveGame extends BaseGame {
     };
   }
   validateDeck(deck) {
+	console.log('[DEBUG] Starting deck validation with abilities:', this.abilities);
+	
 	return deck.map(id => {
-	  // Преобразуем ID к строке для доступа к ключам объекта
-	  const ability = this.abilities[String(id)];
+	  console.log('[DEBUG] Processing card ID:', id, 'Type:', typeof id);
 	  
-	  if (!ability || typeof ability !== 'object') {
-		throw new Error(`Ability ${id} not found`);
+	  // Явное преобразование ID к строке
+	  const abilityKey = String(id);
+	  const ability = this.abilities[abilityKey];
+	  
+	  console.log('[DEBUG] Ability data:', ability);
+  
+	  // Усиленные проверки
+	  if (!ability) {
+		throw new Error(`Ability not found for ID: ${id} (key: ${abilityKey})`);
 	  }
   
-	  if (!ability.name || typeof ability.cost === 'undefined') {
-		console.error('Invalid ability structure:', ability);
-		throw new Error(`Corrupted ability data for ID ${id}`);
+	  if (typeof ability !== 'object' || Array.isArray(ability)) {
+		throw new Error(`Invalid ability type for ID ${id}: ${typeof ability}`);
 	  }
   
+	  // Проверка обязательных полей
+	  const requiredFields = ['name', 'cost', 'effectType'];
+	  const missingFields = requiredFields.filter(field => !(field in ability));
+	  
+	  if (missingFields.length > 0) {
+		throw new Error(`Missing fields in ability ${id}: ${missingFields.join(', ')}`);
+	  }
+  
+	  // Возвращаем нормализованные данные
 	  return {
 		id: Number(id),
 		name: ability.name,
-		cost: ability.cost ?? 1,
-		charges: ability.charges ?? 1,
-		strength: ability.strength ?? 0,
-		health: ability.health ?? 1
+		cost: Number(ability.cost) || 1,
+		charges: Number(ability.charges) || 1,
+		effectType: ability.effectType,
+		target: ability.target || 'NONE',
+		stats: {
+		  strength: Number(ability.strength) || 0,
+		  health: Number(ability.health) || 1
+		}
 	  };
 	});
   }
