@@ -21,16 +21,18 @@ class BaseGame {
   }
 
   validateDecks(decks) {
-    if (!decks || typeof decks !== 'object') {
-      throw new Error('Invalid decks format');
-    }
-    
-    const requiredDecks = this.getRequiredDecks();
-    requiredDecks.forEach(deckKey => {
-      if (!decks[deckKey] || !Array.isArray(decks[deckKey])) {
-        throw new Error(`Missing or invalid ${deckKey} deck`);
-      }
-    });
+	console.log('Received decks:', decks);  // Логирование полученных данных
+  
+	if (!decks || typeof decks !== 'object') {
+	  throw new Error('Invalid decks format');
+	}
+	
+	const requiredDecks = this.getRequiredDecks();
+	requiredDecks.forEach(deckKey => {
+	  if (!decks[deckKey] || !Array.isArray(decks[deckKey])) {
+		throw new Error(`Missing or invalid ${deckKey} deck`);
+	  }
+	});
   }
 
   getRequiredDecks() {
