@@ -8,11 +8,92 @@ class PveGame extends BaseGame {
 	  this.abilities = abilities;
 	}  
 
+  getRequiredDecks() {
+	  return ['human']; // Требуется только колода игрока
+  }
+
   initializePlayers(decks) {
     this.players = {
       human: this.createPlayer(decks.human, 'human'),
-      ai: this.createPlayer(decks.ai, 'ai')
+      ai: this.createAI() // Генерация AI
     };
+  }
+
+  createAI() {
+    return {
+      deck: this.generateAIDeck(),
+      hand: [],
+      field: [],
+      health: 30,
+      energy: 0,
+      energyPerTurn: 1,
+      type: 'ai'
+    };
+  }
+
+  generateAIDeck() {
+	// Получаем все доступные ID способностей
+	const availableIds = Object.keys(this.abilities).map(Number);
+	
+	// Базовые правила для AI:
+	const aiDeckRules = {
+	  minCost: 1,
+	  maxCost: 3,
+	  preferredTypes: ['ATTACK', 'DEFENSE'],
+	  deckSize: 5
+	};
+  
+	// Фильтруем подходящие способности
+	const suitableAbilities = availableIds.filter(id => {
+	  const ability = this.abilities[id];
+	  return ability.cost >= aiDeckRules.minCost && 
+			 ability.cost <= aiDeckRules.maxCost &&
+			 aiDeckRules.preferredTypes.includes(ability.effectType);
+	});
+  
+	// Если подходящих недостаточно - добавляем любые
+	if (suitableAbilities.length < aiDeckRules.deckSize) {
+	  const remainingIds = availableIds.filter(id => !suitableAbilities.includes(id));
+	  suitableAbilities.push(...remainingIds.slice(0, aiDeckRules.deckSize - suitableAbilities.length));
+	}
+  
+	// Выбираем случайные карты
+	const selectedCards = [];
+	while (selectedCards.length < aiDeckRules.deckSize && suitableAbilities.length > 0) {
+	  const randomIndex = Math.floor(Math.random() * suitableAbilities.length);
+	  selectedCards.push(suitableAbilities[randomIndex]);
+	  suitableAbilities.splice(randomIndex, 1); // Удаляем чтобы не дублировать
+	}
+  
+	// Дополняем колоду если всё ещё не хватает
+	while (selectedCards.length < aiDeckRules.deckSize) {
+	  selectedCards.push(availableIds[Math.floor(Math.random() * availableIds.length)]);
+	}
+  
+	return selectedCards.slice(0, aiDeckRules.deckSize);
+  }
+
+  getDifficultyLevel() {
+    return ['easy', 'normal', 'hard'][this.aiDifficulty - 1];
+  }
+
+  selectCards(preferred, all, size) {
+    const deck = [];
+    
+    // Пытаемся взять предпочитаемые карты
+    while (deck.length < size && preferred.length > 0) {
+      const idx = Math.floor(Math.random() * preferred.length);
+      deck.push(preferred.splice(idx, 1)[0]);
+    }
+
+    // Добираем из общих
+    while (deck.length < size && all.length > 0) {
+      const idx = Math.floor(Math.random() * all.length);
+      const card = all.splice(idx, 1)[0];
+      if (!deck.includes(card)) deck.push(card);
+    }
+
+    return deck.slice(0, size);
   }
 
   createPlayer(deck, type) {
@@ -54,17 +135,61 @@ class PveGame extends BaseGame {
   }
 
   processAITurn() {
-    // AI логика
-    setTimeout(() => {
-      const ai = this.players.ai;
-      if (ai.hand.length > 0) {
-        const playableCards = ai.hand.filter(c => c.cost <= ai.energy);
-        if (playableCards.length > 0) {
-          this.playCard('ai', playableCards[0].id);
-        }
+    const ai = this.players.ai;
+    const playable = ai.hand.filter(c => c.cost <= ai.energy);
+    
+    if (playable.length > 0) {
+      const strategy = this.selectAIAction(playable);
+      this.playCard('ai', strategy.cardId);
+      
+      if (strategy.target) {
+        this.combatSystem.resolveAbility(
+          this, 
+          'ai', 
+          strategy.cardId, 
+          strategy.target
+        );
       }
-      this.turnSystem.endTurn();
-    }, 2000);
+    }
+    
+    this.turnSystem.endTurn();
+  }
+
+  selectAIAction(cards) {
+    const priorities = {
+      'ATTACK': 3,
+      'BUFF': 2,
+      'DEFENSE': 1
+    };
+
+    const bestCard = cards.reduce((best, current) => {
+      const currentPriority = priorities[this.abilities[current.id].effectType] || 0;
+      return currentPriority > best.priority ? 
+        { cardId: current.id, priority: currentPriority } : 
+        best;
+    }, { cardId: null, priority: -1 });
+
+    return {
+      cardId: bestCard.cardId,
+      target: this.selectTarget(this.abilities[bestCard.cardId])
+    };
+  }
+
+  selectTarget(ability) {
+    switch(ability.target) {
+      case 'WEAKEST_ENEMY':
+        return this.findWeakestEnemy();
+      case 'RANDOM_ENEMY':
+        return this.findRandomEnemy();
+      default:
+        return null;
+    }
+  }
+
+  findWeakestEnemy() {
+    return this.players.human.field
+      .reduce((weakest, current) => 
+        current.health < (weakest?.health || Infinity) ? current : weakest, null)?.id;
   }
 
   playCard(playerId, cardId) {
