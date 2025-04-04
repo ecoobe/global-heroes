@@ -108,32 +108,34 @@ io.on('connection', (socket) => {
   websocketConnections.inc();
 
   socket.on('startPve', async (deck, callback) => {
-	let invalidIds = [];
-	
 	try {
-	  console.log('Received deck from client:', deck);
-	  
-	  // Проверяем загружены ли способности
-	  if (!abilities || typeof abilities !== 'object') {
-		throw new Error('Ошибка загрузки данных героев');
+	  console.log('[SERVER] Received deck:', deck);
+	  console.log('[SERVER] Available abilities IDs:', Object.keys(abilities));
+  
+	  // Проверяем загрузку способностей
+	  if (!abilities || Object.keys(abilities).length === 0) {
+		throw new Error('Способности героев не загружены');
 	  }
   
-	  // Преобразование ID в числа
 	  const numericDeck = deck.map(id => Number(id));
-	  
+	  console.log('[SERVER] Numeric deck:', numericDeck);
+  
 	  // Проверка существования способностей
-	  invalidIds = numericDeck.filter(id => {
-		return !abilities.hasOwnProperty(id); // Теперь безопасно
-	  });
+	  const invalidIds = numericDeck.filter(id => !abilities[id]);
+	  console.log('[SERVER] Invalid IDs:', invalidIds);
   
 	  if (invalidIds.length > 0) {
 		throw new Error(`Неверные ID: ${invalidIds.join(', ')}`);
 	  }
   
-	  // Создание игры
-	  const game = new PveGame(numericDeck);
-	  const { sessionId } = sessionManager.createGameSession(numericDeck);
-	  
+	  // Формируем данные героев
+	  const heroesData = numericDeck.map(id => ({ id, ...abilities[id] }));
+	  console.log('[SERVER] Heroes data:', heroesData);
+  
+	  // Создаем игру
+	  const game = new PveGame(heroesData);
+	  const { sessionId } = sessionManager.createGameSession(heroesData);
+  
 	  callback({
 		status: 'success',
 		sessionId,
@@ -141,12 +143,12 @@ io.on('connection', (socket) => {
 	  });
   
 	} catch (err) {
-	  console.error(`[PVE ERROR] ${socket.id}:`, err.message);
+	  console.error('[SERVER ERROR]', err.message);
 	  callback({
 		status: 'error',
 		code: "GAME_INIT_FAILURE",
 		message: err.message,
-		invalidIds
+		invalidIds: []
 	  });
 	}
   });
