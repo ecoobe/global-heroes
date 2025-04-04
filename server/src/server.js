@@ -5,70 +5,67 @@ const { Server } = require('socket.io');
 const Redis = require('ioredis');
 const { PveGame } = require('../game/modes/pve-engine');
 const promBundle = require("express-prom-bundle");
-const abilities = {
-	1: {
-	  id: 1,
-	  name: "Месть клинка",
-	  description: "При смерти наносит 4 урона случайному врагу",
-	  cost: 2,
-	  charges: 1,
-	  effectType: "DEATH",
-	  target: "RANDOM_ENEMY",
-	  value: 4
-	},
-	2: {
-	  id: 2,
-	  name: "Невидимость",
-	  description: "Избегает первой атаки в бою",
-	  cost: 1,
-	  charges: 2,
-	  effectType: "PASSIVE",
-	  trigger: "FIRST_ATTACK"
-	},
-	3: {
-	  id: 3,
-	  name: "Тактик",
-	  description: "Увеличивает силу всех союзников на 1",
-	  cost: 3,
-	  charges: 1,
-	  effectType: "BUFF",
-	  target: "ALL_ALLIES",
-	  stat: "strength",
-	  value: 1
-	},
-	4: {
-	  id: 4,
-	  name: "Стрела Луны",
-	  description: "Атакует самого слабого врага, игнорируя защиту",
-	  cost: 2,
-	  charges: 3,
-	  effectType: "ATTACK",
-	  target: "WEAKEST_ENEMY",
-	  pierce: true
-	},
-	5: {
-	  id: 5,
-	  name: "Щит предков",
-	  description: "Получает на 2 меньше урона от атак",
-	  cost: 2,
-	  charges: 2,
-	  effectType: "DEFENSE",
-	  modifier: -2
-	}
-};
 const SessionManager = require('../game/session-manager');
-const { v4: uuidv4 } = require('uuid');
-const Joi = require('joi');
-const crypto = require('crypto');
 const { Gauge } = require('prom-client');
+
+// 1. Инициализация способностей с нормализацией ключей
+const abilities = Object.entries({
+  1: {
+    id: 1,
+    name: "Месть клинка",
+    description: "При смерти наносит 4 урона случайному врагу",
+    cost: 2,
+    charges: 1,
+    effectType: "DEATH",
+    target: "RANDOM_ENEMY",
+    value: 4
+  },
+  2: {
+    id: 2,
+    name: "Невидимость",
+    description: "Избегает первой атаки в бою",
+    cost: 1,
+    charges: 2,
+    effectType: "PASSIVE",
+    trigger: "FIRST_ATTACK"
+  },
+  3: {
+    id: 3,
+    name: "Тактик",
+    description: "Увеличивает силу всех союзников на 1",
+    cost: 3,
+    charges: 1,
+    effectType: "BUFF",
+    target: "ALL_ALLIES",
+    stat: "strength",
+    value: 1
+  },
+  4: {
+    id: 4,
+    name: "Стрела Луны",
+    description: "Атакует самого слабого врага, игнорируя защиту",
+    cost: 2,
+    charges: 3,
+    effectType: "ATTACK",
+    target: "WEAKEST_ENEMY",
+    pierce: true
+  },
+  5: {
+    id: 5,
+    name: "Щит предков",
+    description: "Получает на 2 меньше урона от атак",
+    cost: 2,
+    charges: 2,
+    effectType: "DEFENSE",
+    modifier: -2
+  }
+}).reduce((acc, [key, value]) => {
+  acc[String(key)] = value; // Принудительно строковые ключи
+  return acc;
+}, {});
 
 const app = express();
 const server = createServer(app);
-
-// 1. Валидация колод
-const deckSchema = Joi.array().items(
-  Joi.number().integer().min(1).max(19)
-).length(5).label('HeroDeck');
 
 // 2. Настройка метрик
 const metricsMiddleware = promBundle({
@@ -78,7 +75,7 @@ const metricsMiddleware = promBundle({
   promClient: { collectDefaultMetrics: { timeout: 10000 } }
 });
 
-// Кастомные метрики
+// 3. Кастомные метрики
 const redisStatus = new Gauge({
   name: 'redis_status',
   help: 'Redis connection status',
@@ -92,10 +89,10 @@ const websocketConnections = new Gauge({
 
 app.use(metricsMiddleware);
 
-// 3. Подключение Redis
+// 4. Подключение Redis
 const redisClient = new Redis(process.env.REDIS_URL || 'redis://redis:6379');
 
-// 4. Инициализация Socket.IO
+// 5. Инициализация Socket.IO
 const io = new Server(server, {
   connectionStateRecovery: { maxDisconnectionDuration: 30000 },
   cors: {
@@ -106,10 +103,10 @@ const io = new Server(server, {
   transports: ["websocket"]
 });
 
-// 5. Инициализация менеджера сессий
+// 6. Менеджер сессий
 const sessionManager = new SessionManager();
 
-// 6. Healthcheck
+// 7. Healthcheck
 app.get("/health", async (req, res) => {
   try {
     await redisClient.ping();
@@ -128,20 +125,6 @@ app.get("/health", async (req, res) => {
   }
 });
 
-// 7. Запуск сервера
-const startServer = async () => {
-  try {
-    await redisClient.ping();
-    server.listen(3000, '0.0.0.0', () => {
-      console.log('🚀 Сервер запущен на порту 3000');
-      console.log('🔗 Redis:', redisClient.status);
-    });
-  } catch (err) {
-    console.error('⛔ Ошибка запуска:', err);
-    process.exit(1);
-  }
-};
-
 // 8. Обработчики Redis
 redisClient.on('ready', () => {
   console.log('✅ Подключение к Redis установлено');
@@ -153,64 +136,78 @@ redisClient.on('error', (err) => {
   redisStatus.labels('main').set(0);
 });
 
-// 9. Логика WebSocket
+// 9. WebSocket логика
 io.on('connection', (socket) => {
   console.log(`🎮 Новое подключение: ${socket.id}`);
   websocketConnections.inc();
 
-  socket.on('startPve', async (deck, callback) => {
-	try {
-	  console.log('[SERVER] Received deck:', deck);
-	  console.log('[SERVER] Available ability IDs:', Object.keys(abilities).map(Number));
-  
-	  // Проверка загрузки способностей
-	  if (!abilities || Object.keys(abilities).length === 0) {
-		throw new Error('Hero abilities not loaded');
-	  }
-  
-	  const numericDeck = deck.map(id => Number(id));
-	  console.log('[SERVER] Numeric deck:', numericDeck);
-  
-	  // Проверка существования способностей
-	  const invalidIds = numericDeck.filter(id => !abilities.hasOwnProperty(id));
-	  if (invalidIds.length > 0) {
-		throw new Error(`Invalid ability IDs: ${invalidIds.join(', ')}`);
-	  }
-  
-	  // Формирование данных героев с проверкой
-	  const heroesData = numericDeck.map(id => {
-		const ability = abilities[id];
-		if (!ability) {
-		  throw new Error(`Ability data for ID ${id} is undefined`);
-		}
-		return { id, ...ability };
-	  });
-  
-	  console.log('[SERVER] Heroes data:', heroesData);
-  
-	  // Создание игры
-	  const game = new PveGame(heroesData, abilities);
-	  const { sessionId } = sessionManager.createGameSession(heroesData);
-  
-	  callback({
-		status: 'success',
-		sessionId,
-		gameState: game.getPublicState()
-	  });
-  
-	} catch (err) {
-	  console.error('[SERVER ERROR]', err.stack); // Логируем полный стек
-	  callback({
-		status: 'error',
-		code: "GAME_INIT_FAILURE",
-		message: err.message,
-		invalidIds: []
-	  });
-	}
+  socket.on('startPve', async (deckInput, callback) => {
+    try {
+      console.log('[SERVER] Получены данные:', { input: deckInput });
+
+      // 10. Нормализация колоды
+      let numericDeck;
+      if (typeof deckInput === 'string') {
+        try {
+          numericDeck = JSON.parse(deckInput).map(id => {
+            const numId = Number(id);
+            if (isNaN(numId)) throw new Error(`Неверный ID: ${id}`);
+            return numId;
+          });
+        } catch (e) {
+          throw new Error(`Ошибка парсинга JSON: ${e.message}`);
+        }
+      } else if (Array.isArray(deckInput)) {
+        numericDeck = deckInput.map(id => {
+          const numId = Number(id);
+          if (isNaN(numId)) throw new Error(`Неверный ID: ${id}`);
+          return numId;
+        });
+      } else {
+        throw new Error('Неверный формат колоды');
+      }
+
+      console.log('[SERVER] Нормализованная колода:', numericDeck);
+
+      // 11. Проверка способностей
+      const invalidIds = numericDeck.filter(id => !abilities.hasOwnProperty(String(id)));
+      if (invalidIds.length > 0) {
+        throw new Error(`Несуществующие ID способностей: ${invalidIds.join(', ')}`);
+      }
+
+      // 12. Создание игры
+      console.log('[SERVER] Создание игры...');
+      const game = new PveGame(numericDeck, abilities);
+      
+      // 13. Создание сессии
+      const { sessionId } = sessionManager.createGameSession(numericDeck);
+      
+      callback({
+        status: 'success',
+        sessionId,
+        gameState: game.getPublicState()
+      });
+
+      console.log('[SERVER] Игра успешно создана:', sessionId);
+
+    } catch (error) {
+      console.error('[SERVER ERROR]', {
+        error: error.message,
+        stack: error.stack,
+        input: deckInput
+      });
+      
+      callback({
+        status: 'error',
+        code: "GAME_INIT_FAILURE",
+        message: error.message,
+        invalidIds: []
+      });
+    }
   });
 
   socket.on('disconnect', () => {
-    console.log(`⚠️  Отключение: ${socket.id}`);
+    console.log(`⚠️ Отключение: ${socket.id}`);
     websocketConnections.dec();
   });
 
@@ -219,7 +216,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// 10. Graceful shutdown
+// 14. Graceful shutdown
 const shutdown = async () => {
   console.log('\n🛑 Завершение работы...');
   try {
@@ -235,5 +232,19 @@ const shutdown = async () => {
 
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
+
+// 15. Запуск сервера
+const startServer = async () => {
+  try {
+    await redisClient.ping();
+    server.listen(3000, '0.0.0.0', () => {
+      console.log('🚀 Сервер запущен на порту 3000');
+      console.log('🔗 Redis статус:', redisClient.status);
+    });
+  } catch (err) {
+    console.error('⛔ Ошибка запуска:', err);
+    process.exit(1);
+  }
+};
 
 startServer();
