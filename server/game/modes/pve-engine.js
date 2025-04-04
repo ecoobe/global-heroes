@@ -29,13 +29,11 @@ class PveGame extends BaseGame {
 	return deck.map(id => {
 	  console.log('[DEBUG] Processing card ID:', id, 'Type:', typeof id);
 	  
-	  // Явное преобразование ID к строке
 	  const abilityKey = String(id);
 	  const ability = this.abilities[abilityKey];
 	  
 	  console.log('[DEBUG] Ability data:', ability);
   
-	  // Усиленные проверки
 	  if (!ability) {
 		throw new Error(`Ability not found for ID: ${id} (key: ${abilityKey})`);
 	  }
@@ -44,7 +42,6 @@ class PveGame extends BaseGame {
 		throw new Error(`Invalid ability type for ID ${id}: ${typeof ability}`);
 	  }
   
-	  // Проверка обязательных полей
 	  const requiredFields = ['name', 'cost', 'effectType'];
 	  const missingFields = requiredFields.filter(field => !(field in ability));
 	  
@@ -52,7 +49,7 @@ class PveGame extends BaseGame {
 		throw new Error(`Missing fields in ability ${id}: ${missingFields.join(', ')}`);
 	  }
   
-	  // Возвращаем нормализованные данные
+	  // Возвращаем структуру, совместимую с серверными ожиданиями
 	  return {
 		id: Number(id),
 		name: ability.name,
@@ -60,10 +57,13 @@ class PveGame extends BaseGame {
 		charges: Number(ability.charges) || 1,
 		effectType: ability.effectType,
 		target: ability.target || 'NONE',
-		stats: {
-		  strength: Number(ability.strength) || 0,
-		  health: Number(ability.health) || 1
-		}
+		// Используем прямые поля вместо stats
+		strength: Number(ability.strength) || 0,
+		health: Number(ability.health) || 1,
+		// Добавляем специфичные для сервера поля
+		...(ability.value !== undefined && { value: ability.value }),
+		...(ability.modifier !== undefined && { modifier: ability.modifier }),
+		...(ability.pierce !== undefined && { pierce: ability.pierce })
 	  };
 	});
   }
