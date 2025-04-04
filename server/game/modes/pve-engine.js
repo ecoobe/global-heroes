@@ -4,80 +4,70 @@ const { CombatSystem } = require('../core/combat-system');
 class PveGame extends BaseGame {
   constructor(playerDeck, abilities) {
     try {
-      console.log('[PvE] Constructor start');
+      console.log('[PvE] Initialization started');
       
-      // 1. Вызов super() первым
+      // 1. Принудительная нормализация данных
+      const normalizedAbilities = this.constructor.normalizeAbilities(abilities);
+      const normalizedDeck = this.constructor.normalizeDeck(playerDeck);
+
+      // 2. Инициализация родительского класса
       super();
-      console.log('[PvE] Base initialized');
+      console.log('[PvE] Base game initialized');
 
-      // 2. Нормализация колоды
-      this.numericDeck = this.constructor.staticNormalizeDeck(playerDeck);
-      console.log('[PvE] Deck normalized:', this.numericDeck);
-
-      // 3. Инициализация способностей
-      this.abilities = Object.keys(abilities).reduce((acc, key) => {
-        const strKey = String(key);
-        acc[strKey] = { ...abilities[key], id: Number(key) };
-        return acc;
-      }, {});
-      console.log('[PvE] Abilities loaded:', Object.keys(this.abilities));
-
-      // 4. Проверка существования всех способностей
-      this.validateAbilities();
-
-      // 5. Инициализация систем
+      // 3. Сохранение критических данных
+      this.abilities = normalizedAbilities;
       this.combatSystem = new CombatSystem();
       this.aiDifficulty = 2;
 
-      // 6. Инициализация игроков
-      this.initializePlayers({
-        human: this.numericDeck,
-        ai: []
-      });
+      // 4. Глубокая валидация
+      this.validateInitialData(normalizedDeck);
 
-      console.log('[PvE] Initialization complete');
-    } catch (error) {
-      console.error('[PvE CONSTRUCTOR ERROR]', error.stack);
-      throw new Error(`Game init failed: ${error.message}`);
-    }
-  }
-
-  // region ==================== CORE METHODS ====================
-  initializePlayers(decks) {
-    try {
-      console.log('[PvE] Initializing players...');
-      
+      // 5. Инициализация игроков
       this.players = {
-        human: this.createPlayer(decks.human, 'human'),
-        ai: this.createAI()
+        human: this.createHumanPlayer(normalizedDeck),
+        ai: this.createAIPlayer()
       };
 
-      console.log('[PvE] Players ready:', {
-        human: this.players.human.deck.map(c => c.id),
-        ai: this.players.ai.deck
-      });
+      console.log('[PvE] Game fully initialized');
     } catch (error) {
-      throw new Error(`Players init failed: ${error.message}`);
+      console.error('[CRITICAL ERROR]', {
+        message: error.message,
+        stack: error.stack,
+        inputDeck: playerDeck,
+        abilitiesKeys: Object.keys(abilities || {})
+      });
+      throw new Error(`Game initialization failed: ${error.message}`);
     }
   }
 
-  static staticNormalizeDeck(deck) {
+  // region -------------------- STATIC METHODS --------------------
+  static normalizeDeck(deck) {
     try {
-      if (!Array.isArray(deck)) {
-        throw new Error(`Expected array, got ${typeof deck}`);
-      }
+      console.log('[DECK] Raw input:', deck);
 
-      return deck.map(item => {
-        // Обработка объектов карт
+      // Обработка строкового формата
+      const parsedDeck = typeof deck === 'string' 
+        ? JSON.parse(deck) 
+        : deck;
+
+      // Преобразование в массив
+      const deckArray = Array.isArray(parsedDeck) 
+        ? parsedDeck 
+        : [parsedDeck];
+
+      // Конвертация в числовые ID
+      return deckArray.map(item => {
+        // Извлечение ID из объектов
         if (item && typeof item === 'object' && item.id) {
           const id = Number(item.id);
           if (isNaN(id)) throw new Error(`Invalid object ID: ${item.id}`);
           return id;
         }
 
-        // Обработка примитивов
+        // Прямая конвертация
         const id = Number(item);
-        if (isNaN(id)) throw new Error(`Invalid ID: ${item}`);
+        if (isNaN(id)) throw new Error(`Invalid ID format: ${item}`);
+        
         return id;
       });
     } catch (error) {
@@ -85,98 +75,108 @@ class PveGame extends BaseGame {
     }
   }
 
-  validateAbilities() {
-    console.log('[PvE] Validating abilities...');
-    
-    // Проверка обязательных полей
-    Object.entries(this.abilities).forEach(([key, ability]) => {
-      const requiredFields = ['id', 'name', 'cost', 'effectType'];
-      const missing = requiredFields.filter(f => !(f in ability));
-      
-      if (missing.length > 0) {
-        throw new Error(`Ability ${key} missing fields: ${missing.join(', ')}`);
-      }
-    });
-  }
-  // endregion
-
-  // region ==================== DECK VALIDATION ====================
-  validateDeck(deck) {
+  static normalizeAbilities(abilities) {
     try {
-      console.log('[VALIDATION] Starting with deck:', deck);
-      
-      return deck.map(id => {
-        const key = String(id);
+      console.log('[ABILITIES] Raw input keys:', Object.keys(abilities));
+
+      return Object.entries(abilities).reduce((acc, [key, value]) => {
+        const stringKey = String(key);
         
-        if (!this.abilities[key]) {
-          throw new Error(`Ability ${key} not found`);
+        // Валидация структуры
+        const requiredFields = ['id', 'name', 'cost', 'effectType'];
+        const missingFields = requiredFields.filter(f => !(f in value));
+        if (missingFields.length > 0) {
+          throw new Error(`Ability ${stringKey} missing fields: ${missingFields.join(', ')}`);
         }
 
+        // Создание нормализованного объекта
+        acc[stringKey] = {
+          id: Number(value.id),
+          name: String(value.name),
+          cost: Math.max(1, Number(value.cost)),
+          effectType: String(value.effectType),
+          target: value.target ? String(value.target) : 'NONE',
+          charges: Math.max(1, Number(value.charges || 1)),
+          health: Math.max(1, Number(value.health || 1)),
+          strength: Math.max(0, Number(value.strength || 0)),
+          ...(value.value !== undefined && { value: Number(value.value) }),
+          ...(value.modifier !== undefined && { modifier: Number(value.modifier) }),
+          ...(value.pierce !== undefined && { pierce: Boolean(value.pierce) })
+        };
+
+        return acc;
+      }, {});
+    } catch (error) {
+      throw new Error(`Abilities normalization failed: ${error.message}`);
+    }
+  }
+  // endregion
+
+  // region -------------------- VALIDATION --------------------
+  validateInitialData(deck) {
+    console.log('[VALIDATION] Starting comprehensive check');
+    
+    // Проверка существования всех способностей
+    deck.forEach(id => {
+      const key = String(id);
+      if (!this.abilities[key]) {
+        throw new Error(`Ability not found: ${id} (checked key: ${key})`);
+      }
+    });
+
+    // Дополнительные проверки
+    if (!Array.isArray(deck)) {
+      throw new Error(`Deck must be array, got ${typeof deck}`);
+    }
+    
+    if (deck.length !== 5) {
+      throw new Error(`Invalid deck size: ${deck.length} (required 5)`);
+    }
+  }
+  // endregion
+
+  // region -------------------- PLAYER MANAGEMENT --------------------
+  createHumanPlayer(deck) {
+    try {
+      console.log('[PLAYER] Creating human player');
+
+      const cards = deck.map(id => {
+        const key = String(id);
         const ability = this.abilities[key];
-        return this.buildCardData(ability);
+        
+        return {
+          id: ability.id,
+          name: ability.name,
+          cost: ability.cost,
+          effectType: ability.effectType,
+          target: ability.target,
+          charges: ability.charges,
+          health: ability.health,
+          strength: ability.strength,
+          ...(ability.value && { value: ability.value }),
+          ...(ability.modifier && { modifier: ability.modifier }),
+          ...(ability.pierce && { pierce: ability.pierce })
+        };
       });
-    } catch (error) {
-      console.error('[VALIDATION ERROR]', error.message);
-      throw new Error(`Deck validation failed: ${error.message}`);
-    }
-  }
 
-  buildCardData(ability) {
-    return {
-      id: ability.id,
-      name: ability.name,
-      cost: Math.max(1, Number(ability.cost)),
-      effectType: ability.effectType,
-      target: ability.target || 'NONE',
-      charges: Math.max(1, Number(ability.charges || 1)),
-      health: Math.max(1, Number(ability.health || 1)),
-      strength: Math.max(0, Number(ability.strength || 0)),
-      ...(ability.value && { value: ability.value }),
-      ...(ability.modifier && { modifier: ability.modifier }),
-      ...(ability.pierce && { pierce: ability.pierce })
-    };
-  }
-  // endregion
-
-  // region ==================== PLAYER MANAGEMENT ====================
-  createPlayer(deck, type) {
-    try {
-      console.log(`[PLAYER] Creating ${type} player`);
       return {
-        deck: this.validateDeck(deck),
+        deck: cards,
         hand: [],
         field: [],
         health: 30,
         energy: 0,
         energyPerTurn: 1,
-        type: type
+        type: 'human'
       };
     } catch (error) {
-      throw new Error(`Player creation failed: ${error.message}`);
+      throw new Error(`Human player creation failed: ${error.message}`);
     }
   }
 
-  createAI() {
-    try {
-      return {
-        deck: this.generateAIDeck(),
-        hand: [],
-        field: [],
-        health: 30,
-        energy: 0,
-        energyPerTurn: 1,
-        type: 'ai'
-      };
-    } catch (error) {
-      throw new Error(`AI creation failed: ${error.message}`);
-    }
-  }
-  // endregion
-
-  // region ==================== AI SYSTEM ====================
-  createAI() {
+  createAIPlayer() {
     try {
       console.log('[AI] Initializing AI player');
+      
       return {
         deck: this.generateAIDeck(),
         hand: [],
@@ -187,8 +187,7 @@ class PveGame extends BaseGame {
         type: 'ai'
       };
     } catch (error) {
-      console.error('[AI CREATION ERROR]', error.stack);
-      throw new Error(`AI initialization failed: ${error.message}`);
+      throw new Error(`AI player creation failed: ${error.message}`);
     }
   }
 
@@ -204,190 +203,112 @@ class PveGame extends BaseGame {
         deckSize: 5
       };
 
+      // Фильтрация по правилам
       let candidates = availableIds.filter(id => {
-        const ability = this.abilities[id];
+        const ability = this.abilities[String(id)];
         return ability.cost >= rules.minCost && 
                ability.cost <= rules.maxCost &&
                rules.preferredTypes.includes(ability.effectType);
       });
 
-      // Дополнение если недостаточно
+      // Дополнение при необходимости
       if (candidates.length < rules.deckSize) {
         const rest = availableIds.filter(id => !candidates.includes(id));
         candidates.push(...rest.slice(0, rules.deckSize - candidates.length));
       }
 
-      // Выбор карт
+      // Рандомизация выбора
       const selected = [];
       while (selected.length < rules.deckSize && candidates.length > 0) {
-        const idx = Math.floor(Math.random() * candidates.length);
-        selected.push(candidates[idx]);
-        candidates.splice(idx, 1);
+        const randomIndex = Math.floor(Math.random() * candidates.length);
+        selected.push(candidates[randomIndex]);
+        candidates.splice(randomIndex, 1);
       }
 
       console.log('[AI] Generated deck:', selected);
       return selected;
     } catch (error) {
-      console.error('[AI DECK ERROR]', error.stack);
       throw new Error(`AI deck generation failed: ${error.message}`);
     }
   }
+  // endregion
 
+  // region -------------------- GAME LOGIC --------------------
   processAITurn() {
     try {
-      console.log('[AI] Processing AI turn');
-      const ai = this.players.ai;
-      const playable = ai.hand.filter(card => card.cost <= ai.energy);
+      console.log('[AI] Processing turn');
       
-      if (playable.length === 0) {
+      const ai = this.players.ai;
+      const playableCards = ai.hand.filter(card => card.cost <= ai.energy);
+      
+      if (playableCards.length === 0) {
         console.log('[AI] No playable cards');
-        return this.turnSystem.endTurn();
+        return this.endTurn();
       }
 
-      const strategy = this.selectAIAction(playable);
+      const strategy = this.selectAIStrategy(playableCards);
       console.log('[AI] Selected strategy:', strategy);
 
-      this.playCard('ai', strategy.cardId);
-      
-      if (strategy.target) {
-        this.combatSystem.resolveAbility(
-          this, 
-          'ai', 
-          strategy.cardId, 
-          strategy.target
-        );
-      }
-
-      this.turnSystem.endTurn();
+      this.playCard('ai', strategy.cardId, strategy.target);
     } catch (error) {
       console.error('[AI TURN ERROR]', error.stack);
       throw new Error(`AI turn processing failed: ${error.message}`);
     }
   }
 
-  selectAIAction(playableCards) {
-    try {
-      const priorityMap = {
-        'ATTACK': 3,
-        'BUFF': 2,
-        'DEFENSE': 1
-      };
+  selectAIStrategy(cards) {
+    const priorityMap = {
+      'ATTACK': 3,
+      'BUFF': 2,
+      'DEFENSE': 1
+    };
 
-      return playableCards.reduce((best, current) => {
-        const ability = this.abilities[current.id];
-        const priority = priorityMap[ability.effectType] || 0;
-        
-        if (priority > best.priority) {
-          return {
-            cardId: current.id,
-            priority: priority,
-            target: this.selectTarget(ability)
-          };
-        }
-        return best;
-      }, { cardId: null, priority: -1 });
-    } catch (error) {
-      console.error('[AI STRATEGY ERROR]', error.stack);
-      return { cardId: null, priority: -1 };
-    }
-  }
-
-  selectTarget(ability) {
-    try {
-      if (!ability.target) return null;
+    return cards.reduce((best, current) => {
+      const ability = this.abilities[String(current.id)];
+      const priority = priorityMap[ability.effectType] || 0;
       
-      switch(ability.target) {
-        case 'WEAKEST_ENEMY':
-          return this.findWeakestEnemy();
-        case 'RANDOM_ENEMY':
-          return this.findRandomEnemy();
-        default:
-          return null;
+      if (priority > best.priority) {
+        return {
+          cardId: current.id,
+          priority: priority,
+          target: this.selectTarget(ability)
+        };
       }
-    } catch (error) {
-      console.error('[TARGET SELECTION ERROR]', error.stack);
-      return null;
-    }
+      return best;
+    }, { cardId: null, priority: -1 });
   }
 
-  findWeakestEnemy() {
-    try {
-      const targets = this.players.human.field;
-      if (targets.length === 0) return null;
-      
-      return targets.reduce((weakest, current) => {
-        return current.health < (weakest?.health || Infinity) ? current : weakest;
-      }, null)?.id;
-    } catch (error) {
-      console.error('[WEAKEST ENEMY ERROR]', error.stack);
-      return null;
-    }
-  }
-
-  findRandomEnemy() {
-    try {
-      const targets = this.players.human.field;
-      if (targets.length === 0) return null;
-      
-      const randomIndex = Math.floor(Math.random() * targets.length);
-      return targets[randomIndex]?.id;
-    } catch (error) {
-      console.error('[RANDOM ENEMY ERROR]', error.stack);
-      return null;
-    }
-  }
-  // endregion
-
-  // region ==================== GAME ACTIONS ====================
-  playCard(playerId, cardId) {
+  playCard(playerId, cardId, target) {
     try {
       console.log(`[ACTION] Playing card ${cardId} for ${playerId}`);
-      const player = this.players[playerId];
       
+      const player = this.players[playerId];
       const cardIndex = player.hand.findIndex(c => c.id === cardId);
-      if (cardIndex === -1) {
-        throw new Error(`Card ${cardId} not found in hand`);
+      
+      if (cardIndex === -1) throw new Error(`Card ${cardId} not in hand`);
+      if (player.energy < player.hand[cardIndex].cost) {
+        throw new Error(`Insufficient energy: ${player.energy}/${player.hand[cardIndex].cost}`);
       }
 
-      const card = player.hand[cardIndex];
-      if (player.energy < card.cost) {
-        throw new Error(`Not enough energy: ${player.energy}/${card.cost}`);
-      }
+      const playedCard = player.hand.splice(cardIndex, 1)[0];
+      player.field.push(playedCard);
+      player.energy -= playedCard.cost;
 
-      // Перемещение карты
-      player.hand.splice(cardIndex, 1);
-      player.field.push({ ...card });
-      player.energy -= card.cost;
-
-      // Активация способности
       this.combatSystem.resolveAbility(
         this,
         playerId,
-        card.id,
-        this.selectTarget(this.abilities[card.id])
+        playedCard.id,
+        target
       );
-
-      console.log(`[ACTION] Card played successfully: ${card.name}`);
     } catch (error) {
       console.error('[PLAY CARD ERROR]', error.stack);
       throw new Error(`Card play failed: ${error.message}`);
     }
   }
 
-  onTurnEnd() {
-    try {
-      console.log('[TURN] Ending turn for:', this.turnSystem.currentTurn);
-      
-      if (this.players[this.turnSystem.currentTurn].type === 'ai') {
-        this.processAITurn();
-      }
-      
-      // Базовая логика окончания хода
-      super.onTurnEnd();
-    } catch (error) {
-      console.error('[TURN END ERROR]', error.stack);
-      throw new Error(`Turn end processing failed: ${error.message}`);
-    }
+  endTurn() {
+    console.log('[TURN] Ending current turn');
+    // Логика окончания хода
   }
   // endregion
 }

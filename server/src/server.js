@@ -1,4 +1,3 @@
-const path = require('path');
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
@@ -8,93 +7,63 @@ const promBundle = require("express-prom-bundle");
 const SessionManager = require('../game/session-manager');
 const { Gauge } = require('prom-client');
 
-// 1. Инициализация способностей с нормализацией ключей
-const abilities = Object.entries({
-  1: {
-    id: 1,
-    name: "Месть клинка",
-    description: "При смерти наносит 4 урона случайному врагу",
-    cost: 2,
-    charges: 1,
-    effectType: "DEATH",
-    target: "RANDOM_ENEMY",
-    value: 4
-  },
-  2: {
-    id: 2,
-    name: "Невидимость",
-    description: "Избегает первой атаки в бою",
-    cost: 1,
-    charges: 2,
-    effectType: "PASSIVE",
-    trigger: "FIRST_ATTACK"
-  },
-  3: {
-    id: 3,
-    name: "Тактик",
-    description: "Увеличивает силу всех союзников на 1",
-    cost: 3,
-    charges: 1,
-    effectType: "BUFF",
-    target: "ALL_ALLIES",
-    stat: "strength",
-    value: 1
-  },
-  4: {
-    id: 4,
-    name: "Стрела Луны",
-    description: "Атакует самого слабого врага, игнорируя защиту",
-    cost: 2,
-    charges: 3,
-    effectType: "ATTACK",
-    target: "WEAKEST_ENEMY",
-    pierce: true
-  },
-  5: {
-    id: 5,
-    name: "Щит предков",
-    description: "Получает на 2 меньше урона от атак",
-    cost: 2,
-    charges: 2,
-    effectType: "DEFENSE",
-    modifier: -2
-  }
-}).reduce((acc, [key, value]) => {
-  acc[String(key)] = value; // Принудительно строковые ключи
-  return acc;
-}, {});
+// 1. Инициализация способностей (защищенная версия)
+const abilities = Object.freeze(
+  Object.entries({
+    1: { id: 1, name: "Месть клинка", cost: 2, effectType: "DEATH", target: "RANDOM_ENEMY", value: 4 },
+    2: { id: 2, name: "Невидимость", cost: 1, effectType: "PASSIVE", trigger: "FIRST_ATTACK" },
+    3: { id: 3, name: "Тактик", cost: 3, effectType: "BUFF", target: "ALL_ALLIES", stat: "strength", value: 1 },
+    4: { id: 4, name: "Стрела Луны", cost: 2, effectType: "ATTACK", target: "WEAKEST_ENEMY", pierce: true },
+    5: { id: 5, name: "Щит предков", cost: 2, effectType: "DEFENSE", modifier: -2 }
+  }).reduce((acc, [key, value]) => {
+    const validated = {
+      id: Number(key),
+      name: String(value.name),
+      cost: Math.max(1, Number(value.cost)),
+      effectType: String(value.effectType),
+      ...value
+    };
+    acc[String(key)] = Object.freeze(validated);
+    return acc;
+  }, {})
+);
 
 const app = express();
 const server = createServer(app);
 
-// 2. Настройка метрик
+// 2. Конфигурация метрик
 const metricsMiddleware = promBundle({
   includeMethod: true,
   includePath: true,
   customLabels: { project: 'global-heroes' },
-  promClient: { collectDefaultMetrics: { timeout: 10000 } }
+  promClient: { collectDefaultMetrics: { timeout: 5000 } }
 });
+app.use(metricsMiddleware);
 
 // 3. Кастомные метрики
-const redisStatus = new Gauge({
+const redisStatusGauge = new Gauge({
   name: 'redis_status',
   help: 'Redis connection status',
   labelNames: ['service']
 });
 
-const websocketConnections = new Gauge({
+const wsConnectionsGauge = new Gauge({
   name: 'websocket_connections',
   help: 'Active WebSocket connections'
 });
 
-app.use(metricsMiddleware);
+// 4. Подключение Redis с повторными попытками
+const redisClient = new Redis(process.env.REDIS_URL || 'redis://redis:6379', {
+  retryStrategy: times => Math.min(times * 100, 5000),
+  maxRetriesPerRequest: null
+});
 
-// 4. Подключение Redis
-const redisClient = new Redis(process.env.REDIS_URL || 'redis://redis:6379');
-
-// 5. Инициализация Socket.IO
+// 5. Инициализация Socket.IO с улучшенной обработкой ошибок
 const io = new Server(server, {
-  connectionStateRecovery: { maxDisconnectionDuration: 30000 },
+  connectionStateRecovery: {
+    maxDisconnectionDuration: 60000,
+    skipMiddlewares: true
+  },
   cors: {
     origin: ["https://coobe.ru", "http://localhost:3000"],
     methods: ["GET", "POST"],
@@ -103,129 +72,108 @@ const io = new Server(server, {
   transports: ["websocket"]
 });
 
-// 6. Менеджер сессий
-const sessionManager = new SessionManager();
+// 6. Менеджер сессий с автоматической очисткой
+const sessionManager = new SessionManager({
+  sessionTTL: 3600000, // 1 час
+  gcInterval: 300000   // Каждые 5 минут
+});
 
-// 7. Healthcheck
+// 7. Healthcheck endpoint
 app.get("/health", async (req, res) => {
   try {
     await redisClient.ping();
     res.json({
       status: "OK",
       services: {
-        redis: "available",
-        websocket: io.engine.clientsCount > 0 ? "active" : "idle"
+        redis: "active",
+        websocket: io.engine.clientsCount > 0 ? "active" : "idle",
+        abilities: Object.keys(abilities).length === 5 ? "valid" : "invalid"
       }
     });
   } catch (err) {
     res.status(503).json({ 
-      status: "Service Unavailable",
+      status: "unavailable",
       error: err.message
     });
   }
 });
 
-// 8. Обработчики Redis
+// 8. Обработчики событий Redis
 redisClient.on('ready', () => {
-  console.log('✅ Подключение к Redis установлено');
-  redisStatus.labels('main').set(1);
+  console.log('✅ Redis connected');
+  redisStatusGauge.set(1);
 });
 
 redisClient.on('error', (err) => {
-  console.error('⛔ Ошибка Redis:', err.message);
-  redisStatus.labels('main').set(0);
+  console.error(`⛔ Redis error: ${err.message}`);
+  redisStatusGauge.set(0);
 });
 
-// 9. WebSocket логика
+// 9. WebSocket обработчики
 io.on('connection', (socket) => {
-  console.log(`🎮 Новое подключение: ${socket.id}`);
-  websocketConnections.inc();
+  wsConnectionsGauge.inc();
+  console.log(`🎮 New connection: ${socket.id}`);
 
   socket.on('startPve', async (deckInput, callback) => {
+    const startTime = Date.now();
+    
     try {
-      console.log('[SERVER] Получены данные:', { input: deckInput });
+      // Валидация ввода
+      const { valid, deck, error } = validateDeck(deckInput);
+      if (!valid) throw new Error(error);
 
-      // 10. Нормализация колоды
-      let numericDeck;
-      if (typeof deckInput === 'string') {
-        try {
-          numericDeck = JSON.parse(deckInput).map(id => {
-            const numId = Number(id);
-            if (isNaN(numId)) throw new Error(`Неверный ID: ${id}`);
-            return numId;
-          });
-        } catch (e) {
-          throw new Error(`Ошибка парсинга JSON: ${e.message}`);
-        }
-      } else if (Array.isArray(deckInput)) {
-        numericDeck = deckInput.map(id => {
-          const numId = Number(id);
-          if (isNaN(numId)) throw new Error(`Неверный ID: ${id}`);
-          return numId;
-        });
-      } else {
-        throw new Error('Неверный формат колоды');
-      }
+      // Создание игры
+      const game = new PveGame(deck, abilities);
+      const session = sessionManager.createSession(socket.id, deck);
 
-      console.log('[SERVER] Нормализованная колода:', numericDeck);
-
-      // 11. Проверка способностей
-      const invalidIds = numericDeck.filter(id => !abilities.hasOwnProperty(String(id)));
-      if (invalidIds.length > 0) {
-        throw new Error(`Несуществующие ID способностей: ${invalidIds.join(', ')}`);
-      }
-
-      // 12. Создание игры
-      console.log('[SERVER] Создание игры...');
-      const game = new PveGame(numericDeck, abilities);
-      
-      // 13. Создание сессии
-      const { sessionId } = sessionManager.createGameSession(numericDeck);
-      
+      // Успешный ответ
       callback({
         status: 'success',
-        sessionId,
+        sessionId: session.id,
         gameState: game.getPublicState()
       });
 
-      console.log('[SERVER] Игра успешно создана:', sessionId);
+      console.log(`🚀 Game started in ${Date.now() - startTime}ms`, {
+        socketId: socket.id,
+        deck: deck
+      });
 
     } catch (error) {
-      console.error('[SERVER ERROR]', {
+      console.error(`💥 Game init failed`, { 
+        socketId: socket.id,
         error: error.message,
-        stack: error.stack,
-        input: deckInput
+        stack: error.stack
       });
       
       callback({
         status: 'error',
-        code: "GAME_INIT_FAILURE",
+        code: "INIT_FAILURE",
         message: error.message,
-        invalidIds: []
+        retryable: isRetryableError(error)
       });
     }
   });
 
   socket.on('disconnect', () => {
-    console.log(`⚠️ Отключение: ${socket.id}`);
-    websocketConnections.dec();
-  });
-
-  socket.on('error', (err) => {
-    console.error(`⛔ Ошибка сокета (${socket.id}):`, err.message);
+    wsConnectionsGauge.dec();
+    console.log(`⚠️  Disconnected: ${socket.id}`);
+    sessionManager.removeSession(socket.id);
   });
 });
 
-// 14. Graceful shutdown
+// 10. Graceful shutdown
 const shutdown = async () => {
-  console.log('\n🛑 Завершение работы...');
+  console.log('\n🛑 Shutting down...');
   try {
-    await redisClient.quit();
-    server.close();
-    console.log('✅ Сервер остановлен');
+    await Promise.all([
+      redisClient.quit(),
+      new Promise(resolve => server.close(resolve)),
+      sessionManager.destroyAll()
+    ]);
+    console.log('✅ Graceful shutdown complete');
     process.exit(0);
   } catch (err) {
-    console.error('⛔ Ошибка завершения:', err);
+    console.error('⛔ Force shutdown:', err);
     process.exit(1);
   }
 };
@@ -233,18 +181,68 @@ const shutdown = async () => {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
-// 15. Запуск сервера
+// 11. Валидация колоды
+function validateDeck(input) {
+  try {
+    let parsed = input;
+    
+    // Парсинг JSON строки
+    if (typeof input === 'string') {
+      try {
+        parsed = JSON.parse(input);
+      } catch (e) {
+        return { valid: false, error: "Invalid JSON format" };
+      }
+    }
+
+    // Проверка типа
+    if (!Array.isArray(parsed)) {
+      return { valid: false, error: "Deck must be an array" };
+    }
+
+    // Конвертация ID
+    const deck = parsed.map(item => {
+      const id = Number(item?.id ?? item);
+      if (isNaN(id)) throw new Error(`Invalid ID: ${item}`);
+      if (!abilities[String(id)]) throw new Error(`Ability ${id} not found`);
+      return id;
+    });
+
+    // Проверка размера
+    if (deck.length !== 5) {
+      throw new Error("Deck must contain exactly 5 cards");
+    }
+
+    return { valid: true, deck };
+  } catch (error) {
+    return { valid: false, error: error.message };
+  }
+}
+
+// 12. Проверка возможности повтора
+function isRetryableError(error) {
+  const retryableMessages = [
+    'timeout', 
+    'connection',
+    'busy',
+    'temporarily'
+  ];
+  return retryableMessages.some(msg => error.message.includes(msg));
+}
+
+// 13. Запуск сервера
 const startServer = async () => {
   try {
     await redisClient.ping();
     server.listen(3000, '0.0.0.0', () => {
-      console.log('🚀 Сервер запущен на порту 3000');
-      console.log('🔗 Redis статус:', redisClient.status);
+      console.log('🚀 Server started on port 3000');
+      console.log('🔗 Redis status:', redisClient.status);
     });
   } catch (err) {
-    console.error('⛔ Ошибка запуска:', err);
+    console.error('⛔ Server startup failed:', err);
     process.exit(1);
   }
 };
 
-startServer();
+// Явный вызов функции запуска
+startServer(); // <-- Критически важная строка!
