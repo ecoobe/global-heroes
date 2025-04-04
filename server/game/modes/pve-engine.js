@@ -1,11 +1,11 @@
-// server/game/modes/pve-engine.js
 const { BaseGame } = require('../core/base-game');
 const { CombatSystem } = require('../core/combat-system');
 
 class PveGame extends BaseGame {
-  constructor(playerDeck, aiDeck) {
+  constructor(playerDeck, aiDeck, abilities) { // Добавлен параметр abilities
     super({ human: playerDeck, ai: aiDeck }, 'pve');
     this.combatSystem = new CombatSystem();
+    this.abilities = abilities; // Сохраняем abilities
   }
 
   initializePlayers(decks) {
@@ -29,7 +29,10 @@ class PveGame extends BaseGame {
 
   validateDeck(deck) {
     return deck.map(id => {
-      const ability = abilities[id];
+      const ability = this.abilities[id]; // Используем сохранённые abilities
+      if (!ability) {
+        throw new Error(`Ability ${id} not found`);
+      }
       return {
         id: Number(id),
         name: ability.name,
