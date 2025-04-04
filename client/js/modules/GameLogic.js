@@ -12,14 +12,14 @@ export class GameLogic {
 		if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 		
 		const heroes = await response.json();
-		console.log('Raw heroes data:', heroes); // Для отладки
+		console.log('Raw heroes data:', heroes);
 		
 		const validated = this.validateAndNormalizeHeroes(heroes);
 		if (validated.length === 0) {
 		  throw new Error('No valid heroes found');
 		}
 		
-		console.log('Validated heroes:', validated); // Для отладки
+		console.log('Validated heroes:', validated);
 		return validated;
   
 	  } catch (error) {
@@ -36,7 +36,6 @@ export class GameLogic {
 	  const seenIds = new Set();
 	  return heroes.reduce((acc, hero, index) => {
 		try {
-		  // Генерация ID если отсутствует
 		  const baseId = hero.id || index + 1;
 		  
 		  const normalized = {
@@ -49,7 +48,6 @@ export class GameLogic {
 			image: this.validateImagePath(hero.image)
 		  };
   
-		  // Проверка уникальности ID
 		  if (seenIds.has(normalized.id)) {
 			console.warn(`Duplicate hero ID: ${normalized.id}`);
 			return acc;
@@ -109,8 +107,8 @@ export class GameLogic {
 		if (!path || typeof path !== 'string') return '/images/default-hero.png';
 		
 		const cleanPath = path
-		  .replace(/\.\./g, '') // Защита от path traversal
-		  .replace(/^\/+/, '') // Удаляем ведущие слеши
+		  .replace(/\.\./g, '')
+		  .replace(/^\/+/, '')
 		  .trim();
   
 		return validExtensions.some(ext => cleanPath.endsWith(ext)) 
@@ -122,38 +120,53 @@ export class GameLogic {
 	}
   
 	static validateDeck(selectedHeroes, availableHeroes) {
-		const deckArray = Array.from(selectedHeroes).map(Number); // Приводим ID к числу
-		const errors = [];
-		
-		// Проверяем наличие числовых ID
-		const invalidNumbers = deckArray.filter(id => isNaN(id));
-		if (invalidNumbers.length > 0) {
-		  errors.push(`Некорректные ID: ${invalidNumbers.join(', ')}`);
-		}
-	  
-		// Остальные проверки
-		if (deckArray.length !== this.DECK_SIZE) {
-		  errors.push(`Нужно выбрать ровно ${this.DECK_SIZE} героев`);
-		}
-	  
-		const uniqueIds = new Set(deckArray);
-		if (uniqueIds.size !== this.DECK_SIZE) {
-		  errors.push('В колоде есть повторяющиеся герои');
-		}
-	  
-		const availableIds = availableHeroes.map(h => h.id);
-		const invalidIds = deckArray.filter(id => 
-		  !availableIds.includes(id)
-		);
-	  
-		if (invalidIds.length > 0) {
-		  errors.push(`Недействительные ID: ${invalidIds.join(', ')}`);
-		}
-	  
+	  if (!(selectedHeroes instanceof Set)) {
 		return {
-		  isValid: errors.length === 0,
-		  errors,
-		  deck: deckArray
+		  isValid: false,
+		  errors: ['Некорректный формат данных колоды'],
+		  deck: []
 		};
+	  }
+  
+	  const deckArray = Array.from(selectedHeroes).map(id => {
+		const numId = Number(id);
+		return isNaN(numId) ? null : numId;
+	  });
+  
+	  const errors = [];
+	  const availableIds = availableHeroes?.map(h => h.id) || [];
+  
+	  // Проверка преобразования ID
+	  const invalidNumbers = deckArray.filter(id => id === null);
+	  if (invalidNumbers.length > 0) {
+		errors.push(`Некорректные ID: ${invalidNumbers.join(', ')}`);
+	  }
+  
+	  // Проверка размера колоды
+	  if (deckArray.length !== this.DECK_SIZE) {
+		errors.push(`Требуется ${this.DECK_SIZE} героев (выбрано ${deckArray.length})`);
+	  }
+  
+	  // Проверка уникальности
+	  const uniqueIds = new Set(deckArray);
+	  if (uniqueIds.size !== deckArray.length) {
+		errors.push('Обнаружены дубликаты ID');
+	  }
+  
+	  // Проверка существования героев
+	  if (availableIds.length > 0) {
+		const invalidIds = deckArray.filter(id => !availableIds.includes(id));
+		if (invalidIds.length > 0) {
+		  errors.push(`Несуществующие ID: ${invalidIds.join(', ')}`);
+		}
+	  } else {
+		errors.push('Данные героев не загружены');
+	  }
+  
+	  return {
+		isValid: errors.length === 0,
+		errors,
+		deck: deckArray.filter(id => id !== null)
+	  };
 	}
 }
