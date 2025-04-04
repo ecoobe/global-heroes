@@ -183,20 +183,40 @@ process.on('SIGTERM', shutdown);
 
 // 11. Валидация колоды
 function validateDeck(input) {
-	try {
-	  let parsed = input;
-	  
-	  // Пропускаем парсинг и проверку на строку
-	  if (typeof input === 'string') {
-		// Принудительно преобразуем строку в массив
-		parsed = JSON.parse(input); // Преобразуем строку в массив
-	  }
-  
-	  // Пропускаем дополнительные проверки и просто возвращаем массив в правильном формате
-	  return { valid: true, deck: parsed };
-	} catch (error) {
-	  return { valid: false, error: error.message };
-	}
+  try {
+    let parsed = input;
+    
+    // Парсинг JSON строки
+    if (typeof input === 'string') {
+      try {
+        parsed = JSON.parse(input);
+      } catch (e) {
+        return { valid: false, error: "Invalid JSON format" };
+      }
+    }
+
+    // Проверка типа
+    if (!Array.isArray(parsed)) {
+      return { valid: false, error: "Deck must be an array" };
+    }
+
+    // Конвертация ID
+    const deck = parsed.map(item => {
+      const id = Number(item?.id ?? item);
+      if (isNaN(id)) throw new Error(`Invalid ID: ${item}`);
+      if (!abilities[String(id)]) throw new Error(`Ability ${id} not found`);
+      return id;
+    });
+
+    // Проверка размера
+    if (deck.length !== 5) {
+      throw new Error("Deck must contain exactly 5 cards");
+    }
+
+    return { valid: true, deck };
+  } catch (error) {
+    return { valid: false, error: error.message };
+  }
 }
 
 // 12. Проверка возможности повтора
