@@ -22,6 +22,7 @@ class PveGame extends BaseGame {
       ai: this.createAI() // Генерация AI
     };
   }
+
   validateDeck(deck) {
 	console.log('[DEBUG] Starting deck validation with abilities:', this.abilities);
 	
@@ -155,31 +156,6 @@ class PveGame extends BaseGame {
       type: type
     };
   }
-
-  validateDeck(deck) {
-	return deck.map(id => {
-	  const ability = this.abilities[id];
-	  
-	  // Усиленная проверка структуры
-	  if (!ability || typeof ability !== 'object') {
-		throw new Error(`Ability ${id} not found`);
-	  }
-  
-	  if (!ability.name || typeof ability.cost === 'undefined') {
-		console.error('Invalid ability structure:', ability);
-		throw new Error(`Corrupted ability data for ID ${id}`);
-	  }
-  
-	  return {
-		id: Number(id),
-		name: ability.name,
-		cost: ability.cost ?? 1,
-		charges: ability.charges ?? 1,
-		strength: ability.strength ?? 0,
-		health: ability.health ?? 1
-	  };
-	});
-  }  
 
   onTurnEnd() {
     if (this.players[this.turnSystem.currentTurn].type === 'ai') {
