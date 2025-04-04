@@ -1,17 +1,17 @@
 FROM node:18-alpine
-
 WORKDIR /app
 
-# Устанавливаем curl для healthcheck и python3 для сборки native модулей
-RUN apk add --no-cache curl python3 make g++
-RUN npm install redis@^4.6.13 @redis/client@^1.5.7
+# Установка только необходимых зависимостей
+RUN apk add --no-cache curl
 
+# Копируем зависимости и устанавливаем их
 COPY package*.json ./
+RUN npm ci --production
 
-# Устанавливаем зависимости через npm install с production флагом
-RUN npm install --production --no-package-lock --no-audit --fund=false
-
-COPY . .
+# Точечное копирование нужных директорий
+COPY server/heroes ./heroes
+COPY server/src ./src
+COPY server/game ./game
 
 EXPOSE 3000
-CMD ["node", "src/server.js"]
+CMD ["node", "src/server.js"]  # Правильный путь к server.js
