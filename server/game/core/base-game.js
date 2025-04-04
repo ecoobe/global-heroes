@@ -5,20 +5,19 @@ const { CombatSystem } = require('./combat-system');
 
 class BaseGame {
   constructor(playerDecks, gameType) {
-    // 1. Убираем общую валидацию из конструктора
     try {
       this.id = uuidv4();
       this.gameType = gameType;
       this.status = 'active';
       
-      // 2. Переносим валидацию в отдельный метод
+      // Переносим валидацию и нормализацию в отдельный метод
       this.normalizedDecks = this.normalizeDecks(playerDecks);
       
       this.abilitySystem = new AbilitySystem();
       this.turnSystem = new TurnSystem(this);
       this.combatSystem = new CombatSystem();
       
-      // 3. Унифицированная инициализация игроков
+      // Инициализация игроков с нормализованными колодами
       this.initializePlayers(this.normalizedDecks);
 
     } catch (error) {
@@ -27,19 +26,18 @@ class BaseGame {
     }
   }
 
+  // Метод для нормализации колод в зависимости от формата входных данных
   normalizeDecks(decks) {
     console.log('Normalizing decks:', JSON.stringify(decks));
     
-    // 4. Обработка разных форматов
     if (Array.isArray(decks)) {
+      // Если колода передана как массив чисел, превращаем в массив объектов с id
       return { 
-        player: decks.map(item => 
-          typeof item === 'object' ? item.id : item
-        ) 
+        player: decks.map(item => ({ id: item })) 
       };
     }
-    
-    // 5. Валидация для multiplayer
+
+    // Если колоды переданы как объект с ключами игроков (для многопользовательской игры)
     const required = this.getRequiredDecks();
     required.forEach(key => {
       if (!decks[key] || !Array.isArray(decks[key])) {
@@ -50,19 +48,20 @@ class BaseGame {
     return decks;
   }
 
+  // Метод для определения требуемых колод в зависимости от типа игры
   getRequiredDecks() {
-    // 6. Динамическое определение по типу игры
     return this.gameType === 'pve' ? ['player'] : ['player1', 'player2'];
   }
 
+  // Метод для инициализации игроков
   initializePlayers(normalizedDecks) {
-    // 7. Гибкая инициализация игроков
     this.players = Object.entries(normalizedDecks).reduce((acc, [key, deck]) => {
       acc[key] = this.createPlayer(deck);
       return acc;
     }, {});
   }
 
+  // Метод для создания игрока с базовыми аттрибутами
   createPlayer(deck) {
     return {
       deck: deck,
@@ -74,6 +73,7 @@ class BaseGame {
     };
   }
 
+  // Получение состояния игры для публикации
   getPublicState() {
     return {
       id: this.id,
@@ -85,6 +85,7 @@ class BaseGame {
     };
   }
 
+  // Санитизация данных игроков для публичного состояния
   sanitizePlayers() {
     return Object.entries(this.players).reduce((acc, [playerId, player]) => {
       acc[playerId] = {
@@ -99,6 +100,7 @@ class BaseGame {
     }, {});
   }
 
+  // Санитизация юнитов на поле
   sanitizeUnits(units) {
     return units.map(unit => ({
       id: unit.id,
@@ -110,6 +112,7 @@ class BaseGame {
     }));
   }
 
+  // Санитизация карт
   sanitizeCards(cards) {
     return cards.map(card => ({
       id: card.id,
@@ -120,6 +123,7 @@ class BaseGame {
     }));
   }
 
+  // Завершение игры
   endGame(reason = 'completed') {
     this.status = 'ended';
     console.log(`Game ${this.id} ended. Reason: ${reason}`);
