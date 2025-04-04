@@ -115,34 +115,19 @@ io.on('connection', (socket) => {
 	console.log(`🎮 New connection: ${socket.id}`);
   
 	socket.on('startPve', async (deckInput, callback) => {
+		console.log('Received deck from client:', deckInput);
 		const startTime = Date.now();
 		
 		try {
 		  // Валидация ввода
 		  const { valid, deck, error } = validateDeck(deckInput);
-		  console.log(`Deck validated: ${valid}`, deck); // Логируем результат валидации
-		  if (!valid) {
-			return callback({
-			  status: 'error',
-			  code: "INVALID_DECK",
-			  message: error,
-			  retryable: false
-			});
-		  }
+		  if (!valid) throw new Error(error);
+	  
+		  console.log('Validated deck on server:', deck);  // Логируем после валидации
 	  
 		  // Создание игры
 		  const game = new PveGame(deck, abilities);
-		  console.log(`Game created: ${game}`); // Логируем состояние игры
-		  if (!game) {
-			throw new Error("Failed to initialize the game with the provided deck.");
-		  }
-	  
-		  // Создание сессии
 		  const session = sessionManager.createSession(socket.id, deck);
-		  console.log(`Session created: ${session.id}`); // Логируем сессию
-		  if (!session) {
-			throw new Error("Failed to create session.");
-		  }
 	  
 		  // Успешный ответ
 		  callback({
@@ -202,27 +187,28 @@ process.on('SIGTERM', shutdown);
 // 11. Валидация колоды
 function validateDeck(input) {
 	try {
-	  // Парсинг JSON строки, если это строка
 	  let parsed = input;
+	  
+	  // Парсинг JSON строки, если это строка
 	  if (typeof input === 'string') {
 		try {
-		  parsed = JSON.parse(input);  // Преобразуем строку в массив
+		  parsed = JSON.parse(input);
 		} catch (e) {
 		  return { valid: false, error: "Invalid JSON format" };
 		}
 	  }
   
-	  // Теперь parsed должен быть массивом
+	  // Проверка типа
 	  if (!Array.isArray(parsed)) {
 		return { valid: false, error: "Deck must be an array" };
 	  }
   
-	  // Конвертация ID
+	  // Преобразование ID в объекты с дополнительной информацией
 	  const deck = parsed.map(item => {
-		const id = Number(item?.id ?? item);  // Важно использовать id
+		const id = Number(item?.id ?? item);
 		if (isNaN(id)) throw new Error(`Invalid ID: ${item}`);
 		if (!abilities[String(id)]) throw new Error(`Ability ${id} not found`);
-		return id;
+		return { id, ability: abilities[String(id)] }; // Преобразуем в объект
 	  });
   
 	  // Проверка размера
