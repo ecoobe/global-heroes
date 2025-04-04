@@ -3,14 +3,17 @@ const { CombatSystem } = require('../core/combat-system');
 
 class PveGame extends BaseGame {
 	constructor(playerDeck, abilities) {
-	  console.log('Initializing PvE with abilities:', abilities);
-	  super({ human: playerDeck }, 'pve');
-	  if (!abilities) throw new Error('Abilities not provided');
-	  console.log('Abilities on PvE init:', Object.keys(abilities));
-	  super({ human: playerDeck, ai: [] }, 'pve'); // AI deck пустой
-	  this.combatSystem = new CombatSystem();
-	  this.abilities = abilities;
-	}  
+		if (!abilities) throw new Error('Abilities not provided');
+		console.log('[PvE] Initializing with deck:', playerDeck, 'abilities count:', Object.keys(abilities).length);
+	  
+		// Правильный единый вызов super()
+		super({ human: playerDeck, ai: [] }, 'pve');
+	  
+		this.combatSystem = new CombatSystem();
+		this.abilities = abilities;
+	  
+		console.log('[PvE] Abilities keys:', Object.keys(this.abilities));
+	}
 
   getRequiredDecks() {
 	  return ['human']; // Требуется только колода игрока
