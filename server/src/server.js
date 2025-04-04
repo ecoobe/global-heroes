@@ -108,41 +108,48 @@ io.on('connection', (socket) => {
   websocketConnections.inc();
 
   socket.on('startPve', async (deck, callback) => {
-	let invalidIds = []; // Объявляем переменную в правильной области видимости
-	
-	try {
-	  console.log('Received deck from client:', deck);
-	  
-	  // Валидация колоды
-	  invalidIds = deck.filter(id => {
-		const exists = abilities[id];
-		if (!exists) console.error(`Invalid ability ID: ${id}`);
-		return !exists;
-	  });
-  
-	  if (invalidIds.length > 0) {
-		throw new Error(`Invalid hero IDs: ${invalidIds.join(', ')}`);
-	  }
-  
-	  // Создание игры
-	  const game = new PveGame(deck);
-	  const { sessionId } = sessionManager.createGameSession(deck);
-	  
-	  callback({
-		status: 'success',
-		sessionId,
-		gameState: game.getPublicState()
-	  });
-  
-	} catch (err) {
-	  console.error(`[PVE] ${socket.id}:`, err.message);
-	  callback({
-		status: 'error',
-		code: "GAME_INIT_FAILURE",
-		message: err.message,
-		invalidIds // Теперь переменная доступна
-	  });
-	}
+    let invalidIds = []; // Объявлено во внешней области видимости
+    
+    try {
+      console.log('Received deck from client:', deck);
+      
+      // Преобразование и валидация ID
+      const numericDeck = deck.map(id => {
+        const numId = Number(id);
+        if (isNaN(numId)) throw new Error(`Invalid ID format: ${id}`);
+        return numId;
+      });
+
+      // Проверка существования способностей
+      invalidIds = numericDeck.filter(id => {
+        const exists = abilities.hasOwnProperty(id);
+        if (!exists) console.error('Ability ID not found:', id);
+        return !exists;
+      });
+
+      if (invalidIds.length > 0) {
+        throw new Error(`Неверные ID героев: ${invalidIds.join(', ')}`);
+      }
+
+      // Создание игры
+      const game = new PveGame(numericDeck);
+      const { sessionId } = sessionManager.createGameSession(numericDeck);
+      
+      callback({
+        status: 'success',
+        sessionId,
+        gameState: game.getPublicState()
+      });
+
+    } catch (err) {
+      console.error(`[PVE ERROR] ${socket.id}:`, err.message);
+      callback({
+        status: 'error',
+        code: "GAME_INIT_FAILURE",
+        message: err.message,
+        invalidIds: invalidIds // Теперь переменная доступна
+      });
+    }
   });
 
   socket.on('disconnect', () => {
