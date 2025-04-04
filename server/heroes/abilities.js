@@ -1,5 +1,6 @@
 module.exports = {
 	1: {
+	  id: 1,
 	  name: "Месть клинка",
 	  description: "При смерти наносит 4 урона случайному врагу",
 	  cost: 2,
@@ -9,6 +10,7 @@ module.exports = {
 	  value: 4
 	},
 	2: {
+	  id: 2,
 	  name: "Невидимость",
 	  description: "Избегает первой атаки в бою",
 	  cost: 1,
@@ -17,6 +19,7 @@ module.exports = {
 	  trigger: "FIRST_ATTACK"
 	},
 	3: {
+	  id: 3,
 	  name: "Тактик",
 	  description: "Увеличивает силу всех союзников на 1",
 	  cost: 3,
@@ -27,6 +30,7 @@ module.exports = {
 	  value: 1
 	},
 	4: {
+	  id: 4,
 	  name: "Стрела Луны",
 	  description: "Атакует самого слабого врага, игнорируя защиту",
 	  cost: 2,
@@ -36,6 +40,7 @@ module.exports = {
 	  pierce: true
 	},
 	5: {
+	  id: 5,
 	  name: "Щит предков",
 	  description: "Получает на 2 меньше урона от атак",
 	  cost: 2,
