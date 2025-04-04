@@ -157,7 +157,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     wsConnectionsGauge.dec();
     console.log(`⚠️  Disconnected: ${socket.id}`);
-    sessionManager.removeSession(socket.id);
+    sessionManager.destroySession(socket.id);
   });
 });
 
