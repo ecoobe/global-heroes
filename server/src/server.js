@@ -189,7 +189,7 @@ io.on('connection', (socket) => {
 	  console.log('[SERVER] Heroes data:', heroesData);
   
 	  // Создание игры
-	  const game = new PveGame(heroesData);
+	  const game = new PveGame(heroesData, abilities);
 	  const { sessionId } = sessionManager.createGameSession(heroesData);
   
 	  callback({

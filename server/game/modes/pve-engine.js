@@ -2,11 +2,11 @@ const { BaseGame } = require('../core/base-game');
 const { CombatSystem } = require('../core/combat-system');
 
 class PveGame extends BaseGame {
-  constructor(playerDeck, aiDeck, abilities) { // Добавлен параметр abilities
-    super({ human: playerDeck, ai: aiDeck }, 'pve');
-    this.combatSystem = new CombatSystem();
-    this.abilities = abilities; // Сохраняем abilities
-  }
+	constructor(playerDeck, abilities) { // Убрали ненужный aiDeck
+	  super({ human: playerDeck, ai: [] }, 'pve'); // AI deck пустой
+	  this.combatSystem = new CombatSystem();
+	  this.abilities = abilities;
+	}  
 
   initializePlayers(decks) {
     this.players = {
