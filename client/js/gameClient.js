@@ -177,29 +177,29 @@ class GameClient {
   }
 
   async handleDeckConfirmation() {
+	let deck = null; // Объявляем переменную заранее
+	
 	try {
 	  if (this.state.selectedHeroes.size !== 5) {
 		throw new Error('Выберите ровно 5 героев!');
 	  }
   
-	  // Преобразуем ID в числа и проверяем их
-	  const deck = Array.from(this.state.selectedHeroes).map(id => {
+	  // Преобразуем ID и проверяем
+	  deck = Array.from(this.state.selectedHeroes).map(id => {
 		const numId = Number(id);
-		if (isNaN(numId)) {
-		  throw new Error(`Некорректный ID героя: ${id}`);
-		}
+		if (isNaN(numId)) throw new Error(`Некорректный ID: ${id}`);
 		return numId;
 	  });
   
 	  console.log('Sanitized deck:', deck);
   
-	  // Проверка колоды перед отправкой
+	  // Проверка колоды
 	  const validation = GameLogic.validateDeck(deck, this.state.heroes);
 	  if (!validation.isValid) {
 		throw new Error(validation.errors.join('\n'));
 	  }
   
-	  // Отправка на сервер с таймаутом
+	  // Отправка на сервер
 	  const response = await this.socket.emit('startPve', deck, { 
 		timeout: 15000 
 	  });
@@ -214,7 +214,7 @@ class GameClient {
 	  console.error('Deck Error:', {
 		error: error.message,
 		rawDeck: Array.from(this.state.selectedHeroes),
-		validatedDeck: deck
+		validatedDeck: deck || 'Не определен' // Добавляем проверку
 	  });
 	  this.ui.showError(error.message);
 	}
