@@ -119,54 +119,57 @@ export class GameLogic {
 	  }
 	}
   
-	static validateDeck(selectedHeroes, availableHeroes) {
-	  if (!Array.isArray(selectedHeroIds)) { 
-		return {
-		  isValid: false,
-		  errors: ['Некорректный формат данных колоды'],
-		  deck: []
-		};
-	  }
-  
-	  const deckArray = Array.from(selectedHeroes).map(id => {
-		const numId = Number(id);
-		return isNaN(numId) ? null : numId;
-	  });
-  
-	  const errors = [];
-	  const availableIds = availableHeroes?.map(h => h.id) || [];
-  
-	  // Проверка преобразования ID
-	  const invalidNumbers = deckArray.filter(id => id === null);
-	  if (invalidNumbers.length > 0) {
-		errors.push(`Некорректные ID: ${invalidNumbers.join(', ')}`);
-	  }
-  
-	  // Проверка размера колоды
-	  if (deckArray.length !== this.DECK_SIZE) {
-		errors.push(`Требуется ${this.DECK_SIZE} героев (выбрано ${deckArray.length})`);
-	  }
-  
-	  // Проверка уникальности
-	  const uniqueIds = new Set(deckArray);
-	  if (uniqueIds.size !== deckArray.length) {
-		errors.push('Обнаружены дубликаты ID');
-	  }
-  
-	  // Проверка существования героев
-	  if (availableIds.length > 0) {
-		const invalidIds = deckArray.filter(id => !availableIds.includes(id));
+	static validateDeck(selectedHeroIds, availableHeroes) {
+		console.log('[VALIDATION] Input data:', {
+		  selectedHeroIds: JSON.stringify(selectedHeroIds),
+		  availableHeroes: JSON.stringify(availableHeroes?.map(h => h.id))
+		});
+	  
+		// 1. Проверка типа данных
+		if (!Array.isArray(selectedHeroIds)) {
+		  console.error('[VALIDATION ERROR] Invalid input type:', typeof selectedHeroIds);
+		  return {
+			isValid: false,
+			errors: ['Некорректный формат данных колоды'],
+			deck: []
+		  };
+		}
+	  
+		const errors = [];
+		const availableIds = availableHeroes?.map(h => h.id) || [];
+	  
+		// 2. Проверка существования героев
+		const invalidIds = selectedHeroIds.filter(id => !availableIds.includes(id));
+		console.log('[VALIDATION STEP] Invalid IDs check:', invalidIds);
+		
 		if (invalidIds.length > 0) {
 		  errors.push(`Несуществующие ID: ${invalidIds.join(', ')}`);
 		}
-	  } else {
-		errors.push('Данные героев не загружены');
-	  }
-  
-	  return {
-		isValid: errors.length === 0,
-		errors,
-		deck: deckArray.filter(id => id !== null)
-	  };
+	  
+		// 3. Проверка уникальности
+		const uniqueIds = [...new Set(selectedHeroIds)];
+		console.log('[VALIDATION STEP] Unique IDs:', uniqueIds);
+		
+		if (uniqueIds.length !== selectedHeroIds.length) {
+		  errors.push('Обнаружены дубликаты ID');
+		}
+	  
+		// 4. Проверка размера колоды
+		console.log('[VALIDATION STEP] Deck size:', selectedHeroIds.length);
+		
+		if (selectedHeroIds.length !== this.DECK_SIZE) {
+		  errors.push(`Требуется ${this.DECK_SIZE} героев (выбрано ${selectedHeroIds.length})`);
+		}
+	  
+		console.log('[VALIDATION RESULT]', {
+		  isValid: errors.length === 0,
+		  errors
+		});
+	  
+		return {
+		  isValid: errors.length === 0,
+		  errors,
+		  deck: selectedHeroIds
+		};
 	}
 }
