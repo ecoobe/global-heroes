@@ -205,7 +205,7 @@ class GameClient {
 		}
 		
 		return numId;
-	  });	  
+	  });  
   
 	  console.log('[INFO] Sanitized deck:', JSON.stringify(deck));
   
@@ -221,19 +221,17 @@ class GameClient {
   
 	  // Отправка на сервер
 	  console.log('[INFO] Sending deck to server:', JSON.stringify(deck));
-	  const response = await this.socket.emit('startPve', deck, { 
-		timeout: 15000 
+	  this.socket.emit('startPve', deck, (response) => {
+		console.log('[DEBUG] Server response:', response);
+		
+		if (response.status === 'success') {
+		  console.log('[INFO] Game started successfully. Session ID:', response.sessionId);
+		  this.handleGameState(response.gameState);
+		} else {
+		  console.error('[ERROR] Server error response:', response);
+		  this.ui.showError(response.message || 'Ошибка сервера');
+		}
 	  });
-  
-	  console.log('[DEBUG] Server response:', response);
-	  
-	  if (response.status === 'success') {
-		console.log('[INFO] Game started successfully. Session ID:', response.sessionId);
-		this.handleGameState(response.gameState);
-	  } else {
-		console.error('[ERROR] Server error response:', response);
-		throw new Error(response.message || 'Ошибка сервера');
-	  }
   
 	} catch (error) {
 	  console.error('[ERROR] Deck processing failed:', {
