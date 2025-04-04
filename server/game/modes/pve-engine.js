@@ -2,7 +2,9 @@ const { BaseGame } = require('../core/base-game');
 const { CombatSystem } = require('../core/combat-system');
 
 class PveGame extends BaseGame {
-	constructor(playerDeck, abilities) { // Убрали ненужный aiDeck
+	constructor(playerDeck, abilities) {
+	  if (!abilities) throw new Error('Abilities not provided');
+	  console.log('Abilities on PvE init:', Object.keys(abilities));
 	  super({ human: playerDeck, ai: [] }, 'pve'); // AI deck пустой
 	  this.combatSystem = new CombatSystem();
 	  this.abilities = abilities;
@@ -112,21 +114,26 @@ class PveGame extends BaseGame {
 	return deck.map(id => {
 	  const ability = this.abilities[id];
 	  
-	  // Добавляем проверку структуры ability
+	  // Усиленная проверка структуры
 	  if (!ability || typeof ability !== 'object') {
-		throw new Error(`Invalid ability structure for ID ${id}`);
+		throw new Error(`Ability ${id} not found`);
+	  }
+  
+	  if (!ability.name || typeof ability.cost === 'undefined') {
+		console.error('Invalid ability structure:', ability);
+		throw new Error(`Corrupted ability data for ID ${id}`);
 	  }
   
 	  return {
 		id: Number(id),
-		name: ability.name || 'Unknown Ability',
-		cost: ability.cost ?? 1, // Используем оператор ?? для nullish coalescing
+		name: ability.name,
+		cost: ability.cost ?? 1,
 		charges: ability.charges ?? 1,
 		strength: ability.strength ?? 0,
 		health: ability.health ?? 1
 	  };
 	});
-  }
+  }  
 
   onTurnEnd() {
     if (this.players[this.turnSystem.currentTurn].type === 'ai') {
