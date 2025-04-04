@@ -177,45 +177,72 @@ class GameClient {
   }
 
   async handleDeckConfirmation() {
-	let deck = null; // Объявляем переменную заранее
+	let deck = null;
 	
 	try {
+	  console.log('[DEBUG] Starting deck confirmation');
+	  
+	  // Проверка количества выбранных героев
 	  if (this.state.selectedHeroes.size !== 5) {
+		console.warn('[WARN] Invalid selection count:', this.state.selectedHeroes.size);
 		throw new Error('Выберите ровно 5 героев!');
 	  }
   
-	  // Преобразуем ID и проверяем
+	  // Логирование сырых данных перед обработкой
+	  console.log('[DEBUG] Raw selection:', 
+		JSON.stringify(Array.from(this.state.selectedHeroes)));
+	  console.log('[DEBUG] Available heroes IDs:', 
+		JSON.stringify(this.state.heroes?.map(h => h.id) || []));
+	  
+	  // Преобразование и валидация ID
 	  deck = Array.from(this.state.selectedHeroes).map(id => {
 		const numId = Number(id);
-		if (isNaN(numId)) throw new Error(`Некорректный ID: ${id}`);
+		console.log(`[DEBUG] Processing ID: ${id} → ${numId}`);
+		
+		if (isNaN(numId)) {
+		  console.error('[ERROR] Invalid ID conversion - Original ID:', id, 'Type:', typeof id);
+		  throw new Error(`Некорректный ID: ${id} (тип: ${typeof id})`);
+		}
+		
 		return numId;
-	  });
+	  });	  
   
-	  console.log('Sanitized deck:', deck);
+	  console.log('[INFO] Sanitized deck:', JSON.stringify(deck));
   
-	  // Проверка колоды
+	  // Валидация колды
+	  console.log('[DEBUG] Starting deck validation');
 	  const validation = GameLogic.validateDeck(deck, this.state.heroes);
+	  console.log('[DEBUG] Validation result:', validation);
+  
 	  if (!validation.isValid) {
+		console.error('[ERROR] Deck validation failed:', validation.errors);
 		throw new Error(validation.errors.join('\n'));
 	  }
   
 	  // Отправка на сервер
+	  console.log('[INFO] Sending deck to server:', JSON.stringify(deck));
 	  const response = await this.socket.emit('startPve', deck, { 
 		timeout: 15000 
 	  });
   
+	  console.log('[DEBUG] Server response:', response);
+	  
 	  if (response.status === 'success') {
+		console.log('[INFO] Game started successfully. Session ID:', response.sessionId);
 		this.handleGameState(response.gameState);
 	  } else {
+		console.error('[ERROR] Server error response:', response);
 		throw new Error(response.message || 'Ошибка сервера');
 	  }
   
 	} catch (error) {
-	  console.error('Deck Error:', {
-		error: error.message,
+	  console.error('[ERROR] Deck processing failed:', {
+		error: error.stack, // Полный стек ошибки
 		rawDeck: Array.from(this.state.selectedHeroes),
-		validatedDeck: deck || 'Не определен' // Добавляем проверку
+		validatedDeck: deck || 'N/A',
+		heroesLoaded: !!this.state.heroes
 	  });
+	  
 	  this.ui.showError(error.message);
 	}
   }
