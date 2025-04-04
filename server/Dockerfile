@@ -14,4 +14,4 @@ RUN npm install --production --no-package-lock --no-audit --fund=false
 COPY . .
 
 EXPOSE 3000
-CMD ["node", "server/src/server.js"]
+CMD ["node", "src/server.js"]
