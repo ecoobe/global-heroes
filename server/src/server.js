@@ -115,15 +115,15 @@ io.on('connection', (socket) => {
 	console.log(`🎮 New connection: ${socket.id}`);
   
 	socket.on('startPve', async (deckInput, callback) => {
-		console.log('Received deck from client:', deckInput);
+		console.log('Received deck from client:', JSON.stringify(deckInput)); // Логируем колоду, как строку для наглядности
 		const startTime = Date.now();
-		
+	  
 		try {
 		  // Валидация ввода
 		  const { valid, deck, error } = validateDeck(deckInput);
-		  if (!valid) throw new Error(error);
+		  console.log('Deck after validation:', deck); // Логируем колоду после валидации
 	  
-		  console.log('Validated deck on server:', deck);  // Логируем после валидации
+		  if (!valid) throw new Error(error);
 	  
 		  // Создание игры
 		  const game = new PveGame(deck, abilities);
@@ -142,12 +142,12 @@ io.on('connection', (socket) => {
 		  });
 	  
 		} catch (error) {
-		  console.error(`💥 Game init failed`, { 
+		  console.error(`💥 Game init failed`, {
 			socketId: socket.id,
 			error: error.message,
 			stack: error.stack
 		  });
-		  
+	  
 		  callback({
 			status: 'error',
 			code: "INIT_FAILURE",
