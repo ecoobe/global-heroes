@@ -111,54 +111,70 @@ redisClient.on('error', (err) => {
 
 // 9. WebSocket обработчики
 io.on('connection', (socket) => {
-  wsConnectionsGauge.inc();
-  console.log(`🎮 New connection: ${socket.id}`);
-
-  socket.on('startPve', async (deckInput, callback) => {
-    const startTime = Date.now();
-    
-    try {
-      // Валидация ввода
-      const { valid, deck, error } = validateDeck(deckInput);
-      if (!valid) throw new Error(error);
-
-      // Создание игры
-      const game = new PveGame(deck, abilities);
-      const session = sessionManager.createSession(socket.id, deck);
-
-      // Успешный ответ
-      callback({
-        status: 'success',
-        sessionId: session.id,
-        gameState: game.getPublicState()
-      });
-
-      console.log(`🚀 Game started in ${Date.now() - startTime}ms`, {
-        socketId: socket.id,
-        deck: deck
-      });
-
-    } catch (error) {
-      console.error(`💥 Game init failed`, { 
-        socketId: socket.id,
-        error: error.message,
-        stack: error.stack
-      });
-      
-      callback({
-        status: 'error',
-        code: "INIT_FAILURE",
-        message: error.message,
-        retryable: isRetryableError(error)
-      });
-    }
-  });
-
-  socket.on('disconnect', () => {
-    wsConnectionsGauge.dec();
-    console.log(`⚠️  Disconnected: ${socket.id}`);
-    sessionManager.destroySession(socket.id);
-  });
+	wsConnectionsGauge.inc();
+	console.log(`🎮 New connection: ${socket.id}`);
+  
+	socket.on('startPve', async (deckInput, callback) => {
+	  const startTime = Date.now();
+	  
+	  try {
+		// Валидация ввода
+		const { valid, deck, error } = validateDeck(deckInput);
+		if (!valid) {
+		  console.error(`💥 Invalid deck input: ${error}`);
+		  return callback({
+			status: 'error',
+			code: "INVALID_DECK",
+			message: error,
+			retryable: false
+		  });
+		}
+  
+		// Создание игры
+		const game = new PveGame(deck, abilities);
+		if (!game) {
+		  throw new Error("Failed to initialize the game with the provided deck.");
+		}
+  
+		// Создание сессии
+		const session = sessionManager.createSession(socket.id, deck);
+		if (!session) {
+		  throw new Error("Failed to create session.");
+		}
+  
+		// Успешный ответ
+		callback({
+		  status: 'success',
+		  sessionId: session.id,
+		  gameState: game.getPublicState()
+		});
+  
+		console.log(`🚀 Game started in ${Date.now() - startTime}ms`, {
+		  socketId: socket.id,
+		  deck: deck
+		});
+  
+	  } catch (error) {
+		console.error(`💥 Game init failed`, { 
+		  socketId: socket.id,
+		  error: error.message,
+		  stack: error.stack
+		});
+		
+		callback({
+		  status: 'error',
+		  code: "INIT_FAILURE",
+		  message: error.message,
+		  retryable: isRetryableError(error)
+		});
+	  }
+	});
+  
+	socket.on('disconnect', () => {
+	  wsConnectionsGauge.dec();
+	  console.log(`⚠️  Disconnected: ${socket.id}`);
+	  sessionManager.destroySession(socket.id);
+	});
 });
 
 // 10. Graceful shutdown
