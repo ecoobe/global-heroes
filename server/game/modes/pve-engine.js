@@ -20,6 +20,30 @@ class PveGame extends BaseGame {
       ai: this.createAI() // Генерация AI
     };
   }
+  validateDeck(deck) {
+	return deck.map(id => {
+	  // Преобразуем ID к строке для доступа к ключам объекта
+	  const ability = this.abilities[String(id)];
+	  
+	  if (!ability || typeof ability !== 'object') {
+		throw new Error(`Ability ${id} not found`);
+	  }
+  
+	  if (!ability.name || typeof ability.cost === 'undefined') {
+		console.error('Invalid ability structure:', ability);
+		throw new Error(`Corrupted ability data for ID ${id}`);
+	  }
+  
+	  return {
+		id: Number(id),
+		name: ability.name,
+		cost: ability.cost ?? 1,
+		charges: ability.charges ?? 1,
+		strength: ability.strength ?? 0,
+		health: ability.health ?? 1
+	  };
+	});
+  }
 
   createAI() {
     return {
