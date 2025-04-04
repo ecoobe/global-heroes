@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const { abilities } = require('../heroes/abilities'); // Добавлен импорт способностей
+const { abilities } = require('./abilities'); // Добавлен импорт способностей
 
 class SessionManager {
   constructor() {

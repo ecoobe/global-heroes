@@ -1,5 +1,5 @@
 // server/game/core/ability-system.js
-const { abilities } = require('../../heroes/abilities');
+const { abilities } = require('../abilities');
 
 class AbilitySystem {
   constructor() {
