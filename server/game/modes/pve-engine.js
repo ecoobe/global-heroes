@@ -28,20 +28,23 @@ class PveGame extends BaseGame {
   }
 
   validateDeck(deck) {
-    return deck.map(id => {
-      const ability = this.abilities[id]; // Используем сохранённые abilities
-      if (!ability) {
-        throw new Error(`Ability ${id} not found`);
-      }
-      return {
-        id: Number(id),
-        name: ability.name,
-        cost: ability.cost || 1,
-        charges: ability.charges || 1,
-        strength: ability.strength || 0,
-        health: ability.health || 1
-      };
-    });
+	return deck.map(id => {
+	  const ability = this.abilities[id];
+	  
+	  // Добавляем проверку структуры ability
+	  if (!ability || typeof ability !== 'object') {
+		throw new Error(`Invalid ability structure for ID ${id}`);
+	  }
+  
+	  return {
+		id: Number(id),
+		name: ability.name || 'Unknown Ability',
+		cost: ability.cost ?? 1, // Используем оператор ?? для nullish coalescing
+		charges: ability.charges ?? 1,
+		strength: ability.strength ?? 0,
+		health: ability.health ?? 1
+	  };
+	});
   }
 
   onTurnEnd() {

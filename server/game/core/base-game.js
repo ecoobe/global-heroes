@@ -6,17 +6,35 @@ const { CombatSystem } = require('./combat-system');
 
 class BaseGame {
   constructor(playerDecks, gameType) {
+    this.validateDecks(playerDecks);
+    
     this.id = uuidv4();
     this.gameType = gameType;
     this.status = 'active';
     this.players = {};
     
-    // Инициализация систем
     this.abilitySystem = new AbilitySystem();
     this.turnSystem = new TurnSystem(this);
     this.combatSystem = new CombatSystem();
     
     this.initializePlayers(playerDecks);
+  }
+
+  validateDecks(decks) {
+    if (!decks || typeof decks !== 'object') {
+      throw new Error('Invalid decks format');
+    }
+    
+    const requiredDecks = this.getRequiredDecks();
+    requiredDecks.forEach(deckKey => {
+      if (!decks[deckKey] || !Array.isArray(decks[deckKey])) {
+        throw new Error(`Missing or invalid ${deckKey} deck`);
+      }
+    });
+  }
+
+  getRequiredDecks() {
+    throw new Error('Method getRequiredDecks must be implemented');
   }
 
   initializePlayers(decks) {
@@ -29,22 +47,23 @@ class BaseGame {
       status: this.status,
       players: this.sanitizePlayers(),
       currentTurn: this.turnSystem.currentTurn,
-      round: this.turnSystem.round
+      round: this.turnSystem.round,
+      timestamp: Date.now()
     };
   }
 
   sanitizePlayers() {
-    const result = {};
-    for (const [playerId, player] of Object.entries(this.players)) {
-      result[playerId] = {
+    return Object.entries(this.players).reduce((acc, [playerId, player]) => {
+      acc[playerId] = {
         deck: player.deck.length,
         hand: this.sanitizeCards(player.hand),
         field: this.sanitizeUnits(player.field),
         health: player.health,
-        energy: player.energy
+        energy: player.energy,
+        effects: player.effects || []
       };
-    }
-    return result;
+      return acc;
+    }, {});
   }
 
   sanitizeUnits(units) {
@@ -53,7 +72,8 @@ class BaseGame {
       name: unit.name,
       strength: unit.strength,
       health: unit.health,
-      charges: unit.charges
+      charges: unit.charges,
+      statusEffects: unit.statusEffects || []
     }));
   }
 
@@ -62,8 +82,14 @@ class BaseGame {
       id: card.id,
       name: card.name,
       cost: card.cost,
-      charges: card.charges
+      charges: card.charges,
+      description: card.description || ''
     }));
+  }
+
+  endGame(reason = 'completed') {
+    this.status = 'ended';
+    console.log(`Game ${this.id} ended. Reason: ${reason}`);
   }
 }
 
