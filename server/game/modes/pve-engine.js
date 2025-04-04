@@ -4,138 +4,141 @@ const { CombatSystem } = require('../core/combat-system');
 class PveGame extends BaseGame {
   constructor(playerDeck, abilities) {
     try {
-      console.log('[PvE] Initializing with raw deck:', playerDeck);
+      console.log('[PvE] Constructor start');
       
-      // 1. Нормализация колоды перед super()
-      const numericDeck = PveGame.staticNormalizeDeck(playerDeck);
-      console.log('[PvE] Normalized deck:', numericDeck);
+      // 1. Вызов super() первым
+      super();
+      console.log('[PvE] Base initialized');
 
-      // 2. Обязательный вызов super() первым
-      super({ human: numericDeck, ai: [] }, 'pve');
-      console.log('[PvE] Base game initialized');
+      // 2. Нормализация колоды
+      this.numericDeck = this.constructor.staticNormalizeDeck(playerDeck);
+      console.log('[PvE] Deck normalized:', this.numericDeck);
 
-      // 3. Проверка abilities
-      if (!abilities || typeof abilities !== 'object') {
-        throw new Error(`Invalid abilities: ${typeof abilities}`);
-      }
-      console.log('[PvE] Loaded abilities count:', Object.keys(abilities).length);
+      // 3. Инициализация способностей
+      this.abilities = Object.keys(abilities).reduce((acc, key) => {
+        const strKey = String(key);
+        acc[strKey] = { ...abilities[key], id: Number(key) };
+        return acc;
+      }, {});
+      console.log('[PvE] Abilities loaded:', Object.keys(this.abilities));
 
-      // 4. Инициализация систем
+      // 4. Проверка существования всех способностей
+      this.validateAbilities();
+
+      // 5. Инициализация систем
       this.combatSystem = new CombatSystem();
-      this.abilities = abilities;
-      this.aiDifficulty = 2; // Уровень сложности: 1-easy, 2-normal, 3-hard
-      
-      console.log('[PvE] Initialization completed');
+      this.aiDifficulty = 2;
+
+      // 6. Инициализация игроков
+      this.initializePlayers({
+        human: this.numericDeck,
+        ai: []
+      });
+
+      console.log('[PvE] Initialization complete');
     } catch (error) {
       console.error('[PvE CONSTRUCTOR ERROR]', error.stack);
-      throw new Error(`Game initialization failed: ${error.message}`);
+      throw new Error(`Game init failed: ${error.message}`);
     }
   }
 
   // region ==================== CORE METHODS ====================
-  getRequiredDecks() {
-    return ['human'];
-  }
-
   initializePlayers(decks) {
     try {
-      console.log('[PvE] Initializing players with decks:', {
-        human: decks.human.slice(0, 3) + '...',
-        ai: decks.ai?.slice(0, 3) + '...'
-      });
+      console.log('[PvE] Initializing players...');
       
       this.players = {
         human: this.createPlayer(decks.human, 'human'),
         ai: this.createAI()
       };
 
-      console.log('[PvE] Players initialized:', {
-        humanCards: this.players.human.deck.length,
-        aiCards: this.players.ai.deck.length
+      console.log('[PvE] Players ready:', {
+        human: this.players.human.deck.map(c => c.id),
+        ai: this.players.ai.deck
       });
     } catch (error) {
-      console.error('[INIT PLAYERS ERROR]', error.stack);
-      throw new Error(`Players initialization failed: ${error.message}`);
+      throw new Error(`Players init failed: ${error.message}`);
     }
   }
-  // endregion
 
-  // region ==================== DECK MANAGEMENT ====================
   static staticNormalizeDeck(deck) {
     try {
       if (!Array.isArray(deck)) {
         throw new Error(`Expected array, got ${typeof deck}`);
       }
 
-      return deck.map((item, index) => {
-        // Обработка объектов
+      return deck.map(item => {
+        // Обработка объектов карт
         if (item && typeof item === 'object' && item.id) {
           const id = Number(item.id);
-          if (isNaN(id)) throw new Error(`Invalid object ID at index ${index}: ${item.id}`);
+          if (isNaN(id)) throw new Error(`Invalid object ID: ${item.id}`);
           return id;
         }
 
         // Обработка примитивов
         const id = Number(item);
-        if (isNaN(id)) throw new Error(`Non-numeric ID at index ${index}: ${item}`);
-        
+        if (isNaN(id)) throw new Error(`Invalid ID: ${item}`);
         return id;
       });
     } catch (error) {
-      console.error('[DECK NORMALIZATION ERROR]', error.stack);
       throw new Error(`Deck normalization failed: ${error.message}`);
     }
   }
 
+  validateAbilities() {
+    console.log('[PvE] Validating abilities...');
+    
+    // Проверка обязательных полей
+    Object.entries(this.abilities).forEach(([key, ability]) => {
+      const requiredFields = ['id', 'name', 'cost', 'effectType'];
+      const missing = requiredFields.filter(f => !(f in ability));
+      
+      if (missing.length > 0) {
+        throw new Error(`Ability ${key} missing fields: ${missing.join(', ')}`);
+      }
+    });
+  }
+  // endregion
+
+  // region ==================== DECK VALIDATION ====================
   validateDeck(deck) {
     try {
-      console.log('[VALIDATION] Starting deck validation');
+      console.log('[VALIDATION] Starting with deck:', deck);
       
-      return deck.map((item, index) => {
-        const id = typeof item === 'object' ? item.id : item;
-        const numericId = Number(id);
+      return deck.map(id => {
+        const key = String(id);
         
-        if (isNaN(numericId)) {
-          throw new Error(`Invalid ID at position ${index}: ${id}`);
+        if (!this.abilities[key]) {
+          throw new Error(`Ability ${key} not found`);
         }
 
-        const ability = this.abilities[String(numericId)];
-        if (!ability) {
-          throw new Error(`Ability ${numericId} not found`);
-        }
-
-        // Проверка обязательных полей
-        const requiredFields = ['name', 'cost', 'effectType'];
-        const missing = requiredFields.filter(f => !(f in ability));
-        if (missing.length > 0) {
-          throw new Error(`Missing fields in ability ${numericId}: ${missing.join(', ')}`);
-        }
-
-        // Сборка данных карты
-        return {
-          id: numericId,
-          name: ability.name,
-          cost: Math.max(1, Number(ability.cost)),
-          effectType: ability.effectType,
-          target: ability.target || 'NONE',
-          charges: Math.max(1, Number(ability.charges || 1)),
-          health: Math.max(1, Number(ability.health || 1)),
-          strength: Math.max(0, Number(ability.strength || 0)),
-          ...(ability.value && { value: ability.value }),
-          ...(ability.modifier && { modifier: ability.modifier }),
-          ...(ability.pierce && { pierce: ability.pierce }),
-          ...(ability.stat && { stat: ability.stat })
-        };
+        const ability = this.abilities[key];
+        return this.buildCardData(ability);
       });
     } catch (error) {
-      console.error('[DECK VALIDATION ERROR]', {
-        error: error.message,
-        deck: deck.slice(0, 3) + '...'
-      });
+      console.error('[VALIDATION ERROR]', error.message);
       throw new Error(`Deck validation failed: ${error.message}`);
     }
   }
 
+  buildCardData(ability) {
+    return {
+      id: ability.id,
+      name: ability.name,
+      cost: Math.max(1, Number(ability.cost)),
+      effectType: ability.effectType,
+      target: ability.target || 'NONE',
+      charges: Math.max(1, Number(ability.charges || 1)),
+      health: Math.max(1, Number(ability.health || 1)),
+      strength: Math.max(0, Number(ability.strength || 0)),
+      ...(ability.value && { value: ability.value }),
+      ...(ability.modifier && { modifier: ability.modifier }),
+      ...(ability.pierce && { pierce: ability.pierce })
+    };
+  }
+  // endregion
+
+  // region ==================== PLAYER MANAGEMENT ====================
   createPlayer(deck, type) {
     try {
       console.log(`[PLAYER] Creating ${type} player`);
@@ -149,8 +152,23 @@ class PveGame extends BaseGame {
         type: type
       };
     } catch (error) {
-      console.error('[PLAYER CREATION ERROR]', error.stack);
       throw new Error(`Player creation failed: ${error.message}`);
+    }
+  }
+
+  createAI() {
+    try {
+      return {
+        deck: this.generateAIDeck(),
+        hand: [],
+        field: [],
+        health: 30,
+        energy: 0,
+        energyPerTurn: 1,
+        type: 'ai'
+      };
+    } catch (error) {
+      throw new Error(`AI creation failed: ${error.message}`);
     }
   }
   // endregion
