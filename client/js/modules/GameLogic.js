@@ -120,7 +120,7 @@ export class GameLogic {
 	}
   
 	static validateDeck(selectedHeroes, availableHeroes) {
-	  if (!(selectedHeroes instanceof Set)) {
+	  if (!Array.isArray(selectedHeroIds)) { 
 		return {
 		  isValid: false,
 		  errors: ['Некорректный формат данных колоды'],
