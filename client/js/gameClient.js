@@ -265,7 +265,8 @@ class GameClient {
   async endTurn() {
 	try {
 	  if (!this.state.currentGameState?.id) {
-		throw new Error('Игра не найдена');
+		this.ui.showError('Игра не активна');
+		return;
 	  }
   
 	  await this.socket.emit('endTurn', this.state.currentGameState.id);
