@@ -83,9 +83,18 @@ class GameClient {
   }
 
   handleGameState(state) {
-    this.state.currentGameState = state;
-    this.updateGameInterface();
-    this.ui.toggleInterface('game');
+	this.state.currentGameState = state;
+	this.updateGameInterface();
+	this.ui.toggleInterface('game');
+	
+	// Явно обновляем видимость элементов
+	this.ui.elements.gameContainer.classList.add('active');
+	this.ui.elements.heroSelectContainer.classList.remove('active');
+	this.ui.elements.mainMenu.classList.remove('active');
+	
+	// Принудительный ререндер
+	this.renderPlayerHand(state.human.hand);
+	this.renderBattlefield(state.human.field, state.ai.field);
   }
 
   updateGameInterface() {
