@@ -7,8 +7,9 @@
     position: relative;
 }
 
-.game-container.active {
-    display: block;
+game-container.active {
+	display: grid !important;
+	opacity: 1;  
     z-index: 850;
 }
 
@@ -87,5 +88,7 @@
 }
 
 .game-container {
-	background: red !important; /* Для визуальной проверки */
+	display: none !important;
+	opacity: 0;
+	transition: opacity 0.3s ease;
 }
