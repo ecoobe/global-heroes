@@ -39,38 +39,38 @@ export class UIManager {
   }
 
   toggleInterface(screen) {
-    console.log('[UI] Switching to:', screen);
-    
-    this.elements.mainMenu.hidden = true;
-    this.elements.heroSelectContainer.hidden = true;
-    this.elements.gameContainer.hidden = true;
-    
-    this.elements.mainMenu.style.display = 'none';
-    this.elements.heroSelectContainer.style.display = 'none';
-    this.elements.gameContainer.style.display = 'none';
-
-    switch(screen) {
-      case 'main':
-        this.elements.mainMenu.hidden = false;
-        this.elements.mainMenu.style.display = 'flex';
-        break;
-      
-      case 'heroSelect':
-        this.elements.heroSelectContainer.hidden = false;
-        this.elements.heroSelectContainer.style.display = 'block';
-        break;
-      
-      case 'game':
-        this.elements.gameContainer.hidden = false;
-        this.elements.gameContainer.style.display = 'grid';
-        break;
-    }
-    
-    console.log('[UI] New state:', {
-      main: this.elements.mainMenu.hidden,
-      heroSelect: this.elements.heroSelectContainer.hidden,
-      game: this.elements.gameContainer.hidden
-    });
+	console.log('[UI] Switching to:', screen);
+  
+	// Сбрасываем все inline-стили
+	this.elements.mainMenu.style.cssText = '';
+	this.elements.heroSelectContainer.style.cssText = '';
+	this.elements.gameContainer.style.cssText = '';
+  
+	// Скрываем все элементы
+	this.elements.mainMenu.hidden = true;
+	this.elements.heroSelectContainer.hidden = true;
+	this.elements.gameContainer.hidden = true;
+  
+	// Активируем целевой интерфейс
+	switch(screen) {
+	  case 'main':
+		this.elements.mainMenu.hidden = false;
+		break;
+	  
+	  case 'heroSelect':
+		this.elements.heroSelectContainer.hidden = false;
+		break;
+	  
+	  case 'game':
+		this.elements.gameContainer.hidden = false;
+		break;
+	}
+  
+	console.log('[UI] Verified state:', {
+	  main: this.elements.mainMenu.hidden,
+	  heroSelect: this.elements.heroSelectContainer.hidden,
+	  game: this.elements.gameContainer.hidden
+	});
   }
 
   updateHeroSelection(selectedCount) {
