@@ -28,41 +28,38 @@ export class UIManager {
   }
 
   toggleInterface(screen) {
-	console.log('[UI] Transition to:', screen);
-	
-	const interfaces = {
-	  main: this.elements.mainMenu,
-	  heroSelect: this.elements.heroSelectContainer,
-	  game: this.elements.gameContainer
-	};
-  
-	// Сброс всех состояний
-	Object.values(interfaces).forEach(el => {
-	  el.classList.remove('active', 'ui-force-visible');
-	  el.style.cssText = '';
-	});
-  
-	// Активация целевого интерфейса
-	if (interfaces[screen]) {
-	  const target = interfaces[screen];
-	  target.classList.add('active', 'ui-force-visible');
-	  target.style.display = 'block';
-	  target.style.opacity = '1';
-	  target.hidden = false;
-  
-	  // Гарантия визуального отображения
-	  requestAnimationFrame(() => {
-		target.style.transform = 'none';
-		target.style.visibility = 'visible';
-	  });
-	}
-  
-	// Специфичные действия
-	switch(screen) {
-	  case 'game':
-		this.elements.gameContainer.scrollIntoView({ behavior: 'instant' });
-		break;
-	}
+    console.log('[UI] Switching to:', screen);
+    
+    // Сбрасываем все интерфейсы
+    this.elements.mainMenu.hidden = true;
+    this.elements.heroSelectContainer.hidden = true;
+    this.elements.gameContainer.hidden = true;
+
+    // Активируем целевой интерфейс
+    switch(screen) {
+      case 'main':
+        this.elements.mainMenu.hidden = false;
+        this.elements.mainMenu.style.display = 'flex';
+        break;
+      
+      case 'heroSelect':
+        this.elements.heroSelectContainer.hidden = false;
+        this.elements.heroSelectContainer.style.display = 'block';
+        break;
+      
+      case 'game':
+        this.elements.gameContainer.hidden = false;
+        this.elements.gameContainer.style.display = 'grid';
+        this.elements.gameContainer.style.opacity = '1';
+        this.elements.gameContainer.style.visibility = 'visible';
+        break;
+    }
+    
+    console.log('[UI] New state:', {
+      main: this.elements.mainMenu.hidden,
+      heroSelect: this.elements.heroSelectContainer.hidden,
+      game: this.elements.gameContainer.hidden
+    });
   }
 
   updateHeroSelection(selectedCount) {
@@ -87,43 +84,37 @@ export class UIManager {
     
     this.elements.heroCards.forEach(card => {
       card.addEventListener('click', clickHandler);
-      card.addEventListener('mouseenter', this.handleCardHover);
     });
-  }
-
-  handleCardHover(event) {
-    const heroId = event.currentTarget.dataset.id;
-    // Логика показа подсказки
   }
 
   updateGameInterface(state) {
     this.elements.playerHealth.textContent = state.human.health;
     this.elements.aiHealth.textContent = state.ai.health;
-    this.elements.playerDeck.textContent = state.human.deck.length;
-    this.elements.aiDeck.textContent = state.ai.deck.length;
+    this.elements.playerDeck.textContent = state.human.deck?.length || 0;
+    this.elements.aiDeck.textContent = state.ai.deck?.length || 0;
     
     this.renderBattlefield(state.human.field, state.ai.field);
     this.renderPlayerHand(state.human.hand);
   }
 
-  renderPlayerHand(hand) {
+  renderPlayerHand(hand = []) {
     this.elements.playerHand.innerHTML = hand
       .map(card => DOMHelper.createCardElement(card))
       .join('');
   }
 
-  renderBattlefield(playerField, aiField) {
-	this.clearBattlefield();
-  
-	playerField.forEach(unit => {
-	  const element = DOMHelper.createUnitElement(unit, 'player');
-	  this.elements.playerBattlefield.appendChild(element);
-	});
-  
-	aiField.forEach(unit => {
-	  const element = DOMHelper.createUnitElement(unit, 'ai');
-	  this.elements.aiBattlefield.appendChild(element);
-	});
+  renderBattlefield(playerField = [], aiField = []) {
+    this.clearBattlefield();
+    
+    playerField.forEach(unit => {
+      const element = DOMHelper.createUnitElement(unit, 'player');
+      this.elements.playerBattlefield.appendChild(element);
+    });
+    
+    aiField.forEach(unit => {
+      const element = DOMHelper.createUnitElement(unit, 'ai');
+      this.elements.aiBattlefield.appendChild(element);
+    });
   }
 
   clearBattlefield() {
