@@ -1,18 +1,18 @@
 /* Базовые стили */
 .game-container {
-    display: none; /* Скрыт по умолчанию */
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-    z-index: 1000;
-    position: relative;
-    background: #2c3e50;
-}
+	display: none; /* Скрыт по умолчанию */
+	padding: 2rem;
+	max-width: 1200px;
+	margin: 0 auto;
+	z-index: 1000;
+	position: relative;
+	background: #2c3e50;
+}  
 
 .game-container.active {
-    display: grid !important; /* Показываем только с классом active */
-    animation: fadeIn 0.3s ease;
-}
+	display: grid !important;
+	animation: fadeIn 0.3s ease;
+}  
 
 /* Состояния видимости */
 #gameContainer[hidden] {
@@ -25,8 +25,8 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+	from { opacity: 0; }
+	to { opacity: 1; }
 }
 
 /* Детали интерфейса */
