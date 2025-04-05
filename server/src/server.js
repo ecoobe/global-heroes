@@ -2,18 +2,27 @@ const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const Redis = require('ioredis');
-const { PveGame } = require('../game/modes/pve-engine');
 const promBundle = require("express-prom-bundle");
+const { v4: uuidv4 } = require('uuid');
+const { PveGame } = require('../game/modes/pve-engine');
 const SessionManager = require('../game/session-manager');
 const { Gauge } = require('prom-client');
-
-// 1. Инициализация способностей (защищенная версия)
 const { abilities } = require('../game/abilities');
+
+// 0. Глобальная обработка ошибок
+process.on('uncaughtException', (err) => {
+  console.error('‼️ Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('‼️ Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 const app = express();
 const server = createServer(app);
 
-// 2. Конфигурация метрик
+// 1. Конфигурация метрик
 const metricsMiddleware = promBundle({
   includeMethod: true,
   includePath: true,
@@ -22,25 +31,12 @@ const metricsMiddleware = promBundle({
 });
 app.use(metricsMiddleware);
 
-// 3. Кастомные метрики
-const redisStatusGauge = new Gauge({
-  name: 'redis_status',
-  help: 'Redis connection status',
-  labelNames: ['service']
-});
-
-const wsConnectionsGauge = new Gauge({
-  name: 'websocket_connections',
-  help: 'Active WebSocket connections'
-});
-
-// 4. Подключение Redis с повторными попытками
+// 2. Инициализация сервисов
 const redisClient = new Redis(process.env.REDIS_URL || 'redis://redis:6379', {
   retryStrategy: times => Math.min(times * 100, 5000),
   maxRetriesPerRequest: null
 });
 
-// 5. Инициализация Socket.IO с улучшенной обработкой ошибок
 const io = new Server(server, {
   connectionStateRecovery: {
     maxDisconnectionDuration: 60000,
@@ -51,16 +47,25 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
     credentials: true
   },
-  transports: ["websocket"]
+  transports: ["websocket"],
+  allowEIO3: true
 });
 
-// 6. Менеджер сессий с автоматической очисткой
-const sessionManager = new SessionManager({
-  sessionTTL: 3600000, // 1 час
-  gcInterval: 300000   // Каждые 5 минут
+const sessionManager = new SessionManager();
+
+// 3. Метрики
+const redisStatusGauge = new Gauge({
+  name: 'redis_status',
+  help: 'Redis connection status',
+  labelNames: ['service']
 });
 
-// 7. Healthcheck endpoint
+const sessionGauge = new Gauge({
+  name: 'active_sessions',
+  help: 'Current active game sessions'
+});
+
+// 4. Healthcheck endpoint
 app.get("/health", async (req, res) => {
   try {
     await redisClient.ping();
@@ -68,8 +73,8 @@ app.get("/health", async (req, res) => {
       status: "OK",
       services: {
         redis: "active",
-        websocket: io.engine.clientsCount > 0 ? "active" : "idle",
-        abilities: Object.keys(abilities).length === 5 ? "valid" : "invalid"
+        sessions: sessionManager.sessions.size,
+        abilities: Object.keys(abilities).length
       }
     });
   } catch (err) {
@@ -80,88 +85,69 @@ app.get("/health", async (req, res) => {
   }
 });
 
-// 8. Обработчики событий Redis
-redisClient.on('ready', () => {
-  console.log('✅ Redis connected');
-  redisStatusGauge.set(1);
-});
-
-redisClient.on('error', (err) => {
-  console.error(`⛔ Redis error: ${err.message}`);
-  redisStatusGauge.set(0);
-});
-
-// 9. WebSocket обработчики
+// 5. WebSocket обработчики
 io.on('connection', (socket) => {
-	wsConnectionsGauge.inc();
-	console.log(`🎮 New connection: ${socket.id}`);
-  
-	socket.on('startPve', async (deckInput, callback) => {
-		console.log('Received deck from client:', JSON.stringify(deckInput));
-		const startTime = Date.now();
-		
-		try {
-		  const { valid, deck, error } = validateDeck(deckInput);
-		  console.log('[SERVER] Validated deck:', JSON.stringify(deck, null, 2)); // Подробное логирование
-	  
-		  if (!valid) throw new Error(error);
-	  
-		  const game = new PveGame(deck, abilities);
-		  const session = sessionManager.createGameSession(socket.id, deck);
-	  
-		  const gameState = game.getPublicState();
-		  console.log('[SERVER] Generated game state:', { // Логируем структуру
-			id: gameState.id,
-			human: {
-			  hand: gameState.players.human.hand?.length,
-			  field: gameState.players.human.field?.length
-			},
-			ai: {
-			  field: gameState.players.ai.field?.length
-			}
-		  });
-	  
-		  callback({
-			status: 'success',
-			sessionId: session.id,
-			gameState: gameState
-		  });
-	  
-		  console.log(`🚀 Game started in ${Date.now() - startTime}ms`);
-		  
-		} catch (error) {
-		  console.error(`💥 Game init failed: ${error.message}`);
-		  callback({
-			status: 'error',
-			code: "INIT_FAILURE",
-			message: error.message,
-			retryable: isRetryableError(error)
-		  });
-	  
-		  callback({
-			status: 'error',
-			code: "INIT_FAILURE",
-			message: error.message,
-			retryable: isRetryableError(error)
-		  });
-		}
-	});
-  
-	socket.on('disconnect', () => {
-	  wsConnectionsGauge.dec();
-	  console.log(`⚠️  Disconnected: ${socket.id}`);
-	  sessionManager.destroySession(socket.id);
-	});
+  console.log(`🎮 New connection: ${socket.id}`);
+
+  socket.on('startPve', async (deckInput, callback) => {
+    try {
+      // Валидация ввода
+      if (!deckInput) throw new Error('Missing deck data');
+      
+      const validation = validateDeck(deckInput);
+      if (!validation.valid) {
+        throw new Error(validation.error);
+      }
+
+      // Создание игры
+      const game = new PveGame(validation.deck, abilities);
+      const sessionId = uuidv4();
+      
+      // Сохранение сессии
+      sessionManager.sessions.set(sessionId, game.id);
+      sessionManager.games.set(game.id, {
+        game,
+        socketId: socket.id,
+        lastActivity: Date.now()
+      });
+
+      // Обновление метрик
+      sessionGauge.set(sessionManager.sessions.size);
+
+      // Ответ клиенту
+      callback({
+        status: 'success',
+        sessionId,
+        gameState: game.getPublicState()
+      });
+
+      console.log(`🚀 Game ${game.id} started for ${socket.id}`);
+
+    } catch (error) {
+      console.error(`💥 Game init failed (${socket.id}):`, error.stack);
+      callback({
+        status: 'error',
+        code: "INIT_FAILURE",
+        message: error.message.replace(/[\n\r]/g, ' ')
+      });
+    }
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.log(`⚠️  Disconnected: ${socket.id} (${reason})`);
+    sessionManager.destroySession(socket.id);
+    sessionGauge.set(sessionManager.sessions.size);
+  });
 });
 
-// 10. Graceful shutdown
-const shutdown = async () => {
-  console.log('\n🛑 Shutting down...');
+// 6. Graceful shutdown
+const shutdown = async (signal) => {
+  console.log(`\n🛑 Received ${signal}, shutting down...`);
   try {
     await Promise.all([
       redisClient.quit(),
       new Promise(resolve => server.close(resolve)),
-      sessionManager.destroyAll()
+      sessionManager.cleanupInactiveSessions(0)
     ]);
     console.log('✅ Graceful shutdown complete');
     process.exit(0);
@@ -171,71 +157,42 @@ const shutdown = async () => {
   }
 };
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+['SIGINT', 'SIGTERM', 'SIGQUIT'].forEach(signal => {
+  process.on(signal, () => shutdown(signal));
+});
 
-// 11. Валидация колоды
+// 7. Валидация колоды
 function validateDeck(input) {
-	try {
-	  let parsed = input;
-	  
-	  // Парсинг JSON строки, если это строка
-	  if (typeof input === 'string') {
-		try {
-		  parsed = JSON.parse(input);
-		} catch (e) {
-		  return { valid: false, error: "Invalid JSON format" };
-		}
-	  }
-  
-	  // Проверка типа
-	  if (!Array.isArray(parsed)) {
-		return { valid: false, error: "Deck must be an array" };
-	  }
-  
-	  // Преобразование ID в объекты с дополнительной информацией
-	  const deck = parsed.map(item => {
-		const id = Number(item?.id ?? item);
-		if (isNaN(id)) throw new Error(`Invalid ID: ${item}`);
-		if (!abilities[String(id)]) throw new Error(`Ability ${id} not found`);
-		return { id, ability: abilities[String(id)] }; // Преобразуем в объект
-	  });
-  
-	  // Проверка размера
-	  if (deck.length !== 5) {
-		throw new Error("Deck must contain exactly 5 cards");
-	  }
-  
-	  return { valid: true, deck };
-	} catch (error) {
-	  return { valid: false, error: error.message };
-	}
-}
-
-// 12. Проверка возможности повтора
-function isRetryableError(error) {
-  const retryableMessages = [
-    'timeout', 
-    'connection',
-    'busy',
-    'temporarily'
-  ];
-  return retryableMessages.some(msg => error.message.includes(msg));
-}
-
-// 13. Запуск сервера
-const startServer = async () => {
   try {
-    await redisClient.ping();
-    server.listen(3000, '0.0.0.0', () => {
-      console.log('🚀 Server started on port 3000');
-      console.log('🔗 Redis status:', redisClient.status);
-    });
-  } catch (err) {
-    console.error('⛔ Server startup failed:', err);
-    process.exit(1);
-  }
-};
+    const deck = JSON.parse(input);
+    
+    if (!Array.isArray(deck)) {
+      throw new Error('Deck must be an array');
+    }
+    
+    if (deck.length !== 5) {
+      throw new Error('Deck must contain exactly 5 cards');
+    }
 
-// Явный вызов функции запуска
-startServer(); // <-- Критически важная строка!
+    const validated = deck.map(item => {
+      const id = Number(item?.id ?? item);
+      if (isNaN(id)) throw new Error(`Invalid card ID: ${item}`);
+      if (!abilities[id]) throw new Error(`Unknown ability ID: ${id}`);
+      return id;
+    });
+
+    return { valid: true, deck: validated };
+  } catch (error) {
+    return { 
+      valid: false, 
+      error: error.message.replace(/[\n\r]/g, ' ')
+    };
+  }
+}
+
+// 8. Запуск сервера
+server.listen(3000, '0.0.0.0', () => {
+  console.log('🚀 Server started on port 3000');
+  console.log('🔗 Redis status:', redisClient.status);
+  console.log('📊 Abilities loaded:', Object.keys(abilities).length);
+});
