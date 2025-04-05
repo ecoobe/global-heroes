@@ -239,38 +239,87 @@ class GameClient {
   }
 
   updateGameInterface() {
-    const state = this.state.currentGameState;
-    if (!state) return;
-
-    try {
-      this.debug.log('UPDATING_INTERFACE', {
-        gameId: state.id,
-        humanHealth: state.human.health,
-        aiHealth: state.ai.health
-      }, 'debug');
-      
-      // Обновление основных показателей
-      this.ui.elements.gameId.textContent = `Игра #${state.id}`;
-      this.ui.elements.playerHealth.textContent = state.human.health;
-      this.ui.elements.aiHealth.textContent = state.ai.health;
-      this.ui.elements.playerDeck.textContent = state.human.deck?.length || 0;
-      this.ui.elements.aiDeck.textContent = state.ai.deck?.length || 0;
-
-      // Отрисовка элементов интерфейса
-      this.renderPlayerHand(state.human.hand);
-      this.renderBattlefield(state.human.field, state.ai.field);
-      
-      this.debug.log('INTERFACE_UPDATED', {
-        handSize: state.human.hand.length,
-        playerFieldUnits: state.human.field.length,
-        aiFieldUnits: state.ai.field.length
-      }, 'debug');
-    } catch (error) {
-      this.debug.log('INTERFACE_UPDATE_FAILED', {
-        error: error.message,
-        stack: error.stack
-      }, 'error');
-    }
+	try {
+	  const state = this.state.currentGameState;
+	  
+	  // Глубокая проверка состояния
+	  const isValidState = state?.id && 
+						 state.human && 
+						 state.ai &&
+						 Number.isInteger(state.human.health) &&
+						 Number.isInteger(state.ai.health);
+  
+	  if (!isValidState) {
+		this.debug.log('INVALID_GAME_STATE', {
+		  receivedState: state,
+		  humanValid: !!state?.human,
+		  aiValid: !!state?.ai
+		}, 'error');
+		
+		this.ui.showError('Некорректные данные игры');
+		return;
+	  }
+  
+	  this.debug.log('UPDATING_INTERFACE', {
+		gameId: state.id,
+		humanHealth: state.human.health ?? 'N/A',
+		aiHealth: state.ai.health ?? 'N/A',
+		humanDeckSize: state.human.deck?.length ?? 0,
+		aiDeckSize: state.ai.deck?.length ?? 0
+	  }, 'debug');
+  
+	  // Безопасное обновление UI элементов
+	  this.ui.elements.gameId.textContent = `Игра #${state.id}`;
+	  
+	  // Здоровье игроков
+	  this.ui.elements.playerHealth.textContent = 
+		state.human.health?.toLocaleString() ?? '0';
+		
+	  this.ui.elements.aiHealth.textContent = 
+		state.ai.health?.toLocaleString() ?? '0';
+  
+	  // Размеры колод
+	  this.ui.elements.playerDeck.textContent = 
+		state.human.deck?.length?.toString()?.padStart(2, '0') ?? '00';
+		
+	  this.ui.elements.aiDeck.textContent = 
+		state.ai.deck?.length?.toString()?.padStart(2, '0') ?? '00';
+  
+	  // Отрисовка с fallback значениями
+	  this.renderPlayerHand(state.human.hand ?? []);
+	  this.renderBattlefield(
+		state.human.field ?? [],
+		state.ai.field ?? []
+	  );
+  
+	  // Валидация результата
+	  const interfaceValid = [
+		this.ui.elements.playerHealth.textContent,
+		this.ui.elements.aiHealth.textContent,
+		this.ui.elements.playerDeck.textContent,
+		this.ui.elements.aiDeck.textContent
+	  ].every(Boolean);
+  
+	  this.debug.log('INTERFACE_UPDATE_RESULT', {
+		success: interfaceValid,
+		elementsUpdated: {
+		  playerHealth: this.ui.elements.playerHealth.textContent,
+		  aiHealth: this.ui.elements.aiHealth.textContent,
+		  playerDeck: this.ui.elements.playerDeck.textContent,
+		  aiDeck: this.ui.elements.aiDeck.textContent
+		}
+	  }, 'debug');
+  
+	} catch (error) {
+	  this.debug.log('CRITICAL_UI_FAILURE', {
+		error: error.message,
+		stack: error.stack,
+		lastState: this.state.currentGameState
+	  }, 'error');
+	  
+	  this.ui.showError('Критический сбой интерфейса');
+	  this.ui.toggleInterface('main');
+	}
   }
 
   renderPlayerHand(hand = []) {
