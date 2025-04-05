@@ -28,32 +28,43 @@ export class UIManager {
   }
 
   toggleInterface(screen) {
-    const interfaces = {
-      main: this.elements.mainMenu,
-      heroSelect: this.elements.heroSelectContainer,
-      game: this.elements.gameContainer
-    };
-
-    // Скрываем все интерфейсы
-    Object.values(interfaces).forEach(element => 
-      element.classList.remove('active')
-    );
-
-    // Показываем выбранный интерфейс
-    if (interfaces[screen]) {
-      interfaces[screen].classList.add('active');
-      this.activeInterface = screen;
-    }
-
-    // Специфичные действия при переключении
-    switch(screen) {
-      case 'heroSelect':
-        this.elements.heroSelect.scrollTop = 0;
-        break;
-      case 'game':
-        this.clearBattlefield();
-        break;
-    }
+	console.log('[UI] Switching to screen:', screen); // Добавляем логирование
+	
+	const interfaces = {
+	  main: this.elements.mainMenu,
+	  heroSelect: this.elements.heroSelectContainer,
+	  game: this.elements.gameContainer
+	};
+  
+	// 1. Сбрасываем все стили
+	Object.values(interfaces).forEach(element => {
+	  element.classList.remove('active');
+	  element.style.display = 'none'; // Гарантированное скрытие
+	});
+  
+	// 2. Активируем нужный экран
+	if (interfaces[screen]) {
+	  interfaces[screen].style.display = 'block'; // Принудительное отображение
+	  interfaces[screen].classList.add('active');
+	  this.activeInterface = screen;
+	  console.log('[UI] Activated screen:', screen, interfaces[screen]);
+	}
+  
+	// 3. Дополнительные действия
+	switch(screen) {
+	  case 'heroSelect':
+		this.elements.heroSelect.scrollTop = 0;
+		break;
+		
+	  case 'game':
+		this.clearBattlefield();
+		// 4. Принудительный ререндер
+		requestAnimationFrame(() => {
+		  this.elements.gameContainer.hidden = false;
+		  this.elements.gameContainer.style.visibility = 'visible';
+		});
+		break;
+	}
   }
 
   updateHeroSelection(selectedCount) {
