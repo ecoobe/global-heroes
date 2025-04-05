@@ -1,20 +1,29 @@
+/* Основные стили игрового контейнера */
 .game-container {
     display: none;
     padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
-    z-index: 800;
+    z-index: 1000;
     position: relative;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-.game-container {
-	display: grid !important;
-	opacity: 1 !important;
-	background: red !important; /* Для визуальной проверки */
-	z-index: 9999 !important;  /* Экстренное повышение приоритета */
-	position: relative;        /* Для корректной работы z-index */
+/* Активное состояние */
+.game-container.active {
+    display: grid !important;
+    opacity: 1 !important;
+    background: #2c3e50; /* Возвращаем оригинальный цвет */
 }
 
+/* Экстренная визуальная проверка (можно удалить после тестов) */
+.debug-red {
+    background: red !important;
+    border: 3px solid yellow !important;
+}
+
+/* Детали интерфейса */
 .game-state {
     background: #2c3e50;
     padding: 20px;
@@ -33,6 +42,7 @@
     background: rgba(255,255,255,0.1);
     padding: 20px;
     border-radius: 15px;
+    min-height: 300px;
 }
 
 .battlefield {
@@ -40,6 +50,9 @@
     border: 2px dashed var(--primary-color);
     margin-top: 20px;
     padding: 15px;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
 }
 
 .turn-indicator {
@@ -66,6 +79,7 @@
     padding: 10px;
     background: rgba(255,255,255,0.05);
     border-radius: 8px;
+    flex-wrap: wrap;
 }
 
 .hand-card {
@@ -80,17 +94,4 @@
 
 .hand-card:hover {
     transform: translateY(-5px);
-}
-
-.ui-force-visible {
-	display: block !important;
-	opacity: 1 !important;
-	visibility: visible !important;
-	z-index: 1000 !important;
-}
-
-.game-container {
-	display: none !important;
-	opacity: 0;
-	transition: opacity 0.3s ease;
 }
