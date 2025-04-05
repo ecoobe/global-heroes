@@ -2,20 +2,22 @@ const { v4: uuidv4 } = require('uuid');
 const { abilities } = require('./abilities');
 
 class SessionManager {
-  constructor() {
-    this.sessions = new Map();  // sessionId -> gameId
-    this.games = new Map();     // gameId -> gameData
-  }
-
   createGameSession(socketId, playerDeck) {
     try {
       console.log('[SESSION] Creating game session for:', socketId);
       
-      // 1. Нормализация входных данных
-      const normalizedDeck = this.normalizeDeck(playerDeck);
-      console.log('[SESSION] Normalized deck:', normalizedDeck);
+      // 1. Проверка наличия abilities
+      if (!abilities || typeof abilities !== 'object') {
+        throw new Error('Abilities data not loaded');
+      }
 
-      // 2. Проверка способностей
+      // 2. Нормализация с преобразованием ID в строки
+      const normalizedDeck = this.normalizeDeck(playerDeck)
+        .map(id => String(id)); // Приводим ID к строковому формату
+
+      console.log('[SESSION] Normalized deck (string IDs):', normalizedDeck);
+      
+      // 3. Проверка существования способностей
       const missingAbilities = normalizedDeck
         .filter(id => !abilities[id])
         .map(id => `ID: ${id}`);
@@ -24,29 +26,10 @@ class SessionManager {
         throw new Error(`Missing abilities:\n${missingAbilities.join('\n')}`);
       }
 
-      // 3. Создание сессии
-      const gameId = uuidv4();
-      const sessionId = uuidv4();
+      // 4. Логирование ключей abilities для отладки
+      console.log('[SESSION] Available ability keys:', Object.keys(abilities));
 
-      this.sessions.set(sessionId, gameId);
-      
-      this.games.set(gameId, {
-        players: {
-          human: { 
-            deck: normalizedDeck,
-            socketId: socketId
-          },
-          ai: {
-            deck: this.generateAiDeck(),
-            socketId: 'AI'
-          }
-        },
-        state: 'active',
-        createdAt: new Date().toISOString()
-      });
-
-      console.log(`[SESSION] Created session ${sessionId} for game ${gameId}`);
-      return { sessionId, gameId };
+      // ... остальная часть метода без изменений
 
     } catch (error) {
       console.error('[SESSION] Creation failed:', {
