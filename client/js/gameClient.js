@@ -83,20 +83,40 @@ class GameClient {
   }
 
   handleGameState(state) {
-	console.log('[UI] Received game state:', state); // Добавить логирование
-	this.state.currentGameState = state;
+	console.log('[GAME STATE] Received:', state);
 	
-	// Принудительное обновление DOM
-	this.ui.toggleInterface('game');
-	this.updateGameInterface();
-	
-	// Явный ререндер всех компонентов
-	this.ui.elements.gameContainer.style.display = 'block';
-	this.ui.elements.heroSelectContainer.style.display = 'none';
-	this.ui.elements.mainMenu.style.display = 'none';
-	
-	// Дебаг стилей
-	console.log('Game container classes:', this.ui.elements.gameContainer.classList);
+	try {
+	  // 1. Сохраняем состояние
+	  this.state.currentGameState = state;
+  
+	  // 2. Принудительное обновление UI
+	  this.ui.toggleInterface('game');
+	  
+	  // 3. Явное обновление DOM элементов
+	  const { 
+		gameContainer,
+		heroSelectContainer,
+		mainMenu
+	  } = this.ui.elements;
+  
+	  gameContainer.classList.add('ui-force-visible');
+	  heroSelectContainer.classList.remove('active');
+	  mainMenu.classList.remove('active');
+  
+	  // 4. Рендер игровых данных
+	  this.updateGameInterface();
+  
+	  // 5. Дебаг стилей
+	  console.log('Game container state:', {
+		display: getComputedStyle(gameContainer).display,
+		opacity: getComputedStyle(gameContainer).opacity,
+		classList: Array.from(gameContainer.classList)
+	  });
+  
+	} catch (error) {
+	  console.error('Game state handling failed:', error);
+	  this.ui.showError('Ошибка обновления интерфейса');
+	}
   }
 
   updateGameInterface() {

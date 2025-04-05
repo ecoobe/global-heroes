@@ -78,3 +78,14 @@
 .hand-card:hover {
     transform: translateY(-5px);
 }
+
+.ui-force-visible {
+	display: block !important;
+	opacity: 1 !important;
+	visibility: visible !important;
+	z-index: 1000 !important;
+}
+
+.game-container {
+	background: red !important; /* Для визуальной проверки */
+}

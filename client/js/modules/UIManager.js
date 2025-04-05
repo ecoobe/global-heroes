@@ -28,7 +28,7 @@ export class UIManager {
   }
 
   toggleInterface(screen) {
-	console.log('[UI] Switching to screen:', screen); // Добавляем логирование
+	console.log('[UI] Switching to:', screen);
 	
 	const interfaces = {
 	  main: this.elements.mainMenu,
@@ -36,19 +36,34 @@ export class UIManager {
 	  game: this.elements.gameContainer
 	};
   
-	// 1. Сбрасываем все стили
-	Object.values(interfaces).forEach(element => {
-	  element.classList.remove('active');
-	  element.style.display = 'none'; // Гарантированное скрытие
+	// Сбрасываем состояние
+	Object.values(interfaces).forEach(el => {
+	  el.classList.remove('active', 'ui-force-visible');
+	  el.style.cssText = ''; // Сброс inline-стилей
 	});
   
-	// 2. Активируем нужный экран
+	// Активация выбранного экрана
 	if (interfaces[screen]) {
-	  interfaces[screen].style.display = 'block'; // Принудительное отображение
-	  interfaces[screen].classList.add('active');
-	  this.activeInterface = screen;
-	  console.log('[UI] Activated screen:', screen, interfaces[screen]);
+	  interfaces[screen].classList.add('active', 'ui-force-visible');
+	  interfaces[screen].style.display = 'block';
+	  interfaces[screen].style.opacity = '1';
 	}
+  
+	// Специфичные действия
+	switch(screen) {
+	  case 'game':
+		this.clearBattlefield();
+		this.elements.gameContainer.scrollIntoView({
+		  behavior: 'smooth',
+		  block: 'start'
+		});
+		break;
+	}
+  
+	// Принудительный ререндер
+	requestAnimationFrame(() => {
+	  this.elements.gameContainer.hidden = false;
+	});
   
 	// 3. Дополнительные действия
 	switch(screen) {
