@@ -83,62 +83,65 @@ class GameClient {
   }
 
   handleGameState(state) {
-	console.log('[GAME STATE] Received:', state);
-	
-	try {
-	  // Принудительное обновление DOM
-	  this.state.currentGameState = null;
-	  this.state.currentGameState = state;
-  
-	  // Явное обновление интерфейса
-	  this.ui.toggleInterface('game');
-	  this.updateGameInterface();
-  
-	  // Дебаг-визуализация
-	  this.ui.elements.gameContainer.style.border = '3px solid #00ff00';
-	  setTimeout(() => {
-		this.ui.elements.gameContainer.style.border = '';
-	  }, 2000);
-  
-	} catch (error) {
-	  console.error('UI update failed:', error);
-	}
+    console.log('[GAME STATE] Received:', state);
+    try {
+      this.state.currentGameState = state;
+      
+      // Явное обновление интерфейса
+      this.ui.toggleInterface('game'); 
+      this.updateGameInterface();
+
+      // Принудительный рефлоу для активации CSS
+      this.ui.elements.gameContainer.offsetHeight;
+
+    } catch (error) {
+      console.error('Game state handling error:', error);
+      this.ui.showError('Ошибка отображения игры');
+    }
   }
 
   updateGameInterface() {
     const state = this.state.currentGameState;
     if (!state) return;
 
-    // Обновление основных показателей
     this.ui.elements.gameId.textContent = `Игра #${state.id}`;
     this.ui.elements.playerHealth.textContent = state.human.health;
     this.ui.elements.aiHealth.textContent = state.ai.health;
     this.ui.elements.playerDeck.textContent = state.human.deck?.length || 0;
     this.ui.elements.aiDeck.textContent = state.ai.deck?.length || 0;
 
-    // Обновление интерфейса
     this.renderPlayerHand(state.human.hand);
     this.renderBattlefield(state.human.field, state.ai.field);
   }
 
   renderPlayerHand(hand = []) {
-    this.ui.elements.playerHand.innerHTML = hand
-      .map(card => DOMHelper.createCardElement(card))
-      .join('');
+    try {
+      this.ui.elements.playerHand.innerHTML = hand
+        .map(card => DOMHelper.createCardElement(card))
+        .join('');
+    } catch (error) {
+      console.error('Player hand rendering error:', error);
+      this.ui.elements.playerHand.innerHTML = '';
+    }
   }
 
   renderBattlefield(playerField = [], aiField = []) {
-    this.ui.clearBattlefield();
-    
-    playerField.forEach(unit => {
-      const element = DOMHelper.createUnitElement(unit, 'player');
-      this.ui.elements.playerBattlefield.appendChild(element);
-    });
-    
-    aiField.forEach(unit => {
-      const element = DOMHelper.createUnitElement(unit, 'ai');
-      this.ui.elements.aiBattlefield.appendChild(element);
-    });
+    try {
+      this.ui.clearBattlefield();
+      
+      playerField.forEach(unit => {
+        const element = DOMHelper.createUnitElement(unit, 'player');
+        this.ui.elements.playerBattlefield.appendChild(element);
+      });
+      
+      aiField.forEach(unit => {
+        const element = DOMHelper.createUnitElement(unit, 'ai');
+        this.ui.elements.aiBattlefield.appendChild(element);
+      });
+    } catch (error) {
+      console.error('Battlefield rendering error:', error);
+      this.ui.clearBattlefield();
+    }
   }
 
   handleStartGame() {
@@ -149,11 +152,6 @@ class GameClient {
     
     if (!this.socket.isConnected) {
       this.ui.showError('Соединение не установлено!');
-      return;
-    }
-    
-    if (!this.state.heroes?.length) {
-      this.ui.showError('Герои ещё не загружены');
       return;
     }
     
@@ -178,12 +176,8 @@ class GameClient {
       card.classList.toggle('selected');
       const newSelection = new Set(this.state.selectedHeroes);
       
-      if (newSelection.has(heroId)) {
-        newSelection.delete(heroId);
-      } else {
-        if (newSelection.size >= 5) return;
-        newSelection.add(heroId);
-      }
+      if (newSelection.size >= 5 && !newSelection.has(heroId)) return;
+      newSelection.has(heroId) ? newSelection.delete(heroId) : newSelection.add(heroId);
       
       this.state.selectedHeroes = newSelection;
       this.ui.updateHeroSelection(newSelection.size);
@@ -194,93 +188,47 @@ class GameClient {
   }
 
   async handleDeckConfirmation() {
-	let deck = null;
-	
-	try {
-	  console.log('[DEBUG] Starting deck confirmation');
-	  
-	  // Проверка количества выбранных героев
-	  if (this.state.selectedHeroes.size !== 5) {
-		console.warn('[WARN] Invalid selection count:', this.state.selectedHeroes.size);
-		throw new Error('Выберите ровно 5 героев!');
-	  }
-  
-	  // Логирование сырых данных перед обработкой
-	  console.log('[DEBUG] Raw selection:', 
-		JSON.stringify(Array.from(this.state.selectedHeroes)));
-	  console.log('[DEBUG] Available heroes IDs:', 
-		JSON.stringify(this.state.heroes?.map(h => h.id) || []));
-	  
-	  // Преобразование и валидация ID
-	  deck = Array.from(this.state.selectedHeroes).map(id => {
-		const numId = Number(id);
-		console.log(`[DEBUG] Processing ID: ${id} → ${numId}`);
-		
-		if (isNaN(numId)) {
-		  console.error('[ERROR] Invalid ID conversion - Original ID:', id, 'Type:', typeof id);
-		  throw new Error(`Некорректный ID: ${id} (тип: ${typeof id})`);
-		}
-		
-		return numId;
-	  });  
-  
-	  console.log('[INFO] Sanitized deck:', JSON.stringify(deck));
-  
-	  // Валидация колды
-	  console.log('[DEBUG] Starting deck validation');
-	  const validation = GameLogic.validateDeck(deck, this.state.heroes);
-	  console.log('[DEBUG] Validation result:', validation);
-  
-	  if (!validation.isValid) {
-		console.error('[ERROR] Deck validation failed:', validation.errors);
-		throw new Error(validation.errors.join('\n'));
-	  }
-  
-	  // Отправка на сервер
-	  console.log('[INFO] Sending deck to server:', JSON.stringify(deck));
-	  this.socket.emit('startPve', deck, (response) => {
-		console.log('[DEBUG] Server response:', response);
-		
-		if (response.status === 'success') {
-		  console.log('[INFO] Game started successfully. Session ID:', response.sessionId);
-		  this.handleGameState(response.gameState);
-		} else {
-		  console.error('[ERROR] Server error response:', response);
-		  this.ui.showError(response.message || 'Ошибка сервера');
-		}
-	  });
-  
-	} catch (error) {
-	  console.error('[ERROR] Deck processing failed:', {
-		error: error.stack, // Полный стек ошибки
-		rawDeck: Array.from(this.state.selectedHeroes),
-		validatedDeck: deck || 'N/A',
-		heroesLoaded: !!this.state.heroes
-	  });
-	  
-	  this.ui.showError(error.message);
-	}
+    try {
+      console.log('[DEBUG] Starting deck confirmation');
+      
+      if (this.state.selectedHeroes.size !== 5) {
+        throw new Error('Выберите ровно 5 героев!');
+      }
+
+      const deck = Array.from(this.state.selectedHeroes).map(id => {
+        const numId = Number(id);
+        if (isNaN(numId)) throw new Error(`Некорректный ID: ${id}`);
+        return numId;
+      });
+
+      const validation = GameLogic.validateDeck(deck, this.state.heroes);
+      if (!validation.isValid) throw new Error(validation.errors.join('\n'));
+
+      this.socket.emit('startPve', deck, (response) => {
+        if (response.status === 'success') {
+          this.handleGameState(response.gameState);
+        } else {
+          this.ui.showError(response.message || 'Ошибка сервера');
+        }
+      });
+
+    } catch (error) {
+      console.error('[ERROR] Deck processing failed:', error.stack);
+      this.ui.showError(error.message);
+    }
   }
 
   async endTurn() {
-	try {
-	  if (!this.state.currentGameState?.id) {
-		this.ui.showError('Игра не активна');
-		return;
-	  }
-  
-	  await this.socket.emit('endTurn', this.state.currentGameState.id);
-	  console.log('Ход успешно завершён');
-	  
-	} catch (error) {
-	  this.ui.showError(error.message || 'Ошибка завершения хода');
-	  console.error('Ошибка завершения хода:', error);
-	}
+    try {
+      if (!this.state.currentGameState?.id) return;
+      await this.socket.emit('endTurn', this.state.currentGameState.id);
+    } catch (error) {
+      this.ui.showError(error.message || 'Ошибка завершения хода');
+    }
   }
 
   handleTurnStart({ timeLeft }) {
     this.startTurnTimer(timeLeft);
-    this.ui.toggleActionButtons(true);
   }
 
   startTurnTimer(seconds) {
@@ -297,7 +245,6 @@ class GameClient {
 
   forceEndTurn() {
     this.state.clearTimer();
-    this.ui.toggleActionButtons(false);
     this.endTurn();
   }
 
@@ -310,11 +257,9 @@ class GameClient {
     this.state.reset();
     this.ui.toggleInterface('main');
     this.ui.clearBattlefield();
-    this.ui.clearHand();
   }
 }
 
-// Инициализация при загрузке страницы
 window.addEventListener('DOMContentLoaded', () => {
   window.gameClient = new GameClient();
 });
