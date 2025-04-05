@@ -2,34 +2,56 @@ const { v4: uuidv4 } = require('uuid');
 const { abilities } = require('./abilities');
 
 class SessionManager {
+  constructor() {
+    // Проверка инициализации abilities
+    if (!abilities || typeof abilities !== 'object') {
+      throw new Error('[FATAL] Abilities not initialized');
+    }
+
+    this.sessions = new Map(); // sessionId -> gameId
+    this.games = new Map();    // gameId -> gameData
+    console.log('[SESSION] Manager initialized with', Object.keys(abilities).length, 'abilities');
+  }
+
+  // region -------------------- CORE METHODS --------------------
   createGameSession(socketId, playerDeck) {
     try {
-      console.log('[SESSION] Creating game session for:', socketId);
-      
-      // 1. Проверка наличия abilities
-      if (!abilities || typeof abilities !== 'object') {
-        throw new Error('Abilities data not loaded');
-      }
+      console.log(`[SESSION] Creating session for ${socketId}`);
 
-      // 2. Нормализация с преобразованием ID в строки
-      const normalizedDeck = this.normalizeDeck(playerDeck)
-        .map(id => String(id)); // Приводим ID к строковому формату
+      // 1. Нормализация колоды
+      const normalizedDeck = this.normalizeDeck(playerDeck);
+      console.log('[SESSION] Normalized deck:', normalizedDeck);
 
-      console.log('[SESSION] Normalized deck (string IDs):', normalizedDeck);
-      
-      // 3. Проверка существования способностей
-      const missingAbilities = normalizedDeck
-        .filter(id => !abilities[id])
-        .map(id => `ID: ${id}`);
+      // 2. Валидация способностей
+      this.validateAbilities(normalizedDeck);
 
-      if (missingAbilities.length > 0) {
-        throw new Error(`Missing abilities:\n${missingAbilities.join('\n')}`);
-      }
+      // 3. Создание сессии
+      const gameId = uuidv4();
+      const sessionId = uuidv4();
 
-      // 4. Логирование ключей abilities для отладки
-      console.log('[SESSION] Available ability keys:', Object.keys(abilities));
+      this.sessions.set(sessionId, gameId);
+      this.games.set(gameId, {
+        players: {
+          human: {
+            deck: normalizedDeck,
+            socketId: socketId,
+            health: 30,
+            energy: 0
+          },
+          ai: {
+            deck: this.generateAiDeck(),
+            socketId: `AI_${uuidv4()}`,
+            health: 30,
+            energy: 0
+          }
+        },
+        state: 'active',
+        created: new Date().toISOString(),
+        lastActivity: Date.now()
+      });
 
-      // ... остальная часть метода без изменений
+      console.log(`[SESSION] Created session ${sessionId}`);
+      return { sessionId, gameId };
 
     } catch (error) {
       console.error('[SESSION] Creation failed:', {
@@ -41,35 +63,72 @@ class SessionManager {
     }
   }
 
-  normalizeDeck(input) {
-    console.log('[NORMALIZATION] Raw deck input:', input);
-    
-    // Обработка разных форматов
-    if (Array.isArray(input)) {
-      return input.map(item => 
-        typeof item === 'object' ? item.id : item
-      ).filter(id => !isNaN(id));
+  destroySession(sessionId) {
+    try {
+      const gameId = this.sessions.get(sessionId);
+      if (!gameId) return;
+
+      console.log(`[SESSION] Destroying ${sessionId}`);
+      this.sessions.delete(sessionId);
+      this.games.delete(gameId);
+
+    } catch (error) {
+      console.error('[SESSION] Destruction error:', error);
     }
-    
-    if (input?.player) {
-      return input.player.map(item => 
-        typeof item === 'object' ? item.id : item
-      ).filter(id => !isNaN(id));
+  }
+  // endregion
+
+  // region -------------------- DECK MANAGEMENT --------------------
+  normalizeDeck(input) {
+    try {
+      // Обработка разных форматов ввода
+      const rawDeck = this.extractRawDeck(input);
+      
+      return rawDeck
+        .map(item => {
+          // Извлечение ID из объектов
+          if (typeof item === 'object' && item.id) {
+            return String(item.id);
+          }
+          return String(item);
+        })
+        .filter(id => {
+          // Фильтрация валидных ID
+          const isValid = id in abilities;
+          if (!isValid) console.warn(`[VALIDATION] Invalid ability ID: ${id}`);
+          return isValid;
+        });
+    } catch (error) {
+      throw new Error(`Deck normalization failed: ${error.message}`);
+    }
+  }
+
+  extractRawDeck(input) {
+    if (Array.isArray(input)) return input;
+    if (input?.player && Array.isArray(input.player)) return input.player;
+    throw new Error('Invalid deck structure');
+  }
+
+  validateAbilities(deckIds) {
+    const missing = deckIds.filter(id => !(id in abilities));
+    if (missing.length > 0) {
+      throw new Error(`Missing abilities for: ${missing.join(', ')}`);
     }
 
-    throw new Error(`Invalid deck format: ${typeof input}`);
+    if (deckIds.length !== 5) {
+      throw new Error(`Invalid deck size: ${deckIds.length}/5`);
+    }
   }
 
   generateAiDeck() {
     try {
-      const availableIds = Object.keys(abilities)
-        .map(Number)
-        .filter(id => !isNaN(id));
+      const abilityIds = Object.keys(abilities);
+      if (abilityIds.length < 5) {
+        throw new Error('Not enough abilities for AI deck');
+      }
 
-      console.log('[AI] Available ability IDs:', availableIds);
-      
-      // Фишер-Йейтс shuffle
-      const shuffled = [...availableIds];
+      // Алгоритм Фишера-Йейтса
+      const shuffled = [...abilityIds];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -77,32 +136,35 @@ class SessionManager {
 
       return shuffled.slice(0, 5);
     } catch (error) {
-      console.error('[AI] Deck generation failed:', error);
-      return [1, 2, 3, 4, 5]; // Fallback deck
+      console.error('[AI] Deck generation error:', error);
+      return ['1', '2', '3', '4', '5']; // Fallback
     }
   }
+  // endregion
 
+  // region -------------------- UTILITIES --------------------
   getGameId(sessionId) {
-    return this.sessions.get(sessionId);
+    return this.sessions.get(sessionId) || null;
   }
 
   getGameData(gameId) {
     return this.games.get(gameId) || null;
   }
 
-  destroySession(sessionId) {
-    try {
-      const gameId = this.sessions.get(sessionId);
-      if (!gameId) return;
-
-      console.log(`[SESSION] Destroying session ${sessionId}`);
-      this.sessions.delete(sessionId);
-      this.games.delete(gameId);
-      
-    } catch (error) {
-      console.error('[SESSION] Destruction failed:', error);
-    }
+  getAllSessions() {
+    return Array.from(this.sessions.entries());
   }
+
+  cleanupInactiveSessions(maxInactiveTime = 3600000) {
+    const now = Date.now();
+    Array.from(this.games.entries()).forEach(([gameId, game]) => {
+      if (now - game.lastActivity > maxInactiveTime) {
+        console.log(`[CLEANUP] Removing inactive game ${gameId}`);
+        this.games.delete(gameId);
+      }
+    });
+  }
+  // endregion
 }
 
 module.exports = SessionManager;
