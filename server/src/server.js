@@ -164,31 +164,30 @@ const shutdown = async (signal) => {
 // 7. Валидация колоды
 function validateDeck(input) {
 	try {
-	  // Добавляем проверку типа входных данных
-	  if (typeof input !== 'string') {
-		throw new Error('Input must be a string');
+	  console.log('[DEBUG] Raw deck input:', typeof input, input);
+  
+	  let parsed;
+	  
+	  if (Array.isArray(input)) {
+		parsed = input;
+	  } else if (typeof input === 'string') {
+		try {
+		  parsed = JSON.parse(input.replace(/(\w+)/g, '"$1"'));
+		} catch (e) {
+		  throw new Error('Invalid JSON format: ' + e.message);
+		}
+	  } else {
+		throw new Error('Unsupported input type: ' + typeof input);
 	  }
   
-	  // Логируем сырые данные для отладки
-	  console.log('[DEBUG] Raw deck input:', input);
-  
-	  // Убираем возможные пробелы и лишние символы
-	  const sanitizedInput = input.trim().replace(/^"(.*)"$/, '$1');
-	  
-	  // Пытаемся распарсить
-	  const parsed = JSON.parse(sanitizedInput);
-	  
-	  // Проверяем структуру
 	  if (!Array.isArray(parsed)) {
 		throw new Error('Deck must be an array');
 	  }
   
-	  // Проверяем длину
 	  if (parsed.length !== 5) {
 		throw new Error('Deck must contain exactly 5 cards');
 	  }
   
-	  // Нормализуем ID
 	  const validated = parsed.map(item => {
 		const id = Number(item?.id ?? item);
 		if (isNaN(id)) throw new Error(`Invalid card ID: ${item}`);
@@ -198,7 +197,6 @@ function validateDeck(input) {
   
 	  return { valid: true, deck: validated };
 	} catch (error) {
-	  console.error('[VALIDATION ERROR] Input:', input);
 	  return { 
 		valid: false, 
 		error: `Deck validation failed: ${error.message}`
