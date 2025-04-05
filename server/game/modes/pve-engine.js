@@ -5,30 +5,30 @@ class PveGame extends BaseGame {
 	constructor(playerDeck, abilities) {
 	  try {
 		console.log('[PvE] Initialization started');
-  
-		// 1. Инициализация родительского класса (до использования this!)
-		super();
-  
+
+		// 🛠️ Правильная передача данных в BaseGame
+		super({ player: playerDeck }, 'pve'); // <-- Передаем объект с ключом "player"
+
 		console.log('[PvE] Base game initialized');
-  
+
 		// 2. Принудительная нормализация данных
 		const normalizedAbilities = this.constructor.normalizeAbilities(abilities);
 		const normalizedDeck = this.constructor.normalizeDeck(playerDeck);
-  
+
 		// 3. Сохранение критических данных
 		this.abilities = normalizedAbilities;
 		this.combatSystem = new CombatSystem();
 		this.aiDifficulty = 2;
-  
+
 		// 4. Глубокая валидация
 		this.validateInitialData(normalizedDeck);
-  
+
 		// 5. Инициализация игроков
 		this.players = {
 		  human: this.createHumanPlayer(normalizedDeck),
 		  ai: this.createAIPlayer()
 		};
-  
+
 		console.log('[PvE] Game fully initialized');
 	  } catch (error) {
 		console.error('[CRITICAL ERROR]', {
@@ -40,6 +40,7 @@ class PveGame extends BaseGame {
 		throw new Error(`Game initialization failed: ${error.message}`);
 	  }
 	}
+
 
   // region -------------------- STATIC METHODS --------------------
   static normalizeDeck(deck) {
