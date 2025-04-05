@@ -85,29 +85,28 @@ class GameClient {
   handleGameState(state) {
 	console.log('[GAME STATE] Received:', state);
 	
-	try {
-	  this.state.currentGameState = state;
-  
-	  // Принудительное обновление интерфейса
-	  this.ui.toggleInterface('game');
-	  this.updateGameInterface();
-  
-	  // Явное управление видимостью
-	  const { gameContainer } = this.ui.elements;
-	  gameContainer.classList.add('ui-force-visible');
-	  gameContainer.hidden = false;
-  
-	  // Дебаг в реальном времени
-	  console.log('Render check:', {
-		hand: state.human.hand?.length || 0,
-		field: state.human.field?.length || 0,
-		containerVisible: gameContainer.offsetParent !== null
-	  });
-  
-	} catch (error) {
-	  console.error('Game state handling error:', error);
-	  this.ui.showError('Ошибка отображения игры');
-	}
+	// Принудительное обновление
+	this.ui.elements.gameContainer.innerHTML = ''; 
+	
+	// Визуальный маркер
+	this.ui.elements.gameContainer.style.backgroundColor = '#ff000020';
+	
+	setTimeout(() => {
+	  try {
+		this.state.currentGameState = state;
+		this.ui.toggleInterface('game');
+		
+		// Явное обновление DOM
+		this.updateGameInterface();
+		
+		// Форсированное отображение
+		this.ui.elements.gameContainer.hidden = false;
+		this.ui.elements.gameContainer.style.display = 'block';
+		
+	  } catch (error) {
+		console.error('UI update failed:', error);
+	  }
+	}, 100);
   }
 
   updateGameInterface() {
