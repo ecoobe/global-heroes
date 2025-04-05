@@ -7,10 +7,10 @@
     position: relative;
 }
 
-game-container.active {
+.game-container {
 	display: grid !important;
-	opacity: 1;  
-    z-index: 850;
+	opacity: 1 !important;
+	background: red !important; /* Для визуальной проверки */
 }
 
 .game-state {
