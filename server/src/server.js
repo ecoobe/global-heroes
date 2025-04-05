@@ -163,31 +163,47 @@ const shutdown = async (signal) => {
 
 // 7. Валидация колоды
 function validateDeck(input) {
-  try {
-    const deck = JSON.parse(input);
-    
-    if (!Array.isArray(deck)) {
-      throw new Error('Deck must be an array');
-    }
-    
-    if (deck.length !== 5) {
-      throw new Error('Deck must contain exactly 5 cards');
-    }
-
-    const validated = deck.map(item => {
-      const id = Number(item?.id ?? item);
-      if (isNaN(id)) throw new Error(`Invalid card ID: ${item}`);
-      if (!abilities[id]) throw new Error(`Unknown ability ID: ${id}`);
-      return id;
-    });
-
-    return { valid: true, deck: validated };
-  } catch (error) {
-    return { 
-      valid: false, 
-      error: error.message.replace(/[\n\r]/g, ' ')
-    };
-  }
+	try {
+	  // Добавляем проверку типа входных данных
+	  if (typeof input !== 'string') {
+		throw new Error('Input must be a string');
+	  }
+  
+	  // Логируем сырые данные для отладки
+	  console.log('[DEBUG] Raw deck input:', input);
+  
+	  // Убираем возможные пробелы и лишние символы
+	  const sanitizedInput = input.trim().replace(/^"(.*)"$/, '$1');
+	  
+	  // Пытаемся распарсить
+	  const parsed = JSON.parse(sanitizedInput);
+	  
+	  // Проверяем структуру
+	  if (!Array.isArray(parsed)) {
+		throw new Error('Deck must be an array');
+	  }
+  
+	  // Проверяем длину
+	  if (parsed.length !== 5) {
+		throw new Error('Deck must contain exactly 5 cards');
+	  }
+  
+	  // Нормализуем ID
+	  const validated = parsed.map(item => {
+		const id = Number(item?.id ?? item);
+		if (isNaN(id)) throw new Error(`Invalid card ID: ${item}`);
+		if (!abilities[id]) throw new Error(`Unknown ability ID: ${id}`);
+		return id;
+	  });
+  
+	  return { valid: true, deck: validated };
+	} catch (error) {
+	  console.error('[VALIDATION ERROR] Input:', input);
+	  return { 
+		valid: false, 
+		error: `Deck validation failed: ${error.message}`
+	  };
+	}
 }
 
 // 8. Запуск сервера
