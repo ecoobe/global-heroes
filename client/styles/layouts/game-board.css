@@ -89,3 +89,24 @@
     box-shadow: 0 0 15px #00ff0080 !important;
     border: 2px solid #00ff00 !important;
 }
+
+/* Добавьте эти стили */
+.main-menu {
+  display: flex !important;
+}
+
+.hero-select-container {
+  display: none;
+}
+
+.hero-select-container.active {
+  display: block !important;
+}
+
+.game-container {
+  display: none !important;
+}
+
+.game-container.active {
+  display: grid !important;
+}
