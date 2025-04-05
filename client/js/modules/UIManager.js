@@ -5,7 +5,7 @@ export class UIManager {
     this.elements = elements;
     this.validateElements();
     this.initDynamicElements();
-    this.setInitialState(); // Добавляем инициализацию состояния
+    this.setInitialState();
   }
 
   validateElements() {
@@ -29,12 +29,10 @@ export class UIManager {
   }
 
   setInitialState() {
-    // Явно устанавливаем начальное состояние
     this.elements.mainMenu.hidden = false;
     this.elements.heroSelectContainer.hidden = true;
     this.elements.gameContainer.hidden = true;
     
-    // Сбрасываем стили
     this.elements.mainMenu.style.display = 'flex';
     this.elements.heroSelectContainer.style.display = 'none';
     this.elements.gameContainer.style.display = 'none';
@@ -43,17 +41,14 @@ export class UIManager {
   toggleInterface(screen) {
     console.log('[UI] Switching to:', screen);
     
-    // Сбрасываем все интерфейсы
     this.elements.mainMenu.hidden = true;
     this.elements.heroSelectContainer.hidden = true;
     this.elements.gameContainer.hidden = true;
     
-    // Сбрасываем display свойства
     this.elements.mainMenu.style.display = 'none';
     this.elements.heroSelectContainer.style.display = 'none';
     this.elements.gameContainer.style.display = 'none';
 
-    // Активируем целевой интерфейс
     switch(screen) {
       case 'main':
         this.elements.mainMenu.hidden = false;
