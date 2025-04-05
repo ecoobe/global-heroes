@@ -1,4 +1,3 @@
-// server/game/core/base-game.js
 const { v4: uuidv4 } = require('uuid');
 const { AbilitySystem } = require('./ability-system');
 const { TurnSystem } = require('./turn-system');
@@ -6,43 +5,79 @@ const { CombatSystem } = require('./combat-system');
 
 class BaseGame {
   constructor(playerDecks, gameType) {
-    this.validateDecks(playerDecks);
-    
-    this.id = uuidv4();
-    this.gameType = gameType;
-    this.status = 'active';
-    this.players = {};
-    
-    this.abilitySystem = new AbilitySystem();
-    this.turnSystem = new TurnSystem(this);
-    this.combatSystem = new CombatSystem();
-    
-    this.initializePlayers(playerDecks);
+    try {
+      this.id = uuidv4();
+      this.gameType = gameType;
+      this.status = 'active';
+      
+      // Переносим валидацию и нормализацию в отдельный метод
+      this.normalizedDecks = this.normalizeDecks(playerDecks);
+      
+      this.abilitySystem = new AbilitySystem();
+      this.turnSystem = new TurnSystem(this);
+      this.combatSystem = new CombatSystem();
+      
+      // Инициализация игроков с нормализованными колодами
+      this.initializePlayers(this.normalizedDecks);
+
+    } catch (error) {
+      console.error('Game initialization failed:', error);
+      throw error;
+    }
   }
 
-  validateDecks(decks) {
-	console.log('Received decks:', decks);  // Логирование полученных данных
-  
-	if (!decks || typeof decks !== 'object') {
-	  throw new Error('Invalid decks format');
-	}
-	
-	const requiredDecks = this.getRequiredDecks();
-	requiredDecks.forEach(deckKey => {
-	  if (!decks[deckKey] || !Array.isArray(decks[deckKey])) {
-		throw new Error(`Missing or invalid ${deckKey} deck`);
-	  }
-	});
+  // Метод для нормализации колод в зависимости от формата входных данных
+  normalizeDecks(decks) {
+    console.log('Normalizing decks:', JSON.stringify(decks));
+    
+    if (!decks) {
+      throw new Error('Invalid decks: No decks provided');
+    }
+
+    // Если колода передана как массив чисел, превращаем в массив объектов с id
+    if (Array.isArray(decks)) {
+      return { 
+        player: decks.map(item => ({ id: item })) 
+      };
+    }
+
+    // Если колоды переданы как объект с ключами игроков (для многопользовательской игры)
+    const required = this.getRequiredDecks();
+    required.forEach(key => {
+      if (!decks[key] || !Array.isArray(decks[key])) {
+        throw new Error(`Missing deck for ${key}`);
+      }
+    });
+    
+    return decks;
   }
 
+  // Метод для определения требуемых колод в зависимости от типа игры
   getRequiredDecks() {
-    throw new Error('Method getRequiredDecks must be implemented');
+    return this.gameType === 'pve' ? ['player'] : ['player1', 'player2'];
   }
 
-  initializePlayers(decks) {
-    throw new Error('Method initializePlayers must be implemented');
+  // Метод для инициализации игроков
+  initializePlayers(normalizedDecks) {
+    this.players = Object.entries(normalizedDecks).reduce((acc, [key, deck]) => {
+      acc[key] = this.createPlayer(deck);
+      return acc;
+    }, {});
   }
 
+  // Метод для создания игрока с базовыми аттрибутами
+  createPlayer(deck) {
+    return {
+      deck: deck,
+      health: 100,
+      energy: 0,
+      hand: [],
+      field: [],
+      effects: []
+    };
+  }
+
+  // Получение состояния игры для публикации
   getPublicState() {
     return {
       id: this.id,
@@ -54,6 +89,7 @@ class BaseGame {
     };
   }
 
+  // Санитизация данных игроков для публичного состояния
   sanitizePlayers() {
     return Object.entries(this.players).reduce((acc, [playerId, player]) => {
       acc[playerId] = {
@@ -68,6 +104,7 @@ class BaseGame {
     }, {});
   }
 
+  // Санитизация юнитов на поле
   sanitizeUnits(units) {
     return units.map(unit => ({
       id: unit.id,
@@ -79,6 +116,7 @@ class BaseGame {
     }));
   }
 
+  // Санитизация карт
   sanitizeCards(cards) {
     return cards.map(card => ({
       id: card.id,
@@ -89,6 +127,7 @@ class BaseGame {
     }));
   }
 
+  // Завершение игры
   endGame(reason = 'completed') {
     this.status = 'ended';
     console.log(`Game ${this.id} ended. Reason: ${reason}`);
