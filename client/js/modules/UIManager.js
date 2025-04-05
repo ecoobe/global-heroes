@@ -30,33 +30,28 @@ export class UIManager {
   toggleInterface(screen) {
 	console.log('[UI] Transition to:', screen);
   
-	// Сбрасываем классы и стили для всех интерфейсов
+	// Сброс состояний
 	[this.elements.mainMenu, this.elements.heroSelectContainer, this.elements.gameContainer].forEach(el => {
 	  el.classList.remove('active');
-	  el.style.display = 'none';
 	  el.hidden = true;
 	});
   
-	// Активируем целевой интерфейс
-	switch(screen) {
-	  case 'main':
-		this.elements.mainMenu.classList.add('active');
-		this.elements.mainMenu.style.display = 'flex';
-		this.elements.mainMenu.hidden = false;
-		break;
+	// Активация целевого интерфейса
+	const target = {
+	  main: this.elements.mainMenu,
+	  heroSelect: this.elements.heroSelectContainer,
+	  game: this.elements.gameContainer
+	}[screen];
+  
+	if (target) {
+	  target.classList.add('active');
+	  target.hidden = false;
 	  
-	  case 'heroSelect':
-		this.elements.heroSelectContainer.classList.add('active');
-		this.elements.heroSelectContainer.style.display = 'block';
-		this.elements.heroSelectContainer.hidden = false;
-		break;
-	  
-	  case 'game':
-		this.elements.gameContainer.classList.add('active');
-		this.elements.gameContainer.style.display = 'grid';
-		this.elements.gameContainer.hidden = false;
-		this.elements.gameContainer.scrollIntoView({ behavior: 'smooth' });
-		break;
+	  // Особые действия для игрового интерфейса
+	  if (screen === 'game') {
+		target.style.display = 'grid';
+		target.scrollIntoView({ behavior: 'smooth' });
+	  }
 	}
   }
 
