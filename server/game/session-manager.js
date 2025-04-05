@@ -1,9 +1,9 @@
 const { v4: uuidv4 } = require('uuid');
+const { PveGame } = require('./modes/pve-engine');
 const { abilities } = require('./abilities');
 
 class SessionManager {
   constructor() {
-    // Проверка инициализации abilities
     if (!abilities || typeof abilities !== 'object') {
       throw new Error('[FATAL] Abilities not initialized');
     }
@@ -13,45 +13,31 @@ class SessionManager {
     console.log('[SESSION] Manager initialized with', Object.keys(abilities).length, 'abilities');
   }
 
-  // region -------------------- CORE METHODS --------------------
+  // Основные методы
   createGameSession(socketId, playerDeck) {
     try {
       console.log(`[SESSION] Creating session for ${socketId}`);
-
-      // 1. Нормализация колоды
-      const normalizedDeck = this.normalizeDeck(playerDeck);
-      console.log('[SESSION] Normalized deck:', normalizedDeck);
-
-      // 2. Валидация способностей
-      this.validateAbilities(normalizedDeck);
-
-      // 3. Создание сессии
-      const gameId = uuidv4();
+      
+      // 1. Создание экземпляра игры
+      const game = new PveGame(playerDeck, abilities);
+      
+      // 2. Генерация ID сессии
       const sessionId = uuidv4();
 
-      this.sessions.set(sessionId, gameId);
-      this.games.set(gameId, {
-        players: {
-          human: {
-            deck: normalizedDeck,
-            socketId: socketId,
-            health: 30,
-            energy: 0
-          },
-          ai: {
-            deck: this.generateAiDeck(),
-            socketId: `AI_${uuidv4()}`,
-            health: 30,
-            energy: 0
-          }
-        },
-        state: 'active',
-        created: new Date().toISOString(),
-        lastActivity: Date.now()
+      // 3. Сохранение данных
+      this.sessions.set(sessionId, game.id);
+      this.games.set(game.id, {
+        gameInstance: game,
+        lastActivity: Date.now(),
+        socketId: socketId
       });
 
       console.log(`[SESSION] Created session ${sessionId}`);
-      return { sessionId, gameId };
+      return { 
+        sessionId,
+        gameId: game.id,
+        gameState: game.getPublicState()
+      };
 
     } catch (error) {
       console.error('[SESSION] Creation failed:', {
@@ -76,95 +62,27 @@ class SessionManager {
       console.error('[SESSION] Destruction error:', error);
     }
   }
-  // endregion
 
-  // region -------------------- DECK MANAGEMENT --------------------
-  normalizeDeck(input) {
-    try {
-      // Обработка разных форматов ввода
-      const rawDeck = this.extractRawDeck(input);
-      
-      return rawDeck
-        .map(item => {
-          // Извлечение ID из объектов
-          if (typeof item === 'object' && item.id) {
-            return String(item.id);
-          }
-          return String(item);
-        })
-        .filter(id => {
-          // Фильтрация валидных ID
-          const isValid = id in abilities;
-          if (!isValid) console.warn(`[VALIDATION] Invalid ability ID: ${id}`);
-          return isValid;
-        });
-    } catch (error) {
-      throw new Error(`Deck normalization failed: ${error.message}`);
-    }
+  // Вспомогательные методы
+  getGame(gameId) {
+    const entry = this.games.get(gameId);
+    return entry ? entry.gameInstance : null;
   }
 
-  extractRawDeck(input) {
-    if (Array.isArray(input)) return input;
-    if (input?.player && Array.isArray(input.player)) return input.player;
-    throw new Error('Invalid deck structure');
-  }
-
-  validateAbilities(deckIds) {
-    const missing = deckIds.filter(id => !(id in abilities));
-    if (missing.length > 0) {
-      throw new Error(`Missing abilities for: ${missing.join(', ')}`);
-    }
-
-    if (deckIds.length !== 5) {
-      throw new Error(`Invalid deck size: ${deckIds.length}/5`);
-    }
-  }
-
-  generateAiDeck() {
-    try {
-      const abilityIds = Object.keys(abilities);
-      if (abilityIds.length < 5) {
-        throw new Error('Not enough abilities for AI deck');
-      }
-
-      // Алгоритм Фишера-Йейтса
-      const shuffled = [...abilityIds];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-
-      return shuffled.slice(0, 5);
-    } catch (error) {
-      console.error('[AI] Deck generation error:', error);
-      return ['1', '2', '3', '4', '5']; // Fallback
-    }
-  }
-  // endregion
-
-  // region -------------------- UTILITIES --------------------
-  getGameId(sessionId) {
-    return this.sessions.get(sessionId) || null;
-  }
-
-  getGameData(gameId) {
-    return this.games.get(gameId) || null;
-  }
-
-  getAllSessions() {
-    return Array.from(this.sessions.entries());
+  updateActivity(gameId) {
+    const entry = this.games.get(gameId);
+    if (entry) entry.lastActivity = Date.now();
   }
 
   cleanupInactiveSessions(maxInactiveTime = 3600000) {
     const now = Date.now();
-    Array.from(this.games.entries()).forEach(([gameId, game]) => {
-      if (now - game.lastActivity > maxInactiveTime) {
+    Array.from(this.games.entries()).forEach(([gameId, entry]) => {
+      if (now - entry.lastActivity > maxInactiveTime) {
         console.log(`[CLEANUP] Removing inactive game ${gameId}`);
         this.games.delete(gameId);
       }
     });
   }
-  // endregion
 }
 
 module.exports = SessionManager;
