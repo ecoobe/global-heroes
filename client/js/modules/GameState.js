@@ -2,14 +2,40 @@ export class GameState {
 	constructor() {
 	  this.selectedHeroes = new Set();
 	  this.heroes = [];
-	  this.currentGameState = null;
 	  this.turnTimer = null;
+	  
+	  // Инициализация с дефолтным состоянием
+	  this.currentGameState = {
+		id: null,
+		human: this.createDefaultPlayerState(),
+		ai: this.createDefaultPlayerState(),
+		currentTurn: 'human'
+	  };
+	}
+  
+	// Метод для создания состояния игрока
+	createDefaultPlayerState() {
+	  return {
+		health: 30,
+		deck: [],
+		hand: [],
+		field: [],
+		energy: 0,
+		energyPerTurn: 1
+	  };
 	}
   
 	reset() {
 	  this.selectedHeroes.clear();
-	  this.currentGameState = null;
 	  this.clearTimer();
+	  
+	  // Сброс к дефолтному состоянию
+	  this.currentGameState = {
+		id: null,
+		human: this.createDefaultPlayerState(),
+		ai: this.createDefaultPlayerState(),
+		currentTurn: 'human'
+	  };
 	}
   
 	clearTimer() {
@@ -17,5 +43,15 @@ export class GameState {
 		clearInterval(this.turnTimer);
 		this.turnTimer = null;
 	  }
+	}
+  
+	// Геттер для безопасного доступа
+	get safeGameState() {
+	  return this.currentGameState || {
+		id: 'invalid',
+		human: this.createDefaultPlayerState(),
+		ai: this.createDefaultPlayerState(),
+		currentTurn: 'none'
+	  };
 	}
 }
