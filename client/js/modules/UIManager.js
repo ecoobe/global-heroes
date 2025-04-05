@@ -28,7 +28,7 @@ export class UIManager {
   }
 
   toggleInterface(screen) {
-	console.log('[UI] Switching to:', screen);
+	console.log('[UI] Transition to:', screen);
 	
 	const interfaces = {
 	  main: this.elements.mainMenu,
@@ -36,48 +36,31 @@ export class UIManager {
 	  game: this.elements.gameContainer
 	};
   
-	// Сбрасываем состояние
+	// Сброс всех состояний
 	Object.values(interfaces).forEach(el => {
 	  el.classList.remove('active', 'ui-force-visible');
-	  el.style.cssText = ''; // Сброс inline-стилей
+	  el.style.cssText = '';
 	});
   
-	// Активация выбранного экрана
+	// Активация целевого интерфейса
 	if (interfaces[screen]) {
-	  interfaces[screen].classList.add('active', 'ui-force-visible');
-	  interfaces[screen].style.display = 'block';
-	  interfaces[screen].style.opacity = '1';
+	  const target = interfaces[screen];
+	  target.classList.add('active', 'ui-force-visible');
+	  target.style.display = 'block';
+	  target.style.opacity = '1';
+	  target.hidden = false;
+  
+	  // Гарантия визуального отображения
+	  requestAnimationFrame(() => {
+		target.style.transform = 'none';
+		target.style.visibility = 'visible';
+	  });
 	}
   
 	// Специфичные действия
 	switch(screen) {
 	  case 'game':
-		this.clearBattlefield();
-		this.elements.gameContainer.scrollIntoView({
-		  behavior: 'smooth',
-		  block: 'start'
-		});
-		break;
-	}
-  
-	// Принудительный ререндер
-	requestAnimationFrame(() => {
-	  this.elements.gameContainer.hidden = false;
-	});
-  
-	// 3. Дополнительные действия
-	switch(screen) {
-	  case 'heroSelect':
-		this.elements.heroSelect.scrollTop = 0;
-		break;
-		
-	  case 'game':
-		this.clearBattlefield();
-		// 4. Принудительный ререндер
-		requestAnimationFrame(() => {
-		  this.elements.gameContainer.hidden = false;
-		  this.elements.gameContainer.style.visibility = 'visible';
-		});
+		this.elements.gameContainer.scrollIntoView({ behavior: 'instant' });
 		break;
 	}
   }
