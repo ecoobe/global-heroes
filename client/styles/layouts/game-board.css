@@ -11,6 +11,8 @@
 	display: grid !important;
 	opacity: 1 !important;
 	background: red !important; /* Для визуальной проверки */
+	z-index: 9999 !important;  /* Экстренное повышение приоритета */
+	position: relative;        /* Для корректной работы z-index */
 }
 
 .game-state {
