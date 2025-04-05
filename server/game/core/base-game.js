@@ -91,17 +91,25 @@ class BaseGame {
 
   // Санитизация данных игроков для публичного состояния
   sanitizePlayers() {
-    return Object.entries(this.players).reduce((acc, [playerId, player]) => {
-      acc[playerId] = {
-        deck: player.deck.length,
-        hand: this.sanitizeCards(player.hand),
-        field: this.sanitizeUnits(player.field),
-        health: player.health,
-        energy: player.energy,
-        effects: player.effects || []
-      };
-      return acc;
-    }, {});
+	return Object.entries(this.players).reduce((acc, [playerId, player]) => {
+	  acc[playerId] = {
+		deck: this.sanitizeDeck(player.deck), // Исправлено: санитизируем колоду
+		hand: this.sanitizeCards(player.hand),
+		field: this.sanitizeUnits(player.field),
+		health: player.health,
+		energy: player.energy,
+		effects: player.effects || []
+	  };
+	  return acc;
+	}, {});
+  }
+
+  sanitizeDeck(deck) {
+	return deck.map(card => ({
+	  id: card.id,
+	  name: card.name,
+	  cost: card.cost
+	}));
   }
 
   // Санитизация юнитов на поле
