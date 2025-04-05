@@ -97,37 +97,45 @@ io.on('connection', (socket) => {
 	console.log(`🎮 New connection: ${socket.id}`);
   
 	socket.on('startPve', async (deckInput, callback) => {
-		console.log('Received deck from client:', JSON.stringify(deckInput)); // Логируем колоду, как строку для наглядности
+		console.log('Received deck from client:', JSON.stringify(deckInput));
 		const startTime = Date.now();
-	  
+		
 		try {
-		  // Валидация ввода
 		  const { valid, deck, error } = validateDeck(deckInput);
-		  console.log('Deck after validation:', deck); // Логируем колоду после валидации
+		  console.log('[SERVER] Validated deck:', JSON.stringify(deck, null, 2)); // Подробное логирование
 	  
 		  if (!valid) throw new Error(error);
 	  
-		  // Создание игры
 		  const game = new PveGame(deck, abilities);
 		  const session = sessionManager.createGameSession(socket.id, deck);
 	  
-		  // Успешный ответ
+		  const gameState = game.getPublicState();
+		  console.log('[SERVER] Generated game state:', { // Логируем структуру
+			id: gameState.id,
+			human: {
+			  hand: gameState.players.human.hand?.length,
+			  field: gameState.players.human.field?.length
+			},
+			ai: {
+			  field: gameState.players.ai.field?.length
+			}
+		  });
+	  
 		  callback({
 			status: 'success',
 			sessionId: session.id,
-			gameState: game.getPublicState()
+			gameState: gameState
 		  });
 	  
-		  console.log(`🚀 Game started in ${Date.now() - startTime}ms`, {
-			socketId: socket.id,
-			deck: deck
-		  });
-	  
+		  console.log(`🚀 Game started in ${Date.now() - startTime}ms`);
+		  
 		} catch (error) {
-		  console.error(`💥 Game init failed`, {
-			socketId: socket.id,
-			error: error.message,
-			stack: error.stack
+		  console.error(`💥 Game init failed: ${error.message}`);
+		  callback({
+			status: 'error',
+			code: "INIT_FAILURE",
+			message: error.message,
+			retryable: isRetryableError(error)
 		  });
 	  
 		  callback({
