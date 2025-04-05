@@ -127,7 +127,7 @@ io.on('connection', (socket) => {
 	  
 		  // Создание игры
 		  const game = new PveGame(deck, abilities);
-		  const session = sessionManager.createSession(socket.id, deck);
+		  const session = sessionManager.createGameSession(socket.id, deck);
 	  
 		  // Успешный ответ
 		  callback({
