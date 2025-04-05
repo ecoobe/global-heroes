@@ -1,258 +1,100 @@
 const { BaseGame } = require('../core/base-game');
 const { CombatSystem } = require('../core/combat-system');
-const { v4: uuidv4 } = require('uuid');
 
 class PveGame extends BaseGame {
-  constructor(playerDeck, abilities) {
+	constructor(playerDeck, abilities) {
+	  try {
+		console.log('[PvE] Initialization started');
+
+		// 🛠️ Правильная передача данных в BaseGame
+		super({ player: playerDeck }, 'pve'); // <-- Передаем объект с ключом "player"
+
+		console.log('[PvE] Base game initialized');
+
+		// 2. Принудительная нормализация данных
+		const normalizedAbilities = this.constructor.normalizeAbilities(abilities);
+		const normalizedDeck = this.constructor.normalizeDeck(playerDeck);
+
+		// 3. Сохранение критических данных
+		this.abilities = normalizedAbilities;
+		this.combatSystem = new CombatSystem();
+		this.aiDifficulty = 2;
+
+		// 4. Глубокая валидация
+		this.validateInitialData(normalizedDeck);
+
+		// 5. Инициализация игроков
+		this.players = {
+		  human: this.createHumanPlayer(normalizedDeck),
+		  ai: this.createAIPlayer()
+		};
+
+		console.log('[PvE] Game fully initialized');
+	  } catch (error) {
+		console.error('[CRITICAL ERROR]', {
+		  message: error.message,
+		  stack: error.stack,
+		  inputDeck: playerDeck,
+		  abilitiesKeys: Object.keys(abilities || {})
+		});
+		throw new Error(`Game initialization failed: ${error.message}`);
+	  }
+	}
+
+
+  // region -------------------- STATIC METHODS --------------------
+  static normalizeDeck(deck) {
     try {
-      const initLog = {
-        phase: 'initialization',
-        input: { deckType: typeof playerDeck, abilitiesCount: Object.keys(abilities || {}).length }
-      };
-      
-      console.log('[PvE][🛠] Initialization started', initLog);
-      super({ player: playerDeck }, 'pve');
+      console.log('[DECK] Raw input:', deck);
 
-      this.id = uuidv4();
-      this.round = 1;
-      this.currentTurn = 'human';
-      this.combatSystem = new CombatSystem();
-      this.aiDifficulty = 2;
+      // Обработка строкового формата
+      const parsedDeck = typeof deck === 'string' 
+        ? JSON.parse(deck) 
+        : deck;
 
-      console.log('[PvE][✅] Base initialized', {
-        gameId: this.id,
-        superInitialized: !!this.players
-      });
+      // Преобразование в массив
+      const deckArray = Array.isArray(parsedDeck) 
+        ? parsedDeck 
+        : [parsedDeck];
 
-      // Нормализация данных
-      const normalizationLog = {};
-      this.abilities = this.constructor.normalizeAbilities(abilities, normalizationLog);
-      const normalizedDeck = this.constructor.normalizeDeck(playerDeck, normalizationLog);
-      
-      console.log('[PvE][🔍] Normalization report:', {
-        ...normalizationLog,
-        deckSample: normalizedDeck.slice(0, 3)
-      });
+      // Конвертация в числовые ID
+      return deckArray.map(item => {
+        // Извлечение ID из объектов
+        if (item && typeof item === 'object' && item.id) {
+          const id = Number(item.id);
+          if (isNaN(id)) throw new Error(`Invalid object ID: ${item.id}`);
+          return id;
+        }
 
-      this.validateInitialData(normalizedDeck);
-
-      // Инициализация игроков
-      this.players = {
-        human: this.createHumanPlayer(normalizedDeck) || this._createDefaultPlayer(),
-        ai: this.createAIPlayer() || this._createDefaultPlayer()
-      };
-
-      console.log('[PvE][🎮] Game ready', {
-        gameId: this.id,
-        human: this._safePlayerLog(this.players.human),
-        ai: this._safePlayerLog(this.players.ai)
-      });
-
-    } catch (error) {
-      console.error('[PvE][💥] Init failed', {
-        error: this._safeError(error),
-        inputSample: this._truncateLog(playerDeck)
-      });
-      throw new Error(`Game init failed: ${error.message}`);
-    }
-  }
-
-  // region ==================== CORE METHODS ====================
-  getPublicState() {
-    const safeGet = (obj, prop, def) => obj?.[prop] ?? def;
-    
-    const state = {
-      id: this.id,
-      human: {
-        health: safeGet(this.players.human, 'health', 30),
-        deck: safeGet(this.players.human, 'deck', []),
-        hand: safeGet(this.players.human, 'hand', []),
-        field: safeGet(this.players.human, 'field', []),
-        energy: safeGet(this.players.human, 'energy', 0)
-      },
-      ai: {
-        health: safeGet(this.players.ai, 'health', 30),
-        deck: safeGet(this.players.ai, 'deck', []),
-        field: safeGet(this.players.ai, 'field', []),
-        energy: safeGet(this.players.ai, 'energy', 0)
-      },
-      currentTurn: this.currentTurn,
-      round: this.round
-    };
-
-    console.log('[PvE][📤] State snapshot', this._truncateLog(state));
-    return state;
-  }
-
-  endTurn() {
-    const turnLog = {
-      gameId: this.id,
-      prevTurn: this.currentTurn,
-      humanEnergy: this.players.human?.energy,
-      aiEnergy: this.players.ai?.energy
-    };
-
-    try {
-      console.log('[TURN][⏭] Ending turn', turnLog);
-      
-      super.endTurn();
-      this.round++;
-      this._processNextTurn();
-
-      console.log('[TURN][✅] Turn completed', {
-        newTurn: this.currentTurn,
-        newRound: this.round
-      });
-
-    } catch (error) {
-      console.error('[TURN][💥] Turn error', {
-        ...turnLog,
-        error: this._safeError(error)
-      });
-      throw error;
-    }
-  }
-  // endregion
-
-  // region ==================== PLAYER MANAGEMENT ====================
-  createHumanPlayer(deck) {
-    try {
-      console.log('[PLAYER][👤] Creating human', { deckSize: deck?.length });
-
-      const cards = deck.map(id => {
-        const ability = this.abilities[String(id)] || this._defaultAbility(id);
-        return {
-          id: ability.id,
-          name: ability.name,
-          cost: ability.cost,
-          effectType: ability.effectType,
-          target: ability.target,
-          charges: ability.charges,
-          health: ability.health,
-          strength: ability.strength,
-          ...(ability.value && { value: ability.value })
-        };
-      });
-
-      return {
-        deck: cards,
-        hand: [],
-        field: [],
-        health: 30,
-        energy: 0,
-        energyPerTurn: 1
-      };
-
-    } catch (error) {
-      console.error('[PLAYER][💥] Human creation failed', {
-        error: this._safeError(error),
-        deckSample: deck?.slice(0, 3)
-      });
-      return null;
-    }
-  }
-
-  createAIPlayer() {
-    try {
-      console.log('[PLAYER][🤖] Creating AI');
-      
-      return {
-        deck: this.generateAIDeck(),
-        hand: [],
-        field: [],
-        health: 30,
-        energy: 0,
-        energyPerTurn: 1
-      };
-
-    } catch (error) {
-      console.error('[PLAYER][💥] AI creation failed', {
-        error: this._safeError(error)
-      });
-      return null;
-    }
-  }
-
-  generateAIDeck() {
-    try {
-      const availableIds = Object.keys(this.abilities).map(Number);
-      const rules = {
-        minCost: 1,
-        maxCost: 3,
-        preferredTypes: ['ATTACK', 'DEFENSE'],
-        deckSize: 5
-      };
-
-      console.log('[AI][🃏] Deck generation', {
-        available: availableIds.length,
-        rules
-      });
-
-      let candidates = availableIds.filter(id => {
-        const ability = this.abilities[String(id)] || {};
-        return ability.cost >= rules.minCost && 
-               ability.cost <= rules.maxCost &&
-               rules.preferredTypes.includes(ability.effectType);
-      });
-
-      // Логика выбора карт...
-      const selected = this._selectAICards(candidates, rules.deckSize);
-
-      console.log('[AI][✅] Deck generated', { selected });
-      return selected;
-
-    } catch (error) {
-      console.error('[AI][💥] Deck generation failed', {
-        error: this._safeError(error)
-      });
-      return [];
-    }
-  }
-  // endregion
-
-  // region ==================== STATIC METHODS ====================
-  static normalizeDeck(deck, log = {}) {
-    try {
-      log.originalType = typeof deck;
-      log.originalLength = deck?.length;
-
-      const parsedDeck = typeof deck === 'string' ? 
-        JSON.parse(deck) : 
-        Array.isArray(deck) ? deck : [deck];
-
-      const normalized = parsedDeck.map((item, i) => {
-        const id = Number(item?.id ?? item);
-        if (isNaN(id)) throw new Error(`Invalid ID at index ${i}: ${item}`);
+        // Прямая конвертация
+        const id = Number(item);
+        if (isNaN(id)) throw new Error(`Invalid ID format: ${item}`);
+        
         return id;
       });
-
-      log.normalized = normalized.slice(0, 5);
-      return normalized;
-
     } catch (error) {
-      log.error = this._safeError(error);
       throw new Error(`Deck normalization failed: ${error.message}`);
     }
   }
 
-  static normalizeAbilities(abilities, log = {}) {
+  static normalizeAbilities(abilities) {
     try {
-      log.originalCount = Object.keys(abilities || {}).length;
+      console.log('[ABILITIES] Raw input keys:', Object.keys(abilities));
 
       return Object.entries(abilities).reduce((acc, [key, value]) => {
         const stringKey = String(key);
-        const required = ['id', 'name', 'cost', 'effectType'];
-        const missing = required.filter(f => !(f in value));
-
-        if (missing.length > 0) {
-          log.missingFields = log.missingFields || [];
-          log.missingFields.push({ key: stringKey, missing });
-          return acc;
+        
+        // Валидация структуры
+        const requiredFields = ['id', 'name', 'cost', 'effectType'];
+        const missingFields = requiredFields.filter(f => !(f in value));
+        if (missingFields.length > 0) {
+          throw new Error(`Ability ${stringKey} missing fields: ${missingFields.join(', ')}`);
         }
 
+        // Создание нормализованного объекта
         acc[stringKey] = {
           id: Number(value.id),
-          name: String(value.name).substring(0, 25),
+          name: String(value.name),
           cost: Math.max(1, Number(value.cost)),
           effectType: String(value.effectType),
           target: value.target ? String(value.target) : 'NONE',
@@ -266,90 +108,211 @@ class PveGame extends BaseGame {
 
         return acc;
       }, {});
-
     } catch (error) {
-      log.error = this._safeError(error);
       throw new Error(`Abilities normalization failed: ${error.message}`);
     }
   }
   // endregion
 
-  // region ==================== HELPERS ====================
-  _createDefaultPlayer() {
-    return {
-      health: 30,
-      deck: [],
-      hand: [],
-      field: [],
-      energy: 0,
-      energyPerTurn: 1
-    };
-  }
-
-  _safeError(error) {
-    return {
-      message: error.message,
-      stack: error.stack.split('\n').slice(0, 3).join(' | ')
-    };
-  }
-
-  _truncateLog(data, maxLength = 3) {
-    if (Array.isArray(data)) {
-      return data.slice(0, maxLength);
-    }
-    if (typeof data === 'object' && data !== null) {
-      return Object.keys(data).reduce((acc, key) => {
-        acc[key] = this._truncateLog(data[key], maxLength);
-        return acc;
-      }, {});
-    }
-    return data;
-  }
-
-  _safePlayerLog(player) {
-    return {
-      health: player?.health ?? 'N/A',
-      deckSize: player?.deck?.length ?? 0,
-      fieldSize: player?.field?.length ?? 0
-    };
-  }
-
-  _defaultAbility(id) {
-    console.warn('[⚠️] Using default ability for ID:', id);
-    return {
-      id: Number(id),
-      name: 'Unknown Ability',
-      cost: 1,
-      effectType: 'NONE',
-      target: 'NONE',
-      charges: 1,
-      health: 1,
-      strength: 0
-    };
-  }
-
-  _processNextTurn() {
-    if (this.currentTurn === 'ai') return;
+  // region -------------------- VALIDATION --------------------
+  validateInitialData(deck) {
+    console.log('[VALIDATION] Starting comprehensive check');
     
-    console.log('[TURN][🤖] Processing AI turn');
+    // Проверка существования всех способностей
+    deck.forEach(id => {
+      const key = String(id);
+      if (!this.abilities[key]) {
+        throw new Error(`Ability not found: ${id} (checked key: ${key})`);
+      }
+    });
+
+    // Дополнительные проверки
+    if (!Array.isArray(deck)) {
+      throw new Error(`Deck must be array, got ${typeof deck}`);
+    }
+    
+    if (deck.length !== 5) {
+      throw new Error(`Invalid deck size: ${deck.length} (required 5)`);
+    }
+  }
+  // endregion
+
+  // region -------------------- PLAYER MANAGEMENT --------------------
+  createHumanPlayer(deck) {
     try {
-      this.processAITurn();
-    } catch (error) {
-      console.error('[AI][💥] Turn processing failed', {
-        error: this._safeError(error)
+      console.log('[PLAYER] Creating human player');
+
+      const cards = deck.map(id => {
+        const key = String(id);
+        const ability = this.abilities[key];
+        
+        return {
+          id: ability.id,
+          name: ability.name,
+          cost: ability.cost,
+          effectType: ability.effectType,
+          target: ability.target,
+          charges: ability.charges,
+          health: ability.health,
+          strength: ability.strength,
+          ...(ability.value && { value: ability.value }),
+          ...(ability.modifier && { modifier: ability.modifier }),
+          ...(ability.pierce && { pierce: ability.pierce })
+        };
       });
+
+      return {
+        deck: cards,
+        hand: [],
+        field: [],
+        health: 30,
+        energy: 0,
+        energyPerTurn: 1,
+        type: 'human'
+      };
+    } catch (error) {
+      throw new Error(`Human player creation failed: ${error.message}`);
     }
   }
 
-  _selectAICards(candidates, deckSize) {
-    const selected = [];
-    while (selected.length < deckSize && candidates.length > 0) {
-      const index = Math.floor(Math.random() * candidates.length);
-      selected.push(candidates[index]);
-      candidates.splice(index, 1);
+  createAIPlayer() {
+    try {
+      console.log('[AI] Initializing AI player');
+      
+      return {
+        deck: this.generateAIDeck(),
+        hand: [],
+        field: [],
+        health: 30,
+        energy: 0,
+        energyPerTurn: 1,
+        type: 'ai'
+      };
+    } catch (error) {
+      throw new Error(`AI player creation failed: ${error.message}`);
     }
-    return selected;
   }
+
+  generateAIDeck() {
+    try {
+      const availableIds = Object.keys(this.abilities).map(Number);
+      console.log('[AI] Available ability IDs:', availableIds);
+
+      const rules = {
+        minCost: 1,
+        maxCost: 3,
+        preferredTypes: ['ATTACK', 'DEFENSE'],
+        deckSize: 5
+      };
+
+      // Фильтрация по правилам
+      let candidates = availableIds.filter(id => {
+        const ability = this.abilities[String(id)];
+        return ability.cost >= rules.minCost && 
+               ability.cost <= rules.maxCost &&
+               rules.preferredTypes.includes(ability.effectType);
+      });
+
+      // Дополнение при необходимости
+      if (candidates.length < rules.deckSize) {
+        const rest = availableIds.filter(id => !candidates.includes(id));
+        candidates.push(...rest.slice(0, rules.deckSize - candidates.length));
+      }
+
+      // Рандомизация выбора
+      const selected = [];
+      while (selected.length < rules.deckSize && candidates.length > 0) {
+        const randomIndex = Math.floor(Math.random() * candidates.length);
+        selected.push(candidates[randomIndex]);
+        candidates.splice(randomIndex, 1);
+      }
+
+      console.log('[AI] Generated deck:', selected);
+      return selected;
+    } catch (error) {
+      throw new Error(`AI deck generation failed: ${error.message}`);
+    }
+  }
+  // endregion
+
+  // region -------------------- GAME LOGIC --------------------
+  processAITurn() {
+    try {
+      console.log('[AI] Processing turn');
+      
+      const ai = this.players.ai;
+      const playableCards = ai.hand.filter(card => card.cost <= ai.energy);
+      
+      if (playableCards.length === 0) {
+        console.log('[AI] No playable cards');
+        return this.endTurn();
+      }
+
+      const strategy = this.selectAIStrategy(playableCards);
+      console.log('[AI] Selected strategy:', strategy);
+
+      this.playCard('ai', strategy.cardId, strategy.target);
+    } catch (error) {
+      console.error('[AI TURN ERROR]', error.stack);
+      throw new Error(`AI turn processing failed: ${error.message}`);
+    }
+  }
+
+  selectAIStrategy(cards) {
+    const priorityMap = {
+      'ATTACK': 3,
+      'BUFF': 2,
+      'DEFENSE': 1
+    };
+
+    return cards.reduce((best, current) => {
+      const ability = this.abilities[String(current.id)];
+      const priority = priorityMap[ability.effectType] || 0;
+      
+      if (priority > best.priority) {
+        return {
+          cardId: current.id,
+          priority: priority,
+          target: this.selectTarget(ability)
+        };
+      }
+      return best;
+    }, { cardId: null, priority: -1 });
+  }
+
+  playCard(playerId, cardId, target) {
+    try {
+      console.log(`[ACTION] Playing card ${cardId} for ${playerId}`);
+      
+      const player = this.players[playerId];
+      const cardIndex = player.hand.findIndex(c => c.id === cardId);
+      
+      if (cardIndex === -1) throw new Error(`Card ${cardId} not in hand`);
+      if (player.energy < player.hand[cardIndex].cost) {
+        throw new Error(`Insufficient energy: ${player.energy}/${player.hand[cardIndex].cost}`);
+      }
+
+      const playedCard = player.hand.splice(cardIndex, 1)[0];
+      player.field.push(playedCard);
+      player.energy -= playedCard.cost;
+
+      this.combatSystem.resolveAbility(
+        this,
+        playerId,
+        playedCard.id,
+        target
+      );
+    } catch (error) {
+      console.error('[PLAY CARD ERROR]', error.stack);
+      throw new Error(`Card play failed: ${error.message}`);
+    }
+  }
+
+  endTurn() {
+    console.log('[TURN] Ending current turn');
+    // Логика окончания хода
+  }
+  // endregion
 }
 
 module.exports = { PveGame };
