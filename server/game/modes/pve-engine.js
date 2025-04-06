@@ -419,13 +419,14 @@ class PveGame extends BaseGame {
   }
 
   _selectAICards(candidates, deckSize) {
-    const selected = [];
-    while (selected.length < deckSize && candidates.length > 0) {
-      const index = Math.floor(Math.random() * candidates.length);
-      selected.push(candidates[index]);
-      candidates.splice(index, 1);
-    }
-    return selected;
+	const selected = [];
+	const tempCandidates = [...candidates]; // Работаем с копией
+	while (selected.length < deckSize && tempCandidates.length > 0) {
+	  const index = Math.floor(Math.random() * tempCandidates.length);
+	  selected.push(tempCandidates[index]);
+	  tempCandidates.splice(index, 1);
+	}
+	return selected;
   }
 
   // ==================== STATIC METHODS ====================
