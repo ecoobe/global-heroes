@@ -5,21 +5,43 @@ export const DOMHelper = {
 	  });
 	},
   
-	createCardElement(card) {
-	  return `
-		<div class="hand-card" data-id="${card.id}">
-		  <div class="card-header">
-			<span class="card-cost">${card.cost}⚡</span>
-			<span class="card-name">${card.name}</span>
+	createCardElement(card, type = 'player') {
+	  const element = document.createElement('div');
+	  element.className = `${type}-card card`;
+  
+	  if (type === 'player' && card) {
+		element.innerHTML = `
+		  <div class="card-inner">
+			<div class="card-front">
+			  <img src="/assets/heroes/images/${card.id}.webp" 
+				   alt="${card.name}" 
+				   loading="lazy">
+			  <div class="card-cost">${card.cost}⚡</div>
+			</div>
 		  </div>
-		  <div class="card-description">${card.description}</div>
-		</div>
-	  `;
+		`;
+		element.dataset.id = card.id;
+	  } else {
+		element.innerHTML = `
+		  <div class="card-back">
+			<img src="/assets/heroes/images/card-back.webp" 
+				 alt="Card Back" 
+				 loading="lazy">
+			<div class="ai-label">AI</div>
+		  </div>
+		`;
+		element.classList.add('disabled');
+	  }
+	  return element.outerHTML;
 	},
   
 	createUnitElement(unit, side) {
 	  return `
 		<div class="unit ${side}-unit" data-id="${unit.id}">
+		  <img src="/assets/heroes/images/${unit.id}.webp" 
+			   alt="${unit.name}" 
+			   class="unit-image"
+			   loading="lazy">
 		  <div class="unit-health">❤️${unit.health}</div>
 		  <div class="unit-strength">⚔️${unit.strength}</div>
 		  ${unit.charges ? `<div class="unit-charges">🔵×${unit.charges}</div>` : ''}
@@ -30,14 +52,22 @@ export const DOMHelper = {
 	createHeroCard(hero) {
 	  return `
 		<div class="hero-card" data-id="${hero.id}">
-		  <div class="hero-image" style="background-image: url('${hero.image || '/images/default-hero.png'}')"></div>
-		  <h3>${hero.name}</h3>
-		  <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
-		  <p class="ability">${hero.ability?.name || ''}</p>
+		  <img src="${hero.image || '/assets/heroes/images/default-hero.webp'}" 
+			   alt="${hero.name}" 
+			   class="hero-image"
+			   loading="lazy">
+		  <div class="hero-info">
+			<h3>${hero.name}</h3>
+			<div class="stats">
+			  <span>⚔️ ${hero.strength}</span>
+			  <span>❤️ ${hero.health}</span>
+			</div>
+			${hero.ability ? `<p class="ability">${hero.ability.name}</p>` : ''}
+		  </div>
 		</div>
 	  `;
 	}
-};
+  };
   
   export const ErrorHandler = {
 	show(element, message, timeout = 5000) {
@@ -55,4 +85,4 @@ export const DOMHelper = {
 	  this.show(errorEl, message);
 	  console.error('Game Error:', message);
 	}
-};
+  };

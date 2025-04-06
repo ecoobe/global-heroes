@@ -39,6 +39,11 @@
                         <div class="game-id"></div>
                     </div>
                     <div class="combat-ui">
+                        <!-- Добавлен блок для карт ИИ -->
+                        <div class="ai-hand-container">
+                            <div class="ai-hand" id="aiHand"></div>
+                        </div>
+
                         <div class="player-side">
                             <div class="hero-stats">
                                 <div class="health">❤️ <span id="playerHealth">-</span></div>
@@ -62,11 +67,11 @@
                     </div>
                     
                     <div class="action-buttons">
-						<div class="hand-container" id="playerHand"></div>
-						<button id="endTurnBtn" class="action-btn end-turn-btn">
-						    Завершить ход
-						</button>
-					</div>
+                        <div class="hand-container" id="playerHand"></div>
+                        <button id="endTurnBtn" class="action-btn end-turn-btn">
+                            Завершить ход
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

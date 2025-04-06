@@ -12,7 +12,7 @@ export class UIManager {
       'mainMenu', 'heroSelectContainer', 'gameContainer',
       'playerHealth', 'aiHealth', 'playerDeck', 'aiDeck',
       'playerHand', 'endTurnBtn', 'errorMessage',
-      'playerBattlefield', 'aiBattlefield'
+      'playerBattlefield', 'aiBattlefield', 'aiHand'
     ];
     
     requiredElements.forEach(name => {
@@ -28,31 +28,29 @@ export class UIManager {
   }
 
   toggleInterface(screen) {
-	console.log('[UI] Transition to:', screen);
-  
-	// Сброс состояний
-	[this.elements.mainMenu, this.elements.heroSelectContainer, this.elements.gameContainer].forEach(el => {
-	  el.classList.remove('active');
-	  el.hidden = true;
-	});
-  
-	// Активация целевого интерфейса
-	const target = {
-	  main: this.elements.mainMenu,
-	  heroSelect: this.elements.heroSelectContainer,
-	  game: this.elements.gameContainer
-	}[screen];
-  
-	if (target) {
-	  target.classList.add('active');
-	  target.hidden = false;
-	  
-	  // Особые действия для игрового интерфейса
-	  if (screen === 'game') {
-		target.style.display = 'grid';
-		target.scrollIntoView({ behavior: 'smooth' });
-	  }
-	}
+    console.log('[UI] Transition to:', screen);
+    
+    [this.elements.mainMenu, this.elements.heroSelectContainer, this.elements.gameContainer]
+      .forEach(el => {
+        el.classList.remove('active');
+        el.hidden = true;
+      });
+
+    const target = {
+      main: this.elements.mainMenu,
+      heroSelect: this.elements.heroSelectContainer,
+      game: this.elements.gameContainer
+    }[screen];
+
+    if (target) {
+      target.classList.add('active');
+      target.hidden = false;
+      
+      if (screen === 'game') {
+        target.style.display = 'grid';
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
   }
 
   updateHeroSelection(selectedCount) {
@@ -77,13 +75,7 @@ export class UIManager {
     
     this.elements.heroCards.forEach(card => {
       card.addEventListener('click', clickHandler);
-      card.addEventListener('mouseenter', this.handleCardHover);
     });
-  }
-
-  handleCardHover(event) {
-    const heroId = event.currentTarget.dataset.id;
-    // Логика показа подсказки
   }
 
   updateGameInterface(state) {
@@ -94,26 +86,33 @@ export class UIManager {
     
     this.renderBattlefield(state.human.field, state.ai.field);
     this.renderPlayerHand(state.human.hand);
+    this.renderAIHand(state.ai.hand);
   }
 
   renderPlayerHand(hand) {
     this.elements.playerHand.innerHTML = hand
-      .map(card => DOMHelper.createCardElement(card))
+      .map(card => DOMHelper.createCardElement(card, 'player'))
+      .join('');
+  }
+
+  renderAIHand(hand) {
+    this.elements.aiHand.innerHTML = hand
+      .map(() => DOMHelper.createCardElement(null, 'ai'))
       .join('');
   }
 
   renderBattlefield(playerField, aiField) {
-	this.clearBattlefield();
+    this.clearBattlefield();
   
-	playerField.forEach(unit => {
-	  const element = DOMHelper.createUnitElement(unit, 'player');
-	  this.elements.playerBattlefield.appendChild(element);
-	});
+    playerField.forEach(unit => {
+      const element = DOMHelper.createUnitElement(unit, 'player');
+      this.elements.playerBattlefield.appendChild(element);
+    });
   
-	aiField.forEach(unit => {
-	  const element = DOMHelper.createUnitElement(unit, 'ai');
-	  this.elements.aiBattlefield.appendChild(element);
-	});
+    aiField.forEach(unit => {
+      const element = DOMHelper.createUnitElement(unit, 'ai');
+      this.elements.aiBattlefield.appendChild(element);
+    });
   }
 
   clearBattlefield() {
