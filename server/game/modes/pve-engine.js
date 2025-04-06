@@ -272,40 +272,77 @@ class PveGame extends BaseGame {
   }
 
   generateAIDeck() {
-    try {
-      const availableIds = Object.keys(this.abilities).map(Number);
-      const rules = {
-        minCost: 1,
-        maxCost: 5,
-        preferredTypes: ['ATTACK', 'DEFENSE', 'BUFF'],
-        deckSize: 5
-      };
+	try {
+	  const availableIds = Object.keys(this.abilities).map(Number);
+	  const rules = {
+		minCost: 1,
+		maxCost: 5,
+		preferredTypes: ['ATTACK', 'DEFENSE', 'BUFF'],
+		deckSize: 5
+	  };
+  
+	  console.log('[AI][🃏] Deck generation', {
+		available: availableIds.length,
+		rules
+	  });
+  
+	  // Первичный отбор по строгим критериям
+	  let candidates = availableIds.filter(id => {
+		const ability = this.abilities[String(id)] || {};
+		return ability.cost >= rules.minCost && 
+			   ability.cost <= rules.maxCost &&
+			   rules.preferredTypes.includes(ability.effectType);
+	  });
+  
+	  // Если не хватает карт - ослабить фильтр (игнорировать тип)
+	  if (candidates.length < rules.deckSize) {
+		candidates = availableIds.filter(id => {
+		  const ability = this.abilities[String(id)] || {};
+		  return ability.cost >= rules.minCost && 
+				 ability.cost <= rules.maxCost;
+		});
+		console.log('[AI][🔄] Relaxed type filter', { newCandidates: candidates });
+	  }
+  
+	  // Если всё ещё недостаточно - взять любые доступные
+	  if (candidates.length < rules.deckSize) {
+		candidates = availableIds;
+		console.log('[AI][⚠️] Using all available cards', { candidates });
+	  }
+  
+	  const selected = this._selectAICards(candidates, rules.deckSize);
+	  
+	  // Если всё равно не хватает - дополнить дефолтными
+	  if (selected.length < rules.deckSize) {
+		const missing = rules.deckSize - selected.length;
+		selected.push(...Array(missing).fill().map(() => this._getFallbackCard()));
+		console.log('[AI][❗] Added fallback cards', { missing });
+	  }
+  
+	  console.log('[AI][✅] Deck generated', { selected });
+	  return selected.map(id => ({
+		id,
+		...this.abilities[String(id)]
+	  }));
+  
+	} catch (error) {
+	  console.error('[AI][💥] Deck generation failed', {
+		error: this._safeError(error)
+	  });
+	  return [];
+	}
+  }
 
-      console.log('[AI][🃏] Deck generation', {
-        available: availableIds.length,
-        rules
-      });
-
-      let candidates = availableIds.filter(id => {
-        const ability = this.abilities[String(id)] || {};
-        return ability.cost >= rules.minCost && 
-               ability.cost <= rules.maxCost &&
-               rules.preferredTypes.includes(ability.effectType);
-      });
-
-      const selected = this._selectAICards(candidates, rules.deckSize);
-      console.log('[AI][✅] Deck generated', { selected });
-      return selected.map(id => ({
-        id,
-        ...this.abilities[String(id)]
-      }));
-
-    } catch (error) {
-      console.error('[AI][💥] Deck generation failed', {
-        error: this._safeError(error)
-      });
-      return [];
-    }
+  _getFallbackCard() {
+	console.warn('[AI][🆘] Generating fallback card');
+	return {
+	  id: 999,
+	  name: 'Basic Strike',
+	  cost: 2,
+	  effectType: 'ATTACK',
+	  target: 'ENEMY',
+	  value: 3
+	};
   }
 
   selectAIStrategy(cards) {
