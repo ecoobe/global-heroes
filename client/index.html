@@ -22,10 +22,10 @@
                 </div>
             </div>
             
-            <!-- Выбор героев -->
-            <div class="hero-select-container" id="heroSelectContainer">
-                <div class="hero-select-wrapper">
-                    <div class="hero-select" id="heroSelect"></div>
+            <!-- Выбор карт -->
+            <div class="card-select-container" id="cardSelectContainer">
+                <div class="card-select-wrapper">
+                    <div class="card-select" id="cardSelect"></div>
                     <button id="confirmSelection" class="menu-btn" disabled>
                         <span class="btn-text">Подтвердить выбор (5/5)</span>
                     </button>
@@ -35,38 +35,32 @@
             <!-- Игровой интерфейс -->
             <div class="game-container" id="gameContainer">
                 <div id="gameState" class="game-state">
-                    <div class="game-id-container">
-                        <div class="game-id"></div>
-                    </div>
                     <div class="combat-ui">
-                        <div class="player-side">
-                            <div class="hero-stats">
-                                <div class="health">❤️ <span id="playerHealth">-</span></div>
-                                <div class="deck-count">🃏 <span id="playerDeck">-</span></div>
-                            </div>
-                            <div class="battlefield"></div>
+                        <!-- Рука ИИ -->
+                        <div class="ai-hand-container">
+                            <div class="ai-hand" id="aiHand"></div>
                         </div>
-                        
+
+                        <!-- Статистика игрока -->
+                        <div class="player-stats">
+                            <div class="health">❤️ <span id="playerHealth">30</span></div>
+                            <div class="deck-count">🃏 <span id="playerDeck">-</span></div>
+                        </div>
+
+                        <!-- Индикатор хода -->
                         <div class="turn-indicator">
                             <div class="timer">Ход: <span id="turnTimer">30</span>s</div>
                             <div class="current-turn">Сейчас ходит: <span id="currentTurn">-</span></div>
                         </div>
-                
-                        <div class="ai-side">
-                            <div class="hero-stats">
-                                <div class="health">❤️ <span id="aiHealth">-</span></div>
-                                <div class="deck-count">🃏 <span id="aiDeck">-</span></div>
-                            </div>
-                            <div class="battlefield"></div>
+
+                        <!-- Рука игрока -->
+                        <div class="action-buttons">
+                            <div class="hand-container" id="playerHand"></div>
+                            <button id="endTurnBtn" class="action-btn end-turn-btn">
+                                Завершить ход
+                            </button>
                         </div>
                     </div>
-                    
-                    <div class="action-buttons">
-						<div class="hand-container" id="playerHand"></div>
-						<button id="endTurnBtn" class="action-btn end-turn-btn">
-						    Завершить ход
-						</button>
-					</div>
                 </div>
             </div>
         </div>

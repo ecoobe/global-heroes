@@ -2,129 +2,84 @@ import { DOMHelper } from './utils.js';
 
 export class UIManager {
   constructor(elements) {
-    this.elements = elements;
-    this.validateElements();
-    this.initDynamicElements();
+    this.elements = this.validateElements(elements);
   }
 
-  validateElements() {
+  validateElements(elements) {
     const requiredElements = [
-      'mainMenu', 'heroSelectContainer', 'gameContainer',
+      'mainMenu', 'cardSelectContainer', 'gameContainer',
       'playerHealth', 'aiHealth', 'playerDeck', 'aiDeck',
-      'playerHand', 'endTurnBtn', 'errorMessage',
-      'playerBattlefield', 'aiBattlefield'
+      'playerHand', 'endTurnBtn', 'errorMessage', 'aiHand'
     ];
     
     requiredElements.forEach(name => {
-      if (!this.elements[name]) {
+      if (!elements[name]) {
         throw new Error(`Critical UI element missing: ${name}`);
       }
     });
-  }
-
-  initDynamicElements() {
-    this.elements.heroCards = [];
-    this.activeInterface = 'main';
+    return elements;
   }
 
   toggleInterface(screen) {
-  console.log('[UI] Transition to:', screen);
+    const screens = {
+      main: this.elements.mainMenu,
+      cardSelect: this.elements.cardSelectContainer,
+      game: this.elements.gameContainer
+    };
 
-  // Сброс состояний
-  [this.elements.mainMenu, this.elements.heroSelectContainer, this.elements.gameContainer].forEach(el => {
-    el.classList.remove('active');
-    el.hidden = true;
-  });
+    Object.values(screens).forEach(el => {
+      el.classList.remove('active');
+      el.hidden = true;
+    });
 
-  // Активация целевого интерфейса
-  const target = {
-    main: this.elements.mainMenu,
-    heroSelect: this.elements.heroSelectContainer,
-    game: this.elements.gameContainer
-  }[screen];
-
-  if (target) {
-    target.classList.add('active');
-    target.hidden = false;
-    
-    // Особые действия для игрового интерфейса
-    if (screen === 'game') {
-      target.style.display = 'grid';
-      target.scrollIntoView({ behavior: 'smooth' });
+    if (screens[screen]) {
+      screens[screen].classList.add('active');
+      screens[screen].hidden = false;
     }
   }
-}
 
-  updateHeroSelection(selectedCount) {
+  updateCardSelection(selectedCount) {
     const isComplete = selectedCount === 5;
     this.elements.confirmButton.disabled = !isComplete;
-    
-    const counter = this.elements.confirmButton.querySelector('.btn-text');
-    if (counter) {
-      counter.textContent = `Подтвердить выбор (${selectedCount}/5)`;
-      counter.classList.toggle('complete', isComplete);
-    }
+    this.elements.confirmButton.querySelector('.btn-text').textContent = 
+      `Подтвердить выбор (${selectedCount}/5)`;
   }
 
-  renderHeroCards(heroes, clickHandler) {
-    this.elements.heroSelect.innerHTML = heroes
-      .map(hero => DOMHelper.createHeroCard(hero))
+  renderCardSelection(cards, clickHandler) {
+    this.elements.cardSelect.innerHTML = cards
+      .map(card => DOMHelper.createCardElement(card, 'select'))
       .join('');
 
-    this.elements.heroCards = Array.from(
-      this.elements.heroSelect.querySelectorAll('.hero-card')
-    );
-    
-    this.elements.heroCards.forEach(card => {
-      card.addEventListener('click', clickHandler);
-      card.addEventListener('mouseenter', this.handleCardHover);
-    });
-  }
-
-  handleCardHover(event) {
-    const heroId = event.currentTarget.dataset.id;
-    // Логика показа подсказки
+    this.elements.cardSelect.querySelectorAll('.card')
+      .forEach(card => card.addEventListener('click', clickHandler));
   }
 
   updateGameInterface(state) {
+    // Обновление статистики
     this.elements.playerHealth.textContent = state.human.health;
-    this.elements.aiHealth.textContent = state.ai.health;
     this.elements.playerDeck.textContent = state.human.deck.length;
-    this.elements.aiDeck.textContent = state.ai.deck.length;
     
-    this.renderBattlefield(state.human.field, state.ai.field);
+    // Отрисовка карт
     this.renderPlayerHand(state.human.hand);
+    this.renderAIHand(state.ai.hand.length);
   }
 
   renderPlayerHand(hand) {
     this.elements.playerHand.innerHTML = hand
-      .map(card => DOMHelper.createCardElement(card))
+      .map(card => DOMHelper.createCardElement(card, 'player'))
       .join('');
   }
 
-  renderBattlefield(playerField, aiField) {
-	this.clearBattlefield();
-  
-	playerField.forEach(unit => {
-	  const element = DOMHelper.createUnitElement(unit, 'player');
-	  this.elements.playerBattlefield.appendChild(element);
-	});
-  
-	aiField.forEach(unit => {
-	  const element = DOMHelper.createUnitElement(unit, 'ai');
-	  this.elements.aiBattlefield.appendChild(element);
-	});
-  }
-
-  clearBattlefield() {
-    this.elements.playerBattlefield.innerHTML = '';
-    this.elements.aiBattlefield.innerHTML = '';
+  renderAIHand(cardCount) {
+    this.elements.aiHand.innerHTML = Array(cardCount)
+      .fill()
+      .map(() => DOMHelper.createCardElement(null, 'ai'))
+      .join('');
   }
 
   showError(message, duration = 5000) {
     this.elements.errorMessage.textContent = message;
     this.elements.errorMessage.classList.add('visible');
-    
     setTimeout(() => {
       this.elements.errorMessage.classList.remove('visible');
     }, duration);
