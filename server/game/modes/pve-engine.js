@@ -276,8 +276,8 @@ class PveGame extends BaseGame {
       const availableIds = Object.keys(this.abilities).map(Number);
       const rules = {
         minCost: 1,
-        maxCost: 3,
-        preferredTypes: ['ATTACK', 'DEFENSE'],
+        maxCost: 5,
+        preferredTypes: ['ATTACK', 'DEFENSE', 'BUFF'],
         deckSize: 5
       };
 
