@@ -210,8 +210,17 @@ class GameClient {
         newState: state?.id
       }, 'debug');
       
+      // Обновляем состояние игры
       this.state.currentGameState = state;
-      
+
+      // Инициализация игроков
+      this.players = {
+        human: this.createHumanPlayer(state.human.deck) || this._createDefaultPlayer(),
+        ai: this.createAIPlayer() || this._createDefaultPlayer()
+      };
+      console.log('[DEBUG][🤖] AI Deck Size after creation:', this.players.ai.deck.length);
+
+      // Далее обрабатываем интерфейс игры
       if (!this.ui.elements.gameContainer.classList.contains('active')) {
         this.debug.log('UI_TRANSITION', {
           from: 'heroSelect',
