@@ -17,25 +17,12 @@ export const DOMHelper = {
 	  `;
 	},
   
-	createUnitElement(unit, side) {
-	  return `
-		<div class="unit ${side}-unit" data-id="${unit.id}">
-		  <div class="unit-health">❤️${unit.health}</div>
-		  <div class="unit-strength">⚔️${unit.strength}</div>
-		  ${unit.charges ? `<div class="unit-charges">🔵×${unit.charges}</div>` : ''}
-		</div>
-	  `;
+	createUnitElement() {
+		throw new Error('Units deprecated! Use cards only');
 	},
   
-	createHeroCard(hero) {
-	  return `
-		<div class="hero-card" data-id="${hero.id}">
-		  <div class="hero-image" style="background-image: url('${hero.image || '/images/default-hero.png'}')"></div>
-		  <h3>${hero.name}</h3>
-		  <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
-		  <p class="ability">${hero.ability?.name || ''}</p>
-		</div>
-	  `;
+	createHeroCard() {
+		throw new Error('Heroes deprecated! Use player health directly');
 	}
 };
   
