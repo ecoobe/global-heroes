@@ -281,13 +281,6 @@ class PveGame extends BaseGame {
         deckSize: 5
       };
 
-	  if (candidates.length < rules.deckSize) {
-		candidates = availableIds.filter(id => {
-		  const ability = this.abilities[String(id)] || {};
-		  return ability.cost >= rules.minCost && ability.cost <= rules.maxCost;
-		});
-	  }
-
       console.log('[AI][🃏] Deck generation', {
         available: availableIds.length,
         rules
