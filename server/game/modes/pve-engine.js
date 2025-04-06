@@ -341,8 +341,8 @@ class PveGame extends BaseGame {
   // ==================== HELPERS ====================
   _initializeStartingHands() {
     console.log('[GAME][🃏] Initializing starting hands');
-    this.players.human.hand = this._drawCards(this.players.human.deck, 3);
-    this.players.ai.hand = this._drawCards(this.players.ai.deck, 3);
+    this.players.human.hand = this._drawCards(this.players.human.deck, 5);
+    this.players.ai.hand = this._drawCards(this.players.ai.deck, 5);
     
     console.log('[HUMAN][👤] Starting hand:', this.players.human.hand.map(c => c.id));
     console.log('[AI][🤖] Starting hand:', this.players.ai.hand.map(c => c.id));
