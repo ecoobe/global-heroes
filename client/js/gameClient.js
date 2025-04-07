@@ -3,7 +3,7 @@ import { SocketManager } from './modules/SocketManager.js';
 import { UIManager } from './modules/UIManager.js';
 import { GameLogic } from './modules/GameLogic.js';
 import { DOMHelper, ErrorHandler } from './modules/utils.js';
-
+//work
 class GameClient {
   constructor() {
     this.state = new GameState();
