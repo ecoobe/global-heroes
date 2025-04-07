@@ -12,7 +12,7 @@
 		"cost": 2,
 		"charges": 1
 	  },
-	  "image": "/images/heroes/kaito.webp"
+	  "image": "/images/kaito.webp"
 	},
 	{
 	  "id": 2,
@@ -27,7 +27,7 @@
 		"cost": 1,
 		"charges": 2
 	  },
-	  "image": "/images/heroes/hanzo.webp"
+	  "image": "/images/hanzo.webp"
 	},
 	{
 	  "id": 3,
@@ -42,7 +42,7 @@
 		"cost": 3,
 		"charges": 1
 	  },
-	  "image": "/images/heroes/tokugawa.webp"
+	  "image": "/images/tokugawa.webp"
 	},
 	{
 	  "id": 4,
@@ -57,7 +57,7 @@
 		"cost": 2,
 		"charges": 3
 	  },
-	  "image": "/images/heroes/aya.webp"
+	  "image": "/images/aya.webp"
 	},
 	{
 	  "id": 5,
@@ -72,7 +72,7 @@
 		"cost": 2,
 		"charges": 2
 	  },
-	  "image": "/images/heroes/freya.webp"
+	  "image": "/images/freya.webp"
 	},
 	{
 		"id": 6,
@@ -87,6 +87,6 @@
 		  "cost": 3,
 		  "charges": 2
 		},
-		"image": "/images/heroes/li-wei.webp"
+		"image": "/images/li-wei.webp"
 	}
 ]
