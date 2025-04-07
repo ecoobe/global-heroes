@@ -2,8 +2,9 @@
 .game-container {
     display: none;
     padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
+    width: 100%;
+    min-height: 100vh; /* Заполняем всю высоту экрана */
+    margin: 0;
     z-index: 1000;
     position: relative;
     opacity: 0;
@@ -12,13 +13,13 @@
 
 /* Активное состояние */
 .game-container.active {
-    display: flex !important; /* Разворачиваем на всю ширину */
+    display: flex !important; /* Включаем отображение */
     flex-direction: column;
     justify-content: center;
     align-items: center;
     
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    min-height: 100vh; /* Заполняет всю высоту экрана */
     opacity: 1 !important;
     
     background: url('https://coobe.ru/assets/backgrounds/game_board.webp') no-repeat center center;
