@@ -3,11 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Global Heroes</title>
+    <link rel="stylesheet" href="/styles/main.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        /* Стили остаются теми же, что и в предыдущей версии */
-        /* ... */
-    </style>
 </head>
 <body>
     <div id="error-message"></div>
@@ -26,7 +23,7 @@
             </div>
             
             <!-- Выбор героев -->
-            <div class="hero-select-container" id="heroSelectContainer" style="display: none;">
+            <div class="hero-select-container" id="heroSelectContainer">
                 <div class="hero-select-wrapper">
                     <div class="hero-select" id="heroSelect"></div>
                     <button id="confirmSelection" class="menu-btn" disabled>
@@ -36,61 +33,40 @@
             </div>
             
             <!-- Игровой интерфейс -->
-            <div class="game-container" id="gameContainer" style="display: none;">
+            <div class="game-container" id="gameContainer">
                 <div id="gameState" class="game-state">
                     <div class="game-id-container">
                         <div class="game-id"></div>
                     </div>
+                    <div class="combat-ui">
+                        <div class="player-side">
+                            <div class="hero-stats">
+                                <div class="health">❤️ <span id="playerHealth">-</span></div>
+                                <div class="deck-count">🃏 <span id="playerDeck">-</span></div>
+                            </div>
+                            <div class="battlefield"></div>
+                        </div>
+                        
+                        <div class="turn-indicator">
+                            <div class="timer">Ход: <span id="turnTimer">30</span>s</div>
+                            <div class="current-turn">Сейчас ходит: <span id="currentTurn">-</span></div>
+                        </div>
+                
+                        <div class="ai-side">
+                            <div class="hero-stats">
+                                <div class="health">❤️ <span id="aiHealth">-</span></div>
+                                <div class="deck-count">🃏 <span id="aiDeck">-</span></div>
+                            </div>
+                            <div class="battlefield"></div>
+                        </div>
+                    </div>
                     
-                    <!-- Игровое поле -->
-                    <div class="game-board">
-                        <!-- Противник -->
-                        <div class="player-area opponent">
-                            <div class="deck-counter">
-                                <span id="aiDeck" class="counter">🃏 0</span>
-                            </div>
-                            <div class="hero-avatar">
-                                <img src="/assets/heroes/images/default-hero.png" alt="Противник">
-                            </div>
-                            <div class="deck-container"></div>
-                        </div>
-
-                        <!-- Линии боя -->
-                        <div class="combat-lines">
-                            <div class="melee-row battlefield" id="aiBattlefield"></div>
-                            <div class="ranged-row battlefield" id="playerBattlefield"></div>
-                        </div>
-
-                        <!-- Игрок -->
-                        <div class="player-area user">
-                            <div class="deck-counter">
-                                <span id="playerDeck" class="counter">🃏 0</span>
-                            </div>
-                            <div class="hero-avatar">
-                                <img src="/assets/heroes/images/default-hero.png" alt="Игрок">
-                            </div>
-                            <div class="deck-container"></div>
-                        </div>
-                    </div>
-
-                    <!-- Интерфейсные элементы -->
-                    <div class="turn-indicator">
-                        <div class="timer">Ход: <span id="turnTimer">30</span>s</div>
-                        <div class="current-turn">Сейчас ходит: <span id="currentTurn">-</span></div>
-                    </div>
-
                     <div class="action-buttons">
-                        <div class="hand-container" id="playerHand"></div>
-                        <button id="endTurnBtn" class="action-btn end-turn-btn">
-                            Завершить ход
-                        </button>
-                    </div>
-
-                    <!-- Показатели здоровья -->
-                    <div class="health-indicators">
-                        <div class="health opponent-health">❤️ <span id="aiHealth">-</span></div>
-                    </div>
-                    <div class="health player-health">❤️ <span id="playerHealth">-</span></div>
+						<div class="hand-container" id="playerHand"></div>
+						<button id="endTurnBtn" class="action-btn end-turn-btn">
+						    Завершить ход
+						</button>
+					</div>
                 </div>
             </div>
         </div>
