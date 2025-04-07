@@ -103,7 +103,7 @@ export class GameLogic {
 	}
   
 	static validateImagePath(path) {
-	  const validExtensions = ['.png', '.jpg', '.webp'];
+	  const validExtensions = ['.webp', '.png', '.jpg'];
 	  
 	  try {
 		if (!path || typeof path !== 'string') return '/images/default-hero.png';
