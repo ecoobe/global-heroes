@@ -10,16 +10,9 @@
     left: 0;
     width: 100%;
     height: 100%;
-    display: none; /* Изменено с flex */
-    justify-content: center;
-    align-items: center;
     background: url('https://coobe.ru/assets/backgrounds/main_menu.jpg') no-repeat center center fixed;
-    background-size: cover;  /* Это сделает изображение адаптивным */
-    z-index: 1000;
-    opacity: 0;
-    transition: 
-      opacity var(--transition-duration) ease,
-      visibility 0s linear var(--transition-duration);
+    background-size: cover;
+    z-index: 1000; /* Достаточно для фона */
 }
 
 .main-menu.active {
