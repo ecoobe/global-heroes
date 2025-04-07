@@ -34,31 +34,47 @@
 
 /* Детали интерфейса */
 .game-state {
-    background: rgba(44, 62, 80, 0.85); /* затемнённый фон с прозрачностью */
+    width: 80%; /* Занимает 80% ширины экрана */
+    max-width: 900px; /* Но не более 900px, чтобы не растягивался слишком сильно */
+    background: rgba(44, 62, 80, 0.85);
+    padding: 20px;
+    border-radius: 10px;
+    margin: auto; /* Центрируем */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .combat-ui {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 30px;
-    margin-top: 40px;
+    display: flex;
+    justify-content: space-between; /* Равномерное распределение */
+    align-items: center;
+    width: 100%;
+    gap: 20px;
 }
 
 .player-side, .ai-side {
+    flex: 1; /* Равномерное расширение */
+    min-height: 320px;
     background: rgba(255,255,255,0.1);
     padding: 20px;
     border-radius: 15px;
-    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .battlefield {
-    min-height: 200px;
+    min-height: 250px;
     border: 2px dashed var(--primary-color);
     margin-top: 20px;
     padding: 15px;
     display: flex;
     gap: 15px;
     flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
 }
 
 .turn-indicator {
@@ -86,14 +102,15 @@
     background: rgba(255,255,255,0.05);
     border-radius: 8px;
     flex-wrap: wrap;
+    justify-content: center; /* Выравниваем по центру */
 }
 
 .hand-card {
-    width: 80px;
-    height: 100px;
+    width: 90px; /* Немного больше */
+    height: 120px;
     background: #3a3a3a;
-    border: 1px solid var(--primary-color);
-    border-radius: 5px;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
     cursor: pointer;
     transition: transform 0.2s;
 }
