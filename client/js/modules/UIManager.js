@@ -28,32 +28,29 @@ export class UIManager {
   }
 
   toggleInterface(screen) {
-  console.log('[UI] Transition to:', screen);
+    console.log('[UI] Transition to:', screen);
 
-  // Сброс состояний
-  [this.elements.mainMenu, this.elements.heroSelectContainer, this.elements.gameContainer].forEach(el => {
-    el.classList.remove('active');
-    el.hidden = true;
-  });
+    [this.elements.mainMenu, this.elements.heroSelectContainer, this.elements.gameContainer].forEach(el => {
+      el.classList.remove('active');
+      el.hidden = true;
+    });
 
-  // Активация целевого интерфейса
-  const target = {
-    main: this.elements.mainMenu,
-    heroSelect: this.elements.heroSelectContainer,
-    game: this.elements.gameContainer
-  }[screen];
+    const target = {
+      main: this.elements.mainMenu,
+      heroSelect: this.elements.heroSelectContainer,
+      game: this.elements.gameContainer
+    }[screen];
 
-  if (target) {
-    target.classList.add('active');
-    target.hidden = false;
-    
-    // Особые действия для игрового интерфейса
-    if (screen === 'game') {
-      target.style.display = 'grid';
-      target.scrollIntoView({ behavior: 'smooth' });
+    if (target) {
+      target.classList.add('active');
+      target.hidden = false;
+      
+      if (screen === 'game') {
+        target.style.display = 'grid';
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   }
-}
 
   updateHeroSelection(selectedCount) {
     const isComplete = selectedCount === 5;
@@ -98,22 +95,38 @@ export class UIManager {
 
   renderPlayerHand(hand) {
     this.elements.playerHand.innerHTML = hand
-      .map(card => DOMHelper.createCardElement(card))
+      .map(card => this.createHandCardElement(card))
       .join('');
   }
 
+  createHandCardElement(card) {
+    return `
+      <div class="hand-card" data-id="${card.id}">
+        <img src="${card.image}" 
+             alt="${card.name}"
+             class="card-image"
+             onerror="this.src='/images/heroes/default-hero.png'">
+        <div class="card-content">
+          <div class="card-cost">${card.cost}⚡</div>
+          <h3 class="card-title">${card.name}</h3>
+          <p class="card-description">${card.description}</p>
+        </div>
+      </div>
+    `;
+  }
+
   renderBattlefield(playerField, aiField) {
-	this.clearBattlefield();
+    this.clearBattlefield();
   
-	playerField.forEach(unit => {
-	  const element = DOMHelper.createUnitElement(unit, 'player');
-	  this.elements.playerBattlefield.appendChild(element);
-	});
+    playerField.forEach(unit => {
+      const element = DOMHelper.createUnitElement(unit, 'player');
+      this.elements.playerBattlefield.appendChild(element);
+    });
   
-	aiField.forEach(unit => {
-	  const element = DOMHelper.createUnitElement(unit, 'ai');
-	  this.elements.aiBattlefield.appendChild(element);
-	});
+    aiField.forEach(unit => {
+      const element = DOMHelper.createUnitElement(unit, 'ai');
+      this.elements.aiBattlefield.appendChild(element);
+    });
   }
 
   clearBattlefield() {
