@@ -42,7 +42,7 @@
 		"cost": 3,
 		"charges": 1
 	  },
-	  "image": "/images/heroes/tokugawa.png"
+	  "image": "/images/heroes/tokugawa.webp"
 	},
 	{
 	  "id": 4,
@@ -57,7 +57,7 @@
 		"cost": 2,
 		"charges": 3
 	  },
-	  "image": "/images/heroes/aya.png"
+	  "image": "/images/heroes/aya.webp"
 	},
 	{
 	  "id": 5,
@@ -72,7 +72,7 @@
 		"cost": 2,
 		"charges": 2
 	  },
-	  "image": "/images/heroes/freya.png"
+	  "image": "/images/heroes/freya.webp"
 	},
 	{
 		"id": 6,
@@ -87,6 +87,6 @@
 		  "cost": 3,
 		  "charges": 2
 		},
-		"image": "/images/heroes/li-wei.png"
+		"image": "/images/heroes/li-wei.webp"
 	}
 ]
