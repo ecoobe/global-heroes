@@ -14,7 +14,8 @@
 .game-container.active {
     display: grid !important;
     opacity: 1 !important;
-    background: #2c3e50; /* Возвращаем оригинальный цвет */
+    background: url('https://coobe.ru/assets/backgrounds/game_board.webp') no-repeat center center;
+    background-size: cover;
 }
 
 /* Экстренная визуальная проверка (можно удалить после тестов) */
@@ -25,10 +26,7 @@
 
 /* Детали интерфейса */
 .game-state {
-    background: #2c3e50;
-    padding: 20px;
-    border-radius: 10px;
-    margin-top: 30px;
+    background: rgba(44, 62, 80, 0.85); /* затемнённый фон с прозрачностью */
 }
 
 .combat-ui {
