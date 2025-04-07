@@ -3,145 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Global Heroes</title>
+    <link rel="stylesheet" href="/styles/main.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        /* Original styles */
-        .main-menu {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 2rem;
-            border-radius: 10px;
-        }
-
-        .menu-btn {
-            background: linear-gradient(to bottom, #4a752d, #2a4a1f);
-            border: none;
-            padding: 15px 30px;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            margin: 10px;
-            font-size: 18px;
-            transition: transform 0.2s;
-        }
-
-        .menu-btn:hover {
-            transform: scale(1.05);
-        }
-
-        .hero-select-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .hero-select {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px;
-            padding: 20px;
-            max-width: 800px;
-        }
-
-        /* New game board styles */
-        .game-board {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: radial-gradient(circle at center, #2a4a3c, #15261f);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .player-area {
-            flex: 1;
-            position: relative;
-            min-height: 30vh;
-        }
-
-        .hero-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 3px solid gold;
-            position: absolute;
-            overflow: hidden;
-            background: #1a1a1a;
-        }
-
-        .hero-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .opponent .hero-avatar {
-            right: 20px;
-            top: 20px;
-        }
-
-        .user .hero-avatar {
-            left: 20px;
-            bottom: 20px;
-        }
-
-        .combat-lines {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            padding: 20px 0;
-        }
-
-        .melee-row, .ranged-row {
-            flex: 1;
-            border: 2px dashed rgba(255, 215, 0, 0.3);
-            margin: 0 10%;
-            transform: perspective(500px) rotateX(15deg);
-        }
-
-        /* Other existing styles */
-        #connection-status {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            border-radius: 5px;
-            background: #ff4444;
-            color: white;
-            z-index: 1000;
-        }
-
-        .health-indicators {
-            position: fixed;
-            right: 20px;
-            top: 20px;
-            font-size: 24px;
-            color: white;
-            text-shadow: 1px 1px 2px black;
-        }
-
-        .player-health {
-            position: fixed;
-            left: 20px;
-            bottom: 20px;
-            font-size: 24px;
-            color: white;
-            text-shadow: 1px 1px 2px black;
-        }
-    </style>
 </head>
 <body>
     <div id="error-message"></div>
@@ -160,7 +23,7 @@
             </div>
             
             <!-- Выбор героев -->
-            <div class="hero-select-container" id="heroSelectContainer" style="display: none;">
+            <div class="hero-select-container" id="heroSelectContainer">
                 <div class="hero-select-wrapper">
                     <div class="hero-select" id="heroSelect"></div>
                     <button id="confirmSelection" class="menu-btn" disabled>
@@ -170,61 +33,40 @@
             </div>
             
             <!-- Игровой интерфейс -->
-            <div class="game-container" id="gameContainer" style="display: none;">
+            <div class="game-container" id="gameContainer">
                 <div id="gameState" class="game-state">
                     <div class="game-id-container">
                         <div class="game-id"></div>
                     </div>
+                    <div class="combat-ui">
+                        <div class="player-side">
+                            <div class="hero-stats">
+                                <div class="health">❤️ <span id="playerHealth">-</span></div>
+                                <div class="deck-count">🃏 <span id="playerDeck">-</span></div>
+                            </div>
+                            <div class="battlefield"></div>
+                        </div>
+                        
+                        <div class="turn-indicator">
+                            <div class="timer">Ход: <span id="turnTimer">30</span>s</div>
+                            <div class="current-turn">Сейчас ходит: <span id="currentTurn">-</span></div>
+                        </div>
+                
+                        <div class="ai-side">
+                            <div class="hero-stats">
+                                <div class="health">❤️ <span id="aiHealth">-</span></div>
+                                <div class="deck-count">🃏 <span id="aiDeck">-</span></div>
+                            </div>
+                            <div class="battlefield"></div>
+                        </div>
+                    </div>
                     
-                    <!-- Игровое поле -->
-                    <div class="game-board">
-                        <!-- Противник -->
-                        <div class="player-area opponent">
-                            <div class="deck-counter">
-                                <span id="aiDeck" class="counter">🃏 0</span>
-                            </div>
-                            <div class="hero-avatar">
-                                <img src="/assets/heroes/images/default-hero.png" alt="Противник">
-                            </div>
-                            <div class="deck-container"></div>
-                        </div>
-
-                        <!-- Линии боя -->
-                        <div class="combat-lines">
-                            <div class="melee-row battlefield" id="aiBattlefield"></div>
-                            <div class="ranged-row battlefield" id="playerBattlefield"></div>
-                        </div>
-
-                        <!-- Игрок -->
-                        <div class="player-area user">
-                            <div class="deck-counter">
-                                <span id="playerDeck" class="counter">🃏 0</span>
-                            </div>
-                            <div class="hero-avatar">
-                                <img src="/assets/heroes/images/default-hero.png" alt="Игрок">
-                            </div>
-                            <div class="deck-container"></div>
-                        </div>
-                    </div>
-
-                    <!-- Интерфейсные элементы -->
-                    <div class="turn-indicator">
-                        <div class="timer">Ход: <span id="turnTimer">30</span>s</div>
-                        <div class="current-turn">Сейчас ходит: <span id="currentTurn">-</span></div>
-                    </div>
-
                     <div class="action-buttons">
-                        <div class="hand-container" id="playerHand"></div>
-                        <button id="endTurnBtn" class="action-btn end-turn-btn">
-                            Завершить ход
-                        </button>
-                    </div>
-
-                    <!-- Показатели здоровья -->
-                    <div class="health-indicators">
-                        <div class="health opponent-health">❤️ <span id="aiHealth">-</span></div>
-                    </div>
-                    <div class="health player-health">❤️ <span id="playerHealth">-</span></div>
+						<div class="hand-container" id="playerHand"></div>
+						<button id="endTurnBtn" class="action-btn end-turn-btn">
+						    Завершить ход
+						</button>
+					</div>
                 </div>
             </div>
         </div>
