@@ -73,5 +73,20 @@
 		"charges": 2
 	  },
 	  "image": "/images/heroes/freya.png"
+	},
+	{
+		"id": 6,
+		"name": "Ли Вэй",
+		"class": "Мастер Цигун",
+		"strength": 3,
+		"health": 8,
+		"ability": {
+		  "id": 6,
+		  "name": "Вихрь Ци",
+		  "description": "Каждые 2 хода создаёт щит, поглощающий 3 урона. При активации лечит всех союзников на 2 HP",
+		  "cost": 3,
+		  "charges": 2
+		},
+		"image": "/images/heroes/li-wei.png"
 	}
 ]

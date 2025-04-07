@@ -13,3 +13,14 @@
         transform: translateY(0) scale(1);
     }
 }
+
+@keyframes qi-vortex {
+	0% { background-position: 0% 50%; }
+	50% { background-position: 100% 50%; }
+	100% { background-position: 0% 50%; }
+}
+  
+  .qi-effect {
+	background: linear-gradient(45deg, #a8e063, #56ab2f, #1a512e);
+	animation: qi-vortex 3s infinite linear;
+}

@@ -115,6 +115,27 @@ class CombatSystem {
       target.health -= ability.value;
     });
   }
+  
+  handleChannelAbilities(unit) {
+	if (unit.ability?.effectType === 'CHANNEL') {
+	  unit.ability.effects.forEach(effect => {
+		if (effect.trigger === 'TURN_START' && this.currentTurn % 2 === 0) {
+		  this.applyEffect(unit, { 
+			type: effect.type,
+			value: effect.value,
+			duration: effect.duration
+		  });
+		}
+	  });
+	}
+  }
+  
+  applyHealAOE(source, value) {
+	const targets = this.getUnitsByTarget(source, 'ALL_ALLIES');
+	targets.forEach(target => {
+	  target.health = Math.min(target.maxHealth, target.health + value);
+	});
+  }
 }
 
 module.exports = { CombatSystem };

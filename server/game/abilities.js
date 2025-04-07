@@ -46,6 +46,27 @@ const abilities = Object.freeze(
 		effectType: "DEFENSE",			// Защитный эффект
 		modifier: -2,					// Модификатор получаемого урона (-2)
 		duration: 2						// Эффект длится 2 хода
+	},
+	6: {
+		id: 6,
+		name: "Вихрь Ци",
+		cost: 3,
+		effectType: "CHANNEL",
+		target: "SELF",
+		charges: 2,
+		effects: [
+		  {
+			type: "SHIELD", 
+			value: 3,
+			duration: 2,
+			trigger: "TURN_START"
+		  },
+		  {
+			type: "HEAL_AOE",
+			value: 2,
+			target: "ALL_ALLIES"
+		  }
+		]
 	}
 
 	}).reduce((acc, [key, value]) => {
