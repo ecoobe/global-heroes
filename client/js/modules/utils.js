@@ -6,48 +6,69 @@ export const DOMHelper = {
 	},
   
 	createCardElement(card) {
-	  return `
-		<div class="hand-card" data-id="${card.id}">
-		  <div class="card-header">
-			<span class="card-cost">${card.cost}⚡</span>
-			<span class="card-name">${card.name}</span>
+		// Добавить изображение и обработку ошибок
+		return `
+		  <div class="hand-card" data-id="${card.id}">
+			<img src="${card.image}" 
+				 alt="${card.name}" 
+				 class="card-image"
+				 onerror="this.src='/images/default-hero.png'">
+			<div class="card-header">
+			  <span class="card-cost">${card.cost}⚡</span>
+			  <span class="card-name">${card.name}</span>
+			</div>
+			<div class="card-description">${card.description}</div>
 		  </div>
-		  <div class="card-description">${card.description}</div>
-		</div>
-	  `;
-	},
-  
+		`;
+	  },
+	
 	createUnitElement(unit, side) {
-	  return `
-		<div class="unit ${side}-unit" data-id="${unit.id}">
-		  <div class="unit-health">❤️${unit.health}</div>
-		  <div class="unit-strength">⚔️${unit.strength}</div>
-		  ${unit.charges ? `<div class="unit-charges">🔵×${unit.charges}</div>` : ''}
-		</div>
-	  `;
+		// Добавить изображение юнита
+		return `
+		  <div class="unit ${side}-unit" data-id="${unit.id}">
+			<img src="${unit.image}" 
+				 alt="${unit.name}"
+				 class="unit-image"
+				 onerror="this.style.display='none'">
+			<div class="unit-health">❤️${unit.health}</div>
+			<div class="unit-strength">⚔️${unit.strength}</div>
+			${unit.charges ? `<div class="unit-charges">🔵×${unit.charges}</div>` : ''}
+		  </div>
+		`;
 	},
-  
+	
 	createHeroCard(hero) {
-	  return `
-		<div class="hero-card" data-id="${hero.id}">
-		  <div class="hero-image" style="background-image: url('${hero.image || '/images/default-hero.png'}')"></div>
-		  <h3>${hero.name}</h3>
-		  <p>⚔️ ${hero.strength} ❤️ ${hero.health}</p>
-		  <p class="ability">${hero.ability?.name || ''}</p>
-		</div>
-	  `;
+		// Оптимизировать фондовое изображение
+		return `
+		  <div class="hero-card" data-id="${hero.id}">
+			<div class="hero-image-container">
+			  <img src="${hero.image || '/images/default-hero.png'}" 
+				   alt="${hero.name}"
+				   class="hero-image"
+				   onerror="this.src='/images/default-hero.png'">
+			</div>
+			<h3>${hero.name}</h3>
+			<div class="hero-stats">
+			  <span>⚔️ ${hero.strength}</span>
+			  <span>❤️ ${hero.health}</span>
+			</div>
+			<p class="ability">${hero.ability?.name || 'Без способности'}</p>
+		  </div>
+		`;
 	}
 };
-  
-  export const ErrorHandler = {
-	show(element, message, timeout = 5000) {
-	  if (!element) {
-		console.error('Error element not found:', message);
-		return;
-	  }
-	  element.textContent = message;
-	  element.classList.add('visible');
-	  setTimeout(() => element.classList.remove('visible'), timeout);
+	
+	export const ErrorHandler = {
+	  show(element, message, timeout = 5000) {
+		if (!element) {
+		  console.error('Error element not found:', message);
+		  return;
+		}
+		element.textContent = message;
+		element.classList.add('visible');
+		if (timeout > 0) { // Добавить проверку timeout
+		  setTimeout(() => element.classList.remove('visible'), timeout);
+		}
 	},
   
 	showError(message) {
