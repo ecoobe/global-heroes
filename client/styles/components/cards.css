@@ -7,12 +7,10 @@
     color: white;
     position: relative;
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-                box-shadow 0.5s ease-out;
+    transition: all 0.3s ease;
     cursor: pointer;
     overflow: hidden;
     width: 220px;
-    z-index: 1;
 }
 
 .hero-card:hover {
@@ -20,7 +18,6 @@
     box-shadow: 0 8px 20px rgba(76,175,80,0.4);
 }
 
-/* Контейнер изображения героя */
 .hero-image-container {
     height: 180px;
     overflow: hidden;
@@ -38,12 +35,10 @@
     transform: scale(1.05);
 }
 
-/* Текстовые элементы карты */
 .hero-card h3 {
     margin: 12px 15px 8px;
     font-size: 1.2em;
     text-align: center;
-    color: var(--text-light);
 }
 
 .hero-stats {
@@ -52,7 +47,6 @@
     justify-content: center;
     margin-bottom: 12px;
     font-size: 1.1em;
-    color: var(--text-light);
 }
 
 .ability {
@@ -62,44 +56,14 @@
     border-radius: 6px;
     font-size: 0.9em;
     text-align: center;
-    color: var(--text-light);
 }
 
-/* ========== ВЫБРАННАЯ КАРТА ГЕРОЯ ========== */
+/* ========== ВЫБРАННАЯ КАРТА ========== */
 .hero-card.selected {
     border: 3px solid var(--primary-color);
-    box-shadow: 0 0 25px rgba(76,175,80,0.7);
-    transform: scale(1.08) translateY(-8px);
-    background: linear-gradient(
-        45deg, 
-        rgba(58,58,58,0.9) 0%,
-        rgba(40,40,40,0.9) 100%
-    );
-    animation: card-pulse 1.5s infinite;
-    z-index: 10;
-}
-
-.hero-card.selected::after {
-    content: "✓";
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    color: var(--primary-color);
-    font-size: 28px;
-    text-shadow: 0 0 15px rgba(76,175,80,0.8);
-    animation: check-glow 1.5s infinite;
-}
-
-/* Анимации для выбранной карты */
-@keyframes card-pulse {
-    0% { transform: scale(1.08) translateY(-8px); }
-    50% { transform: scale(1.05) translateY(-8px); }
-    100% { transform: scale(1.08) translateY(-8px); }
-}
-
-@keyframes check-glow {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+    box-shadow: 0 0 15px rgba(76,175,80,0.3);
+    transform: translateY(-8px) scale(1.03);
+    background: rgba(40,40,40,0.9);
 }
 
 /* ========== КАРТЫ В РУКЕ ========== */
@@ -122,7 +86,7 @@
     border: 2px solid var(--primary-color);
     border-radius: 10px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
     overflow: hidden;
     position: relative;
 }
@@ -132,15 +96,12 @@
     box-shadow: 0 8px 20px rgba(76,175,80,0.4);
 }
 
-/* Выбранная карта в руке */
 .hand-card.selected {
-    border: 3px solid #FFD700;
-    box-shadow: 0 0 25px rgba(255,215,0,0.5);
-    transform: translateY(-15px) scale(1.1);
-    z-index: 5;
+    border: 3px solid var(--primary-color);
+    box-shadow: 0 0 12px rgba(76,175,80,0.3);
+    transform: translateY(-10px) scale(1.02);
 }
 
-/* Элементы карты в руке */
 .card-image {
     width: 100%;
     height: 120px;
@@ -160,7 +121,6 @@
     padding: 4px 8px;
     border-radius: 4px;
     font-weight: bold;
-    color: var(--text-light);
 }
 
 .card-title {
@@ -168,7 +128,6 @@
     font-size: 1em;
     line-height: 1.2;
     text-align: center;
-    color: var(--text-light);
 }
 
 .card-description {
@@ -179,7 +138,6 @@
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    color: var(--text-light);
 }
 
 /* ========== ЮНИТЫ НА ПОЛЕ БОЯ ========== */
@@ -198,7 +156,6 @@
     width: 100%;
     height: 70px;
     object-fit: cover;
-    border-bottom: 2px solid var(--primary-color);
 }
 
 .unit-health,
@@ -207,7 +164,6 @@
     background: rgba(0,0,0,0.7);
     padding: 2px 6px;
     font-size: 0.9em;
-    color: var(--text-light);
 }
 
 .unit-health {
@@ -228,31 +184,19 @@
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 0.8em;
-    color: var(--text-light);
 }
 
-/* ========== АДАПТИВНЫЕ СТИЛИ ========== */
+/* ========== АДАПТИВНОСТЬ ========== */
 @media (max-width: 768px) {
     .hero-card {
         width: 180px;
     }
-
-    .hero-card.selected {
-        transform: scale(1.05) translateY(-5px);
-        animation: card-pulse-mobile 1.5s infinite;
-    }
     
-    @keyframes card-pulse-mobile {
-        0% { transform: scale(1.05) translateY(-5px); }
-        50% { transform: scale(1.03) translateY(-5px); }
-        100% { transform: scale(1.05) translateY(-5px); }
-    }
-
     .hand-card {
         width: 120px;
         height: 180px;
     }
-
+    
     .card-image {
         height: 100px;
     }
