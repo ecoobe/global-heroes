@@ -12,8 +12,15 @@
 
 /* Активное состояние */
 .game-container.active {
-    display: grid !important;
+    display: flex !important; /* Разворачиваем на всю ширину */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    
+    width: 100vw;
+    height: 100vh;
     opacity: 1 !important;
+    
     background: url('https://coobe.ru/assets/backgrounds/game_board.webp') no-repeat center center;
     background-size: cover;
 }
