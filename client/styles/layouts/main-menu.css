@@ -15,7 +15,7 @@
     align-items: center;
     background: url('https://coobe.ru/assets/backgrounds/main_menu.jpg') no-repeat center center fixed;
     background-size: cover;  /* Это сделает изображение адаптивным */
-    z-index: 9999;
+    z-index: 1000;
     opacity: 0;
     transition: 
       opacity var(--transition-duration) ease,
