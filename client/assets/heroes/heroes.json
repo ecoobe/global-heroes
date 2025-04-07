@@ -12,7 +12,7 @@
 		"cost": 2,
 		"charges": 1
 	  },
-	  "image": "/images/heroes/kaito.png"
+	  "image": "/images/heroes/kaito.webp"
 	},
 	{
 	  "id": 2,
@@ -27,7 +27,7 @@
 		"cost": 1,
 		"charges": 2
 	  },
-	  "image": "/images/heroes/hanzo.png"
+	  "image": "/images/heroes/hanzo.webp"
 	},
 	{
 	  "id": 3,

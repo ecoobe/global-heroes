@@ -220,15 +220,8 @@ class PveGame extends BaseGame {
       const cards = deck.map(id => {
         const ability = this.abilities[String(id)] || this._defaultAbility(id);
         return {
-          id: ability.id,
-          name: ability.name,
-          cost: ability.cost,
-          effectType: ability.effectType,
-          target: ability.target,
-          charges: ability.charges,
-          health: ability.health,
-          strength: ability.strength,
-          ...(ability.value && { value: ability.value })
+          ...ability, // Используем spread оператор для всех полей способности
+          image: this._getHeroImage(ability.id) // Добавляем изображение
         };
       });
 
@@ -376,6 +369,11 @@ class PveGame extends BaseGame {
   }
 
   // ==================== HELPERS ====================
+  _getHeroImage(abilityId) {
+    const hero = Object.values(this.abilities).find(a => a.id === abilityId);
+    return hero?.image || '/images/heroes/default-hero.png';
+  }
+
   _initializeStartingHands() {
     console.log('[GAME][🃏] Initializing starting hands');
     this.players.human.hand = this._drawCards(this.players.human.deck, 5);
@@ -400,7 +398,9 @@ class PveGame extends BaseGame {
       cost: card.cost,
       effectType: card.effectType,
       target: card.target,
-      charges: card.charges
+      charges: card.charges,
+      image: card.image, // Добавляем поле изображения
+      description: card.description // Добавляем описание
     };
   }
 
