@@ -1,29 +1,23 @@
-/* Основные стили игрового контейнера */
 .game-container {
     display: none;
-    padding: 2rem;
     width: 100%;
-    min-height: 100vh; /* Заполняем всю высоту экрана */
-    margin: 0;
-    z-index: 1000;
+    height: 100vh; /* Заполняет весь экран */
     position: relative;
+    z-index: 1000;
     opacity: 0;
     transition: opacity 0.3s ease;
+    background: url('https://coobe.ru/assets/backgrounds/game_board.webp') no-repeat center center;
+    background-size: cover;
 }
 
 /* Активное состояние */
 .game-container.active {
-    display: flex !important; /* Включаем отображение */
-    flex-direction: column;
-    justify-content: center;
+    display: flex !important;
+    flex-direction: column; /* Теперь зоны идут горизонтально */
+    justify-content: space-between;
     align-items: center;
-    
-    width: 100%;
-    min-height: 100vh; /* Заполняет всю высоту экрана */
     opacity: 1 !important;
-    
-    background: url('https://coobe.ru/assets/backgrounds/game_board.webp') no-repeat center center;
-    background-size: cover;
+    padding: 2rem;
 }
 
 /* Экстренная визуальная проверка (можно удалить после тестов) */
@@ -53,28 +47,44 @@
     gap: 20px;
 }
 
-.player-side, .ai-side {
-    flex: 1; /* Равномерное расширение */
-    min-height: 320px;
-    background: rgba(255,255,255,0.1);
-    padding: 20px;
-    border-radius: 15px;
+.ai-side {
+    width: 100%;
+    height: 45%;
+    background: rgba(255, 255, 255, 0.05);
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.player-side {
+    width: 100%;
+    height: 45%;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-top: 2px solid var(--primary-color);
 }
 
 .battlefield {
-    min-height: 250px;
-    border: 2px dashed var(--primary-color);
-    margin-top: 20px;
-    padding: 15px;
     display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
     width: 100%;
+    height: 100%;
+}
+
+.battlefield-center {
+    width: 100%;
+    height: 10%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid var(--primary-color);
+    border-bottom: 1px solid var(--primary-color);
 }
 
 .turn-indicator {
@@ -102,7 +112,7 @@
     background: rgba(255,255,255,0.05);
     border-radius: 8px;
     flex-wrap: wrap;
-    justify-content: center; /* Выравниваем по центру */
+    justify-content: center;
 }
 
 .hand-card {
