@@ -2,49 +2,52 @@
 const abilities = Object.freeze(
 	Object.entries({
 	1: { 
-		id: 1, 
-		name: "Месть клинка", 
-		cost: 2, 
-		effectType: "DEATH", 
-		target: "RANDOM_ENEMY", 
-		value: 4 
+		id: 1,							// Уникальный идентификатор
+		name: "Месть клинка",			// Название для интерфейса
+		cost: 2,						// Стоимость использования (энергия/ресурс)
+		effectType: "DEATH",			// Срабатывает при смерти носителя
+		target: "RANDOM_ENEMY",			// Цель: случайный враг
+		value: 4						// Наносимый урон
 	},
 
 	2: { 
-		id: 2, 
-		name: "Невидимость", 
-		cost: 1, 
-		effectType: "PASSIVE", 
-		trigger: "FIRST_ATTACK" 
+		id: 2,							// Уникальный идентификатор
+		name: "Невидимость",			// Название для интерфейса
+		cost: 1,						// Низкая стоимость
+		effectType: "PASSIVE",			// Постоянный эффект
+		trigger: "FIRST_ATTACK"			// Активация при первой атаке
 	},
 
 	3: { 
-		id: 3, 
-		name: "Тактик", 
-		cost: 3, 
-		effectType: "BUFF", 
-		target: "ALL_ALLIES", 
-		stat: "strength", 
-		value: 1 
+		id: 3,							// Уникальный идентификатор
+		name: "Тактик",					// Название для интерфейса
+		cost: 3,						// Высокая стоимость
+		effectType: "BUFF",				// Усиление союзников
+		target: "ALL_ALLIES",			// Все члены команды
+		stat: "strength",				// Атрибут для усиления
+		value: 1,						// Значение усиления (+1 к силе)
+		duration: 3						// Длительность баффа
 	},
 
 	4: { 
-		id: 4, 
-		name: "Стрела Луны", 
-		cost: 2, 
-		effectType: "ATTACK", 
-		target: "WEAKEST_ENEMY", 
-		pierce: true 
+		id: 4,							// Уникальный идентификатор
+		name: "Стрела Луны",			// Название для интерфейса
+		cost: 2,						// Средняя стоимость
+		effectType: "ATTACK",			// Активная атака
+		target: "WEAKEST_ENEMY",		// Цель: враг с наименьшим здоровьем
+		pierce: true,					// Игнорирует защиту
+		value: 4						// Наносит 4 урона поверх базовой атаки
 	},
 
 	5: { 
-		id: 5, 
-		name: "Щит предков", 
-		cost: 2, 
-		effectType: "DEFENSE", 
-		modifier: -2 
+		id: 5,							// Уникальный идентификатор
+		name: "Щит предков",			// Название для интерфейса
+		cost: 2,						// Средняя стоимость
+		effectType: "DEFENSE",			// Защитный эффект
+		modifier: -2,					// Модификатор получаемого урона (-2)
+		duration: 2						// Эффект длится 2 хода
 	}
-	
+
 	}).reduce((acc, [key, value]) => {
 	  const validated = {
 		id: Number(key),
