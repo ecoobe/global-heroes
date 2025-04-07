@@ -3,8 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <title>Global Heroes</title>
-    <link rel="stylesheet" href="/styles/main.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Reset и базовые стили */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            background: #000;
+            color: #fff;
+        }
+
+        /* Контейнеры */
+        .root-container {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
+        #app {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Игровое поле */
+        .game-board {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, #2a4a3c, #15261f);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-area {
+            flex: 1;
+            position: relative;
+            min-height: 30vh;
+        }
+
+        /* Аватары */
+        .hero-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid gold;
+            position: absolute;
+            overflow: hidden;
+            background: #1a1a1a;
+        }
+
+        .hero-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .opponent .hero-avatar {
+            right: 20px;
+            top: 20px;
+        }
+
+        .user .hero-avatar {
+            left: 20px;
+            bottom: 20px;
+        }
+
+        /* Колоды */
+        .deck-container {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+        }
+
+        .opponent .deck-container {
+            left: 20px;
+            top: 50px;
+        }
+
+        .user .deck-container {
+            right: 20px;
+            bottom: 50px;
+        }
+
+        /* Боевые линии */
+        .combat-lines {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            padding: 20px 0;
+        }
+
+        .melee-row, .ranged-row {
+            flex: 1;
+            border: 2px dashed rgba(255, 215, 0, 0.3);
+            margin: 0 10%;
+            transform: perspective(500px) rotateX(15deg);
+        }
+
+        /* Карты */
+        .card {
+            width: 120px;
+            height: 180px;
+            background: #1a2e25;
+            border-radius: 8px;
+            transition: transform 0.2s;
+            cursor: grab;
+            position: absolute;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .card.dragging {
+            cursor: grabbing;
+            transform: scale(1.1) rotate(3deg);
+            z-index: 1000;
+        }
+
+        .card-in-play {
+            transform: rotate(calc(-5deg + 10deg * var(--rand)));
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+        }
+
+        /* Интерфейс */
+        .health-indicators {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            z-index: 100;
+            font-size: 24px;
+        }
+
+        .player-health {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            font-size: 24px;
+        }
+
+        .deck-counter {
+            position: absolute;
+            font-size: 20px;
+            color: gold;
+        }
+
+        .opponent .deck-counter {
+            left: 20px;
+            top: 20px;
+        }
+
+        .user .deck-counter {
+            right: 20px;
+            bottom: 20px;
+        }
+
+        /* Главное меню */
+        .main-menu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .menu-btn {
+            background: linear-gradient(to bottom, #4a752d, #2a4a1f);
+            border: none;
+            padding: 15px 30px;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 18px;
+        }
+
+        /* Состояние подключения */
+        #connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .offline {
+            background: #ff4444;
+        }
+
+        /* Индикатор хода */
+        .turn-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        /* Рука игрока */
+        .hand-container {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            z-index: 500;
+        }
+    </style>
 </head>
 <body>
     <div id="error-message"></div>
@@ -38,35 +258,56 @@
                     <div class="game-id-container">
                         <div class="game-id"></div>
                     </div>
-                    <div class="combat-ui">
-                        <div class="player-side">
-                            <div class="hero-stats">
-                                <div class="health">❤️ <span id="playerHealth">-</span></div>
-                                <div class="deck-count">🃏 <span id="playerDeck">-</span></div>
+                    
+                    <!-- Игровое поле -->
+                    <div class="game-board">
+                        <!-- Противник -->
+                        <div class="player-area opponent">
+                            <div class="deck-counter">
+                                <span id="aiDeck" class="counter">🃏 0</span>
                             </div>
-                            <div class="battlefield"></div>
-                        </div>
-                        
-                        <div class="turn-indicator">
-                            <div class="timer">Ход: <span id="turnTimer">30</span>s</div>
-                            <div class="current-turn">Сейчас ходит: <span id="currentTurn">-</span></div>
-                        </div>
-                
-                        <div class="ai-side">
-                            <div class="hero-stats">
-                                <div class="health">❤️ <span id="aiHealth">-</span></div>
-                                <div class="deck-count">🃏 <span id="aiDeck">-</span></div>
+                            <div class="hero-avatar">
+                                <img src="/assets/heroes/images/default-hero.png" alt="Противник">
                             </div>
-                            <div class="battlefield"></div>
+                            <div class="deck-container"></div>
+                        </div>
+
+                        <!-- Линии боя -->
+                        <div class="combat-lines">
+                            <div class="melee-row battlefield"></div>
+                            <div class="ranged-row battlefield"></div>
+                        </div>
+
+                        <!-- Игрок -->
+                        <div class="player-area user">
+                            <div class="deck-counter">
+                                <span id="playerDeck" class="counter">🃏 0</span>
+                            </div>
+                            <div class="hero-avatar">
+                                <img src="/assets/heroes/images/default-hero.png" alt="Игрок">
+                            </div>
+                            <div class="deck-container"></div>
                         </div>
                     </div>
-                    
+
+                    <!-- Интерфейсные элементы -->
+                    <div class="turn-indicator">
+                        <div class="timer">Ход: <span id="turnTimer">30</span>s</div>
+                        <div class="current-turn">Сейчас ходит: <span id="currentTurn">-</span></div>
+                    </div>
+
                     <div class="action-buttons">
-						<div class="hand-container" id="playerHand"></div>
-						<button id="endTurnBtn" class="action-btn end-turn-btn">
-						    Завершить ход
-						</button>
-					</div>
+                        <div class="hand-container" id="playerHand"></div>
+                        <button id="endTurnBtn" class="action-btn end-turn-btn">
+                            Завершить ход
+                        </button>
+                    </div>
+
+                    <!-- Показатели здоровья -->
+                    <div class="health-indicators">
+                        <div class="health opponent-health">❤️ <span id="aiHealth">-</span></div>
+                    </div>
+                    <div class="health player-health">❤️ <span id="playerHealth">-</span></div>
                 </div>
             </div>
         </div>
