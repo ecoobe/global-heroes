@@ -5,6 +5,10 @@ export class UIManager {
     this.elements = elements;
     this.validateElements();
     this.initDynamicElements();
+    
+    // Привязка контекста для обработчиков
+    this.handleCardClick = this.handleCardClick.bind(this);
+    this.handleCardHover = this.handleCardHover.bind(this);
   }
 
   validateElements() {
@@ -12,7 +16,7 @@ export class UIManager {
       'mainMenu', 'heroSelectContainer', 'gameContainer',
       'playerHealth', 'aiHealth', 'playerDeck', 'aiDeck',
       'playerHand', 'endTurnBtn', 'errorMessage',
-      'playerBattlefield', 'aiBattlefield'
+      'playerBattlefield', 'aiBattlefield', 'confirmSelection'
     ];
     
     requiredElements.forEach(name => {
@@ -20,7 +24,7 @@ export class UIManager {
         throw new Error(`Critical UI element missing: ${name}`);
       }
     });
-  }
+}
 
   initDynamicElements() {
     this.elements.heroCards = [];
@@ -64,38 +68,50 @@ export class UIManager {
   }
 
   renderHeroCards(heroes, clickHandler) {
-	this.elements.heroSelect.innerHTML = heroes
-	  .map(hero => `
-		<div class="hero-card" data-hero-id="${hero.id}">
-		  <div class="hero-image-container">
-			<img src="${hero.image}" 
-				 class="hero-image"
-				 alt="${hero.name}"
-				 loading="lazy">
-		  </div>
-		  <h3>${hero.name}</h3>
-		  <div class="hero-stats">
-			<span>❤️${hero.health}</span>
-			<span>⚔️${hero.strength}</span>
-		  </div>
-		</div>
-	  `).join('');
-  
-	// Обработчики событий
-	this.elements.heroCards = Array.from(
-	  this.elements.heroSelect.querySelectorAll('.hero-card')
-	);
-	
-	this.elements.heroCards.forEach(card => {
-	  card.addEventListener('click', () => clickHandler(card.dataset.heroId));
-	  card.addEventListener('mouseenter', this.showHeroTooltip);
-	});
-  }  
+    this.elements.heroSelect.innerHTML = heroes
+      .map(hero => `
+        <div class="hero-card" data-hero-id="${hero.id}">
+          <div class="hero-image-container">
+            <img src="${hero.image}" 
+                 class="hero-image"
+                 alt="${hero.name}"
+                 loading="lazy"
+                 onerror="this.src='assets/heroes/images/default-hero.webp'">
+          </div>
+          <h3>${hero.name}</h3>
+          <div class="hero-stats">
+            <span>❤️${hero.health}</span>
+            <span>⚔️${hero.strength}</span>
+          </div>
+        </div>
+      `).join('');
 
-  handleCardHover(event) {
-    const heroId = event.currentTarget.dataset.id;
+    this.elements.heroCards = Array.from(
+      this.elements.heroSelect.querySelectorAll('.hero-card')
+    );
+    
+    this.elements.heroCards.forEach(card => {
+      card.addEventListener('click', () => clickHandler(card.dataset.heroId));
+      card.addEventListener('mouseenter', this.handleCardHover);
+    });
+}
+
+handleCardHover(event) {
+    const heroId = event.currentTarget.dataset.heroId;
     // Логика показа подсказки
+    console.log('Hover over hero:', heroId);
   }
+
+  updateHeroSelection(selectedCount) {
+    const isComplete = selectedCount === 5;
+    this.elements.confirmSelection.disabled = !isComplete;
+    
+    const counter = this.elements.confirmSelection.querySelector('.btn-text');
+    if (counter) {
+      counter.textContent = `Подтвердить выбор (${selectedCount}/5)`;
+      counter.classList.toggle('complete', isComplete);
+    }
+}
 
   updateGameInterface(state) {
     this.elements.playerHealth.textContent = state.human.health;
