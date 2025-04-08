@@ -12,6 +12,8 @@
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     background: linear-gradient(15deg, #1a1a1a 0%, #2d2d2d 100%);
     border: 2px solid rgba(76, 175, 80, 0.4);
+	color: #fff; /* Общий цвет текста */
+    font-family: 'Arial', sans-serif; /* Проверьте наличие шрифта */
 }
 
 /* Контейнер изображения героя */
@@ -57,6 +59,9 @@
     color: white;
     border: 2px solid var(--primary-color);
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+	z-index: 2; /* Выше изображения */
+    font-size: 1.4em; /* Увеличим размер цифр */
+    text-shadow: 0 2px 2px rgba(0,0,0,0.5);
 }
 
 /* Здоровье */
@@ -66,11 +71,25 @@
     background: linear-gradient(45deg, #e74c3c, #c0392b);
 }
 
+.health-stat:after {
+    content: '❤️';
+    position: absolute;
+    left: -25px;
+    font-size: 0.8em;
+}
+
 /* Атака */
 .strength-stat {
     bottom: 15px;
     left: 15px;
     background: linear-gradient(45deg, #3498db, #2980b9);
+}
+
+.strength-stat:before {
+    content: '⚔️';
+    position: absolute;
+    left: -25px;
+    font-size: 0.8em;
 }
 
 /* Имя героя */
@@ -90,6 +109,9 @@
     font-weight: 600;
     color: white;
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+	font-size: 1.6em; /* Увеличим размер имени */
+    padding: 25px 20px;
+    z-index: 2;
 }
 
 /* ========== ВЫБРАННАЯ КАРТА ========== */
@@ -118,8 +140,19 @@
         45deg,
         rgba(40,40,40,0.95),
         rgba(30,30,30,0.95)
-    ), url('../assets/backgrounds/card_menu.webp'); /* Добавьте текстуру */
+    ), url('/assets/backgrounds/card_menu.webp') center/cover fixed;
     backdrop-filter: blur(5px);
+}
+
+.hero-select-wrapper::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: -1;
 }
 
 /* Сетка выбора */
