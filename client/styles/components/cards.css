@@ -62,6 +62,21 @@
     text-shadow: 0 2px 2px rgba(0,0,0,0.5);
 }
 
+.card-stat {
+    position: relative !important; /* Переопределяем абсолютное позиционирование */
+    width: auto !important;
+    height: auto !important;
+    display: flex !important;
+    padding: 10px 20px !important;
+    margin: 10px !important;
+    background: red !important; /* Яркий цвет для теста */
+    border: none !important;
+    border-radius: 0 !important;
+    top: auto !important;
+    left: auto !important;
+    bottom: auto !important;
+}
+
 /* Здоровье (левый верх) */
 .health-stat {
     top: 15px;
