@@ -103,22 +103,19 @@ export class GameLogic {
 	}
   
 	static validateImagePath(path) {
-	  const validExtensions = ['.webp', '.png', '.jpg'];
+		const validExtensions = ['.webp', '.png', '.jpg'];
 	  
-	  try {
-		if (!path || typeof path !== 'string') return '/images/default-hero.png';
-		
-		const cleanPath = path
-		  .replace(/\.\./g, '')
-		  .replace(/^\/+/, '')
-		  .trim();
-  
-		return validExtensions.some(ext => cleanPath.endsWith(ext)) 
-		  ? `/images/heroes/${cleanPath}`
-		  : '/images/default-hero.png';
-	  } catch {
-		return '/images/default-hero.png';
-	  }
+		try {
+		  if (!path || typeof path !== 'string') return '/assets/heroes/images/default-hero.webp';
+	  
+		  const cleanPath = path.replace(/\.\./g, '').trim(); 
+	  
+		  return validExtensions.some(ext => cleanPath.endsWith(ext)) 
+			? cleanPath  // Оставляем путь как есть, если расширение верное
+			: '/assets/heroes/images/default-hero.webp';
+		} catch {
+		  return '/assets/heroes/images/default-hero.webp';
+		}
 	}
   
 	static validateDeck(selectedHeroIds, availableHeroes) {
