@@ -45,7 +45,6 @@
 }
 
 /* ========== ХАРАКТЕРИСТИКИ ГЕРОЯ ========== */
-/* Здоровье (левый верх) */
 .hero-stats {
     position: absolute;
     left: 20px;
@@ -57,59 +56,52 @@
 }
 
 .hero-stats span {
+    position: relative;
     background: rgba(0,0,0,0.9);
-    padding: 10px 16px;
+    padding: 12px 20px 12px 55px;
     border-radius: 8px;
     font-size: 1.6em;
     border: 2px solid var(--primary-color);
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* Стиль для здоровья (первый элемент) */
-.hero-stats span:first-child {
-    color: #ff6b6b;
-}
-
-/* Стиль для атаки (второй элемент) */
-.hero-stats span:last-child {
-    color: #4ecdc4;
-    margin-top: auto; /* Для позиционирования внизу, если потребуется */
-}
-
-/* Гарантируем видимость над изображением */
-.hero-image {
-    z-index: 1;
+    color: white;
 }
 
 /* Иконки характеристик */
-.card-stat::before {
+.hero-stats span::before {
     content: '';
     position: absolute;
-    width: 30px;
-    height: 30px;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 35px;
+    height: 35px;
     background-size: contain;
     background-repeat: no-repeat;
 }
 
-.health-stat::before {
-    background-image: url('/assets/ui/heart-icon.webp'); /* Путь к иконке */
-    left: -40px;
-    top: 50%;
-    transform: translateY(-50%);
+/* Здоровье */
+.hero-stats span:first-child {
+    color: #ff6b6b;
 }
 
-.strength-stat::before {
-    background-image: url('/assets/ui/sword-icon.webp'); /* Путь к иконке */
-    left: -40px;
-    top: 50%;
-    transform: translateY(-50%);
+.hero-stats span:first-child::before {
+    background-image: url('/assets/ui/heart-icon.webp');
+}
+
+/* Сила */
+.hero-stats span:last-child {
+    color: #4ecdc4;
+    position: absolute;
+    top: auto;
+    bottom: -300px; /* Расстояние от верхнего края карточки */
+}
+
+.hero-stats span:last-child::before {
+    background-image: url('/assets/ui/sword-icon.webp');
 }
 
 /* Имя героя */
-.hero-name {
+h3 {
     position: absolute;
     bottom: 0;
     left: 0;
@@ -122,11 +114,40 @@
     );
     text-align: center;
     font-size: 1.8em;
-    font-weight: 600;
     color: white;
     text-shadow: 0 3px 6px rgba(0,0,0,0.8);
     z-index: 2;
+    margin: 0;
     letter-spacing: 1px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .hero-stats {
+        left: 10px;
+        top: 10px;
+        gap: 10px;
+    }
+    
+    .hero-stats span {
+        padding: 10px 15px 10px 45px;
+        font-size: 1.4em;
+    }
+    
+    .hero-stats span::before {
+        width: 28px;
+        height: 28px;
+        left: 10px;
+    }
+    
+    .hero-stats span:last-child {
+        bottom: -250px;
+    }
+    
+    h3 {
+        font-size: 1.5em;
+        padding: 20px 15px;
+    }
 }
 
 /* ========== ВЫБРАННАЯ КАРТА ========== */
