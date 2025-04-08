@@ -118,7 +118,7 @@
         45deg,
         rgba(40,40,40,0.95),
         rgba(30,30,30,0.95)
-    ), url('../assets/ui/select-bg-pattern.png'); /* Добавьте текстуру */
+    ), url('../assets/backgrounds/card_menu.webp'); /* Добавьте текстуру */
     backdrop-filter: blur(5px);
 }
 
