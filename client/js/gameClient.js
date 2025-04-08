@@ -34,25 +34,25 @@ class GameClient {
 
   getDOMElements() {
     return {
-      status: document.getElementById('connection-status'),
-      startButton: document.getElementById('startPve'),
-      confirmButton: document.getElementById('confirmSelection'),
-      heroSelect: document.getElementById('heroSelect'),
       mainMenu: document.getElementById('mainMenu'),
-      gameContainer: document.getElementById('gameContainer'),
       heroSelectContainer: document.getElementById('heroSelectContainer'),
+      gameContainer: document.getElementById('gameContainer'),
       playerHealth: document.getElementById('playerHealth'),
-      playerDeck: document.getElementById('playerDeck'),
       aiHealth: document.getElementById('aiHealth'),
+      playerDeck: document.getElementById('playerDeck'),
       aiDeck: document.getElementById('aiDeck'),
-      currentTurn: document.getElementById('currentTurn'),
-      gameId: document.querySelector('.game-id'),
       playerHand: document.getElementById('playerHand'),
       endTurnBtn: document.getElementById('endTurnBtn'),
       errorMessage: document.getElementById('error-message'),
-      playerBattlefield: document.querySelector('.player-side .battlefield'),
-      aiBattlefield: document.querySelector('.ai-side .battlefield'),
-      turnTimer: document.getElementById('turnTimer')
+      playerBattlefield: document.getElementById('playerBattlefield'),
+      aiBattlefield: document.getElementById('aiBattlefield'),
+      confirmSelection: document.getElementById('confirmSelection'), // Исправлено
+      startPve: document.getElementById('startPve'),
+      heroSelect: document.getElementById('heroSelect'),
+      turnTimer: document.getElementById('turnTimer'),
+      currentTurn: document.getElementById('currentTurn'),
+      gameId: document.querySelector('.game-id'),
+      connectionStatus: document.getElementById('connection-status')
     };
   }
 
@@ -81,9 +81,9 @@ class GameClient {
         transport: this.socket.socket?.io?.engine?.transport?.name
       }, 'info');
       
-      this.ui.elements.status.className = 'online';
-      this.ui.elements.status.textContent = 'Online';
-      this.ui.elements.startButton.disabled = false;
+      this.ui.elements.connectionStatus.className = 'online';
+      this.ui.elements.connectionStatus.textContent = 'Online';
+      this.ui.elements.startPve.disabled = false;
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -92,9 +92,9 @@ class GameClient {
         reconnecting: this.socket.socket?.reconnecting
       }, 'warn');
       
-      this.ui.elements.status.className = 'offline';
-      this.ui.elements.status.textContent = 'Offline';
-      this.ui.elements.startButton.disabled = true;
+      this.ui.elements.connectionStatus.className = 'offline';
+      this.ui.elements.connectionStatus.textContent = 'Offline';
+      this.ui.elements.startPve.disabled = true;
       this.ui.showError(`Соединение потеряно: ${reason}`);
     });
 
@@ -145,22 +145,23 @@ class GameClient {
   }
 
   setupEventListeners() {
-    this.ui.elements.startButton.addEventListener('click', () => {
-      this.debug.log('MAIN_MENU_START_CLICK', {
-        heroesLoaded: !!this.state.heroes,
-        socketStatus: this.socket.isConnected
-      }, 'info');
-      
-      this.handleStartGame();
-    });
-
-    this.ui.elements.confirmButton.addEventListener('click', () => {
+    // Исправленный обработчик для confirmSelection
+    this.ui.elements.confirmSelection.addEventListener('click', () => {
       this.debug.log('HERO_SELECT_CONFIRM_CLICK', {
         selectedCount: this.state.selectedHeroes.size,
         selectedIds: Array.from(this.state.selectedHeroes)
       }, 'info');
       
       this.handleDeckConfirmation();
+    });
+
+    this.ui.elements.startPve.addEventListener('click', () => {
+      this.debug.log('MAIN_MENU_START_CLICK', {
+        heroesLoaded: !!this.state.heroes,
+        socketStatus: this.socket.isConnected
+      }, 'info');
+      
+      this.handleStartGame();
     });
 
     this.ui.elements.endTurnBtn.addEventListener('click', () => {
@@ -239,87 +240,87 @@ class GameClient {
   }
 
   updateGameInterface() {
-	try {
-	  const state = this.state.currentGameState;
-	  
-	  // Глубокая проверка состояния
-	  const isValidState = state?.id && 
-						 state.human && 
-						 state.ai &&
-						 Number.isInteger(state.human.health) &&
-						 Number.isInteger(state.ai.health);
-  
-	  if (!isValidState) {
-		this.debug.log('INVALID_GAME_STATE', {
-		  receivedState: state,
-		  humanValid: !!state?.human,
-		  aiValid: !!state?.ai
-		}, 'error');
-		
-		this.ui.showError('Некорректные данные игры');
-		return;
-	  }
-  
-	  this.debug.log('UPDATING_INTERFACE', {
-		gameId: state.id,
-		humanHealth: state.human.health ?? 'N/A',
-		aiHealth: state.ai.health ?? 'N/A',
-		humanDeckSize: state.human.deck?.length ?? 0,
-		aiDeckSize: state.ai.deck?.length ?? 0
-	  }, 'debug');
-  
-	  // Безопасное обновление UI элементов
-	  this.ui.elements.gameId.textContent = `Игра #${state.id}`;
-	  
-	  // Здоровье игроков
-	  this.ui.elements.playerHealth.textContent = 
-		state.human.health?.toLocaleString() ?? '0';
-		
-	  this.ui.elements.aiHealth.textContent = 
-		state.ai.health?.toLocaleString() ?? '0';
-  
-	  // Размеры колод
-	  this.ui.elements.playerDeck.textContent = 
-		state.human.deck?.length?.toString()?.padStart(2, '0') ?? '00';
-		
-	  this.ui.elements.aiDeck.textContent = 
-		state.ai.deck?.length?.toString()?.padStart(2, '0') ?? '00';
-  
-	  // Отрисовка с fallback значениями
-	  this.renderPlayerHand(state.human.hand ?? []);
-	  this.renderBattlefield(
-		state.human.field ?? [],
-		state.ai.field ?? []
-	  );
-  
-	  // Валидация результата
-	  const interfaceValid = [
-		this.ui.elements.playerHealth.textContent,
-		this.ui.elements.aiHealth.textContent,
-		this.ui.elements.playerDeck.textContent,
-		this.ui.elements.aiDeck.textContent
-	  ].every(Boolean);
-  
-	  this.debug.log('INTERFACE_UPDATE_RESULT', {
-		success: interfaceValid,
-		elementsUpdated: {
-		  playerHealth: this.ui.elements.playerHealth.textContent,
-		  aiHealth: this.ui.elements.aiHealth.textContent,
-		  playerDeck: this.ui.elements.playerDeck.textContent,
-		  aiDeck: this.ui.elements.aiDeck.textContent
-		}
-	  }, 'debug');
-  
-	} catch (error) {
-	  this.debug.log('CRITICAL_UI_FAILURE', {
-		error: error.message,
-		stack: error.stack,
-		lastState: this.state.currentGameState
-	  }, 'error');
-	  
-	  this.ui.showError('Критический сбой интерфейса');
-	  this.ui.toggleInterface('main');
-	}
+    try {
+      const state = this.state.currentGameState;
+      
+      // Глубокая проверка состояния
+      const isValidState = state?.id && 
+                          state.human && 
+                          state.ai &&
+                          Number.isInteger(state.human.health) &&
+                          Number.isInteger(state.ai.health);
+    
+      if (!isValidState) {
+        this.debug.log('INVALID_GAME_STATE', {
+          receivedState: state,
+          humanValid: !!state?.human,
+          aiValid: !!state?.ai
+        }, 'error');
+        
+        this.ui.showError('Некорректные данные игры');
+        return;
+      }
+    
+      this.debug.log('UPDATING_INTERFACE', {
+        gameId: state.id,
+        humanHealth: state.human.health ?? 'N/A',
+        aiHealth: state.ai.health ?? 'N/A',
+        humanDeckSize: state.human.deck?.length ?? 0,
+        aiDeckSize: state.ai.deck?.length ?? 0
+      }, 'debug');
+    
+      // Безопасное обновление UI элементов
+      this.ui.elements.gameId.textContent = `Игра #${state.id}`;
+      
+      // Здоровье игроков
+      this.ui.elements.playerHealth.textContent = 
+        state.human.health?.toLocaleString() ?? '0';
+        
+      this.ui.elements.aiHealth.textContent = 
+        state.ai.health?.toLocaleString() ?? '0';
+    
+      // Размеры колод
+      this.ui.elements.playerDeck.textContent = 
+        state.human.deck?.length?.toString()?.padStart(2, '0') ?? '00';
+        
+      this.ui.elements.aiDeck.textContent = 
+        state.ai.deck?.length?.toString()?.padStart(2, '0') ?? '00';
+    
+      // Отрисовка с fallback значениями
+      this.renderPlayerHand(state.human.hand ?? []);
+      this.renderBattlefield(
+        state.human.field ?? [],
+        state.ai.field ?? []
+      );
+    
+      // Валидация результата
+      const interfaceValid = [
+        this.ui.elements.playerHealth.textContent,
+        this.ui.elements.aiHealth.textContent,
+        this.ui.elements.playerDeck.textContent,
+        this.ui.elements.aiDeck.textContent
+      ].every(Boolean);
+    
+      this.debug.log('INTERFACE_UPDATE_RESULT', {
+        success: interfaceValid,
+        elementsUpdated: {
+          playerHealth: this.ui.elements.playerHealth.textContent,
+          aiHealth: this.ui.elements.aiHealth.textContent,
+          playerDeck: this.ui.elements.playerDeck.textContent,
+          aiDeck: this.ui.elements.aiDeck.textContent
+        }
+      }, 'debug');
+    
+    } catch (error) {
+      this.debug.log('CRITICAL_UI_FAILURE', {
+        error: error.message,
+        stack: error.stack,
+        lastState: this.state.currentGameState
+      }, 'error');
+      
+      this.ui.showError('Критический сбой интерфейса');
+      this.ui.toggleInterface('main');
+    }
   }
 
   renderPlayerHand(hand = []) {
@@ -399,48 +400,29 @@ class GameClient {
         heroCount: this.state.heroes.length
       }, 'debug');
       
-      this.ui.renderHeroCards(this.state.heroes, (e) => this.handleHeroClick(e));
+      // Исправленный обработчик выбора героев
+      this.ui.renderHeroCards(this.state.heroes, (heroId) => {
+        const card = this.ui.elements.heroCards.find(
+          c => c.dataset.heroId === heroId.toString()
+        );
+        
+        if (!card) return;
+
+        const isSelected = card.classList.contains('selected');
+        const newSelection = new Set(this.state.selectedHeroes);
+
+        if (newSelection.size >= 5 && !isSelected) return;
+
+        card.classList.toggle('selected');
+        isSelected ? 
+          newSelection.delete(heroId) : 
+          newSelection.add(heroId);
+        
+        this.state.selectedHeroes = newSelection;
+        this.ui.updateHeroSelection(newSelection.size);
+      });
     } catch (error) {
       this.debug.log('HERO_SELECT_RENDER_ERROR', {
-        error: error.message,
-        stack: error.stack
-      }, 'error');
-    }
-  }
-
-  handleHeroClick(event) {
-    try {
-      const card = event.currentTarget;
-      const heroId = parseInt(card.dataset.id, 10);
-      
-      this.debug.log('HERO_CLICKED', {
-        heroId,
-        alreadySelected: this.state.selectedHeroes.has(heroId)
-      }, 'debug');
-      
-      card.classList.toggle('selected');
-      const newSelection = new Set(this.state.selectedHeroes);
-      
-      if (newSelection.size >= 5 && !newSelection.has(heroId)) {
-        this.debug.log('SELECTION_LIMIT_REACHED', {
-          currentSelection: Array.from(newSelection)
-        }, 'debug');
-        return;
-      }
-      
-      newSelection.has(heroId) ? 
-        newSelection.delete(heroId) : 
-        newSelection.add(heroId);
-      
-      this.state.selectedHeroes = newSelection;
-      this.ui.updateHeroSelection(newSelection.size);
-      
-      this.debug.log('SELECTION_UPDATED', {
-        newCount: newSelection.size,
-        selectedIds: Array.from(newSelection)
-      }, 'debug');
-    } catch (error) {
-      this.debug.log('HERO_SELECTION_ERROR', {
         error: error.message,
         stack: error.stack
       }, 'error');
