@@ -81,8 +81,8 @@ export class UIManager {
           </div>
           <h3>${hero.name}</h3>
           <div class="hero-stats">
-            <span>❤️${hero.health}</span>
-            <span>⚔️${hero.strength}</span>
+            <span>${hero.health}</span>
+            <span>${hero.strength}</span>
           </div>
         </div>
       `).join('');
