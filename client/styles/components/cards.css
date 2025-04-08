@@ -27,6 +27,7 @@
 
 /* Изображение героя */
 .hero-image {
+	z-index: 1;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -63,17 +64,28 @@
 }
 
 /* Здоровье (левый верх) */
-.health-stat {
-    top: 15px;
-    left: 15px;
-    background: linear-gradient(45deg, #e74c3c, #c0392b);
+.health-stat, .strength-stat {
+    position: absolute;
+    background: rgba(0,0,0,0.9);
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 1.6em;
+    color: white;
+    z-index: 1000;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
 
-/* Сила (левый низ) */
+.health-stat {
+    top: 20px;
+    left: 20px;
+    color: #ff6b6b;
+}
+
 .strength-stat {
-    bottom: 15px;
-    left: 15px;
-    background: linear-gradient(45deg, #3498db, #2980b9);
+    bottom: 20px;
+    left: 20px;
+    color: #4ecdc4;
 }
 
 /* Иконки характеристик */
