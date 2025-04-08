@@ -1,3 +1,4 @@
+/* Контейнер экрана выбора */
 .hero-select-container {
     position: fixed;
     top: 0;
@@ -5,7 +6,7 @@
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.97);
-    z-index: 900;
+    z-index: 1000;
     opacity: 0;
     visibility: hidden;
     transition: all 0.4s ease;
@@ -15,20 +16,40 @@
 .hero-select-container.active {
     opacity: 1;
     visibility: visible;
-    z-index: 950;
 }
 
-.hero-select-wrapper {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-}
-
+/* Сетка выбора героев */
 .hero-select {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(var(--card-width-select), 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px 0;
+}
+
+/* Модификации карт для экрана выбора */
+.hero-select-container .hero-card {
+    width: var(--card-width-select);
+    margin: 0 auto;
+}
+
+.hero-select-container .hero-card:hover {
+    transform: translateY(-12px);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .hero-select {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        padding: 1rem;
+    }
+    
+    .hero-select-container .hero-card {
+        width: 200px;
+    }
+    
+    .hero-select-container .hero-image-container {
+        height: 160px;
+    }
 }

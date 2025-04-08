@@ -1,8 +1,18 @@
 :root {
+    /* Цвета */
     --bg-color: #1a1a1a;
     --primary-color: #4CAF50;
     --danger-color: #ff4444;
-    --gradient-btn: linear-gradient(135deg, #27ae60 0%, #219651 100%);
     --card-bg: #2d2d2d;
+    --text-primary: #ffffff;
+    
+    /* Размеры */
+    --card-width: 220px;
+    --card-width-select: 250px;
+    --card-image-height: 180px;
+    
+    /* Эффекты */
     --transition-duration: 0.3s;
+    --gradient-btn: linear-gradient(135deg, #27ae60 0%, #219651 100%);
+    --card-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }

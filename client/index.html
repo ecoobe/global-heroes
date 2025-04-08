@@ -24,13 +24,13 @@
             
             <!-- Выбор героев -->
             <div class="hero-select-container" id="heroSelectContainer">
-                <div class="hero-select-wrapper">
-                    <div class="hero-select" id="heroSelect"></div>
-                    <button id="confirmSelection" class="menu-btn" disabled>
-                        <span class="btn-text">Подтвердить выбор (5/5)</span>
-                    </button>
-                </div>
-            </div>
+				<div class="hero-select-wrapper">
+					<div class="hero-select" id="heroSelect"></div>
+						<button id="confirmSelection" class="menu-btn" disabled>
+					<span class="btn-text">Подтвердить выбор (0/5)</span>
+				  </button>
+				</div>
+			</div>
             
             <!-- Игровой интерфейс -->
             <div class="game-container" id="gameContainer">
@@ -44,7 +44,7 @@
                                 <div class="health">❤️ <span id="playerHealth">-</span></div>
                                 <div class="deck-count">🃏 <span id="playerDeck">-</span></div>
                             </div>
-                            <div class="battlefield"></div>
+                            <div class="battlefield player-battlefield" id="playerBattlefield"></div>
                         </div>
                         
                         <div class="turn-indicator">
@@ -57,7 +57,7 @@
                                 <div class="health">❤️ <span id="aiHealth">-</span></div>
                                 <div class="deck-count">🃏 <span id="aiDeck">-</span></div>
                             </div>
-                            <div class="battlefield"></div>
+                            <div class="battlefield ai-battlefield" id="aiBattlefield"></div>
                         </div>
                     </div>
                     

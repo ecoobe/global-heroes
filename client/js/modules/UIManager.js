@@ -64,19 +64,33 @@ export class UIManager {
   }
 
   renderHeroCards(heroes, clickHandler) {
-    this.elements.heroSelect.innerHTML = heroes
-      .map(hero => DOMHelper.createHeroCard(hero))
-      .join('');
-
-    this.elements.heroCards = Array.from(
-      this.elements.heroSelect.querySelectorAll('.hero-card')
-    );
-    
-    this.elements.heroCards.forEach(card => {
-      card.addEventListener('click', clickHandler);
-      card.addEventListener('mouseenter', this.handleCardHover);
-    });
-  }
+	this.elements.heroSelect.innerHTML = heroes
+	  .map(hero => `
+		<div class="hero-card" data-hero-id="${hero.id}">
+		  <div class="hero-image-container">
+			<img src="${hero.image}" 
+				 class="hero-image"
+				 alt="${hero.name}"
+				 loading="lazy">
+		  </div>
+		  <h3>${hero.name}</h3>
+		  <div class="hero-stats">
+			<span>❤️${hero.health}</span>
+			<span>⚔️${hero.strength}</span>
+		  </div>
+		</div>
+	  `).join('');
+  
+	// Обработчики событий
+	this.elements.heroCards = Array.from(
+	  this.elements.heroSelect.querySelectorAll('.hero-card')
+	);
+	
+	this.elements.heroCards.forEach(card => {
+	  card.addEventListener('click', () => clickHandler(card.dataset.heroId));
+	  card.addEventListener('mouseenter', this.showHeroTooltip);
+	});
+  }  
 
   handleCardHover(event) {
     const heroId = event.currentTarget.dataset.id;
@@ -100,20 +114,22 @@ export class UIManager {
   }
 
   createHandCardElement(card) {
-    return `
-      <div class="hand-card" data-id="${card.id}">
-        <img src="${card.image}" 
-             alt="${card.name}"
-             class="card-image"
-             onerror="this.src='/images/heroes/default-hero.png'">
-        <div class="card-content">
-          <div class="card-cost">${card.cost}⚡</div>
-          <h3 class="card-title">${card.name}</h3>
-          <p class="card-description">${card.description}</p>
-        </div>
-      </div>
-    `;
-  }
+	return `
+	  <div class="hand-card" data-card-id="${card.id}">
+		<div class="card-image-container">
+		  <img src="${card.image}" 
+			   class="card-image"
+			   alt="${card.name}"
+			   onerror="this.src='assets/heroes/images/default-hero.webp'">
+		</div>
+		<div class="card-content">
+		  <div class="card-cost">${card.cost}⚡</div>
+		  <h3 class="card-title">${card.name}</h3>
+		  <p class="card-description">${card.description}</p>
+		</div>
+	  </div>
+	`;
+  }  
 
   renderBattlefield(playerField, aiField) {
     this.clearBattlefield();
