@@ -11,9 +11,10 @@
         box-shadow 0.3s ease;
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     background: linear-gradient(15deg, #1a1a1a 0%, #2d2d2d 100%);
-    border: 3px solid var(--primary-color);
+    border: 3px solid var(--primary-color); /* Усиленная рамка */
     color: #fff;
     font-family: 'Arial', sans-serif;
+    z-index: 1;
 }
 
 /* Контейнер изображения героя */
@@ -30,7 +31,6 @@
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
-    z-index: 1; /* Убедитесь, что изображение ниже характеристик */
 }
 
 /* Эффекты при наведении */
@@ -46,17 +46,19 @@
 /* ========== ХАРАКТЕРИСТИКИ ГЕРОЯ ========== */
 .card-stat {
     position: absolute;
+    background: rgba(0,0,0,0.8);
+    border-radius: 8px;
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 15px;
-    background: rgba(0,0,0,0.9);
-    border-radius: 8px;
+    justify-content: center;
+    font-weight: 700;
     font-size: 1.8em;
     color: white;
     border: 2px solid var(--primary-color);
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    z-index: 1000; /* Самый высокий уровень */
+    z-index: 3;
     text-shadow: 0 2px 2px rgba(0,0,0,0.5);
 }
 
@@ -64,31 +66,38 @@
 .health-stat {
     top: 15px;
     left: 15px;
-    color: #ff6b6b;
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
 }
 
 /* Сила (левый низ) */
 .strength-stat {
     bottom: 15px;
     left: 15px;
-    color: #4ecdc4;
+    background: linear-gradient(45deg, #3498db, #2980b9);
 }
 
 /* Иконки характеристик */
 .card-stat::before {
     content: '';
-    display: inline-block;
+    position: absolute;
     width: 30px;
     height: 30px;
     background-size: contain;
+    background-repeat: no-repeat;
 }
 
 .health-stat::before {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ff6b6b"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>');
+    background-image: url('/assets/ui/heart-icon.webp'); /* Путь к иконке */
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .strength-stat::before {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234ecdc4"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>');
+    background-image: url('/assets/ui/sword-icon.webp'); /* Путь к иконке */
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 /* Имя героя */
@@ -98,12 +107,18 @@
     left: 0;
     right: 0;
     padding: 25px 20px;
-    background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0));
+    background: linear-gradient(
+        to top, 
+        rgba(0,0,0,0.95) 60%, 
+        rgba(0,0,0,0) 100%
+    );
     text-align: center;
     font-size: 1.8em;
+    font-weight: 600;
     color: white;
     text-shadow: 0 3px 6px rgba(0,0,0,0.8);
-    z-index: 1000;
+    z-index: 2;
+    letter-spacing: 1px;
 }
 
 /* ========== ВЫБРАННАЯ КАРТА ========== */
@@ -128,13 +143,9 @@
 
 /* ========== ФОН ПАНЕЛИ ВЫБОРА ========== */
 .hero-select-container {
-	display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 40px 20px;
     position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     background: 
@@ -151,21 +162,11 @@
 
 /* Сетка выбора */
 .hero-select {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    padding: 40px 20px;
     gap: 30px;
-    width: 100%;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     max-width: 1400px;
-    padding: 30px 0;
-    justify-content: center;
-}
-
-#confirmSelection {
-    margin-top: 40px;
-    padding: 15px 40px;
-    font-size: 1.2em;
-    position: relative;
-    z-index: 1001;
+    margin: 0 auto;
 }
 
 /* Адаптивность */
