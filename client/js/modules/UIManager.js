@@ -2,11 +2,13 @@ import { DOMHelper } from './utils.js';
 
 export class UIManager {
   constructor(elements) {
-    this.elements = elements;
+    this.elements = {
+      ...elements,
+      confirmSelection: elements.confirmSelection || document.getElementById('confirmSelection')
+    };
+    
     this.validateElements();
     this.initDynamicElements();
-    
-    // Привязка контекста для обработчиков
     this.handleCardHover = this.handleCardHover.bind(this);
   }
 
