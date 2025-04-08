@@ -43,13 +43,13 @@
 
 /* ========== ХАРАКТЕРИСТИКИ ГЕРОЯ ========== */
 .hero-stats {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: 5px 10px;
-    font-size: 1em;
-    font-weight: bold;
+    gap: 15px;
+    z-index: 10;
 }
 
 .hero-stats span {
@@ -123,10 +123,11 @@ h3 {
 /* ========== ВЫБРАННАЯ КАРТА ========== */
 .hero-card.selected {
     border: 3px solid var(--primary-color);
-    box-shadow: 0 0 15px var(--primary-color);
-    transform: translateY(-8px) scale(1.03);
-    background: rgba(40,40,40,0.9);
-    animation: none; /* Убираем анимацию, если была */
+    box-shadow: 
+        0 0 35px rgba(76,175,80,0.5),
+        inset 0 0 25px rgba(76,175,80,0.3);
+    transform: translateY(-15px);
+    animation: card-selected-glow 1.5s infinite;
 }
 
 @keyframes card-selected-glow {
