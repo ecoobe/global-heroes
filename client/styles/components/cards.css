@@ -4,17 +4,17 @@
     width: 300px;
     height: 400px;
     border-radius: 15px;
-    overflow: visible; /* Изменим на visible */
+    overflow: hidden;
     cursor: pointer;
     transition: 
         transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
         box-shadow 0.3s ease;
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     background: linear-gradient(15deg, #1a1a1a 0%, #2d2d2d 100%);
-    border: 2px solid rgba(76, 175, 80, 0.4);
+    border: 3px solid var(--primary-color); /* Усиленная рамка */
     color: #fff;
     font-family: 'Arial', sans-serif;
-    z-index: 1; /* Добавляем базовый z-index */
+    z-index: 1;
 }
 
 /* Контейнер изображения героя */
@@ -23,73 +23,84 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    transform: scale(1.02);
-    z-index: 1; /* Устанавливаем ниже элементов интерфейса */
 }
 
-/* Само изображение героя */
+/* Изображение героя */
 .hero-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
-    position: relative;
-    z-index: 1;
 }
 
-/* ========== ЭЛЕМЕНТЫ ИНТЕРФЕЙСА НА КАРТЕ ========== */
+/* Эффекты при наведении */
+.hero-card:hover {
+    transform: translateY(-10px) scale(1.05);
+    box-shadow: 0 15px 30px rgba(76,175,80,0.3);
+}
+
+.hero-card:hover .hero-image {
+    transform: scale(1.08);
+}
+
+/* ========== ХАРАКТЕРИСТИКИ ГЕРОЯ ========== */
 .card-stat {
     position: absolute;
-    background: rgba(0,0,0,0.7);
-    border-radius: 50%;
-    width: 50px; /* Увеличиваем размер */
-    height: 50px;
+    background: rgba(0,0,0,0.8);
+    border-radius: 8px;
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 1.6em;
+    font-size: 1.8em;
     color: white;
     border: 2px solid var(--primary-color);
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    z-index: 3; /* Увеличиваем z-index */
+    z-index: 3;
     text-shadow: 0 2px 2px rgba(0,0,0,0.5);
 }
 
+/* Здоровье (левый верх) */
 .health-stat {
-    top: 20px;
-    left: 20px;
+    top: 15px;
+    left: 15px;
     background: linear-gradient(45deg, #e74c3c, #c0392b);
-    padding-left: 12px; /* Компенсация для иконки */
 }
 
+/* Сила (левый низ) */
 .strength-stat {
-    bottom: 20px;
-    left: 20px;
+    bottom: 15px;
+    left: 15px;
     background: linear-gradient(45deg, #3498db, #2980b9);
-    padding-left: 12px;
 }
 
-.health-stat::after {
-    content: '❤️';
+/* Иконки характеристик */
+.card-stat::before {
+    content: '';
     position: absolute;
-    left: -32px;
+    width: 30px;
+    height: 30px;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.health-stat::before {
+    background-image: url('/assets/ui/heart-icon.svg'); /* Путь к иконке */
+    left: -40px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 1.4em;
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
 }
 
 .strength-stat::before {
-    content: '⚔️';
-    position: absolute;
-    left: -32px;
+    background-image: url('/assets/ui/sword-icon.svg'); /* Путь к иконке */
+    left: -40px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 1.4em;
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
 }
 
+/* Имя героя */
 .hero-name {
     position: absolute;
     bottom: 0;
@@ -102,28 +113,28 @@
         rgba(0,0,0,0) 100%
     );
     text-align: center;
-    font-size: 1.6em;
+    font-size: 1.8em;
     font-weight: 600;
     color: white;
     text-shadow: 0 3px 6px rgba(0,0,0,0.8);
     z-index: 2;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
 
 /* ========== ВЫБРАННАЯ КАРТА ========== */
 .hero-card.selected {
     border: 3px solid var(--primary-color);
     box-shadow: 
-        0 0 25px rgba(76,175,80,0.4),
-        inset 0 0 15px rgba(76,175,80,0.2);
+        0 0 35px rgba(76,175,80,0.5),
+        inset 0 0 25px rgba(76,175,80,0.3);
     transform: translateY(-15px);
 }
 
 /* Анимация выбора */
 @keyframes card-selected-glow {
-    0% { box-shadow: 0 0 10px rgba(76,175,80,0.3); }
-    50% { box-shadow: 0 0 20px rgba(76,175,80,0.5); }
-    100% { box-shadow: 0 0 10px rgba(76,175,80,0.3); }
+    0% { box-shadow: 0 0 15px rgba(76,175,80,0.4); }
+    50% { box-shadow: 0 0 30px rgba(76,175,80,0.7); }
+    100% { box-shadow: 0 0 15px rgba(76,175,80,0.4); }
 }
 
 .hero-card.selected {
@@ -138,57 +149,46 @@
     width: 100%;
     height: 100%;
     background: 
+        url('/assets/backgrounds/card_menu.webp') center/cover fixed,
         linear-gradient(
             45deg,
-            rgba(20,20,20,0.92),
-            rgba(10,10,10,0.95)
-        ),
-        url('/assets/backgrounds/card_menu.webp') center/cover fixed !important;
-    backdrop-filter: blur(12px) brightness(0.8);
-    -webkit-backdrop-filter: blur(12px) brightness(0.8);
+            rgba(10,10,10,0.96),
+            rgba(20,20,20,0.94)
+        ) !important;
+    backdrop-filter: blur(15px) saturate(1.2);
+    -webkit-backdrop-filter: blur(15px) saturate(1.2);
     z-index: 1000;
-}
-
-.hero-select-wrapper {
-    position: relative;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 40px 20px;
-}
-
-.hero-select-wrapper::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: -1;
 }
 
 /* Сетка выбора */
 .hero-select {
-    padding: 30px;
+    padding: 40px 20px;
     gap: 30px;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
-/* ========== АДАПТИВНОСТЬ ========== */
+/* Адаптивность */
 @media (max-width: 768px) {
     .hero-card {
-        width: 250px;
-        height: 350px;
+        width: 280px;
+        height: 373px;
     }
     
     .card-stat {
-        width: 35px;
-        height: 35px;
-        font-size: 1em;
+        width: 50px;
+        height: 50px;
+        font-size: 1.4em;
     }
     
     .hero-name {
-        font-size: 1.2em;
-        padding: 15px;
+        font-size: 1.4em;
+        padding: 20px;
+    }
+    
+    .hero-select {
+        padding: 20px 10px;
+        gap: 20px;
     }
 }
