@@ -1,4 +1,4 @@
-/* ========== ОСНОВНОЙ СТИЛЬ КАРТОЧЕК ========== */
+/* ========== ОСНОВНЫЕ СТИЛИ ========== */
 .hero-card {
     position: relative;
     width: 300px;
@@ -11,13 +11,11 @@
         box-shadow 0.3s ease;
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     background: linear-gradient(15deg, #1a1a1a 0%, #2d2d2d 100%);
-    border: 3px solid var(--primary-color); /* Усиленная рамка */
+    border: 3px solid var(--primary-color);
     color: #fff;
     font-family: 'Arial', sans-serif;
-    z-index: 1;
 }
 
-/* Контейнер изображения героя */
 .hero-image-container {
     position: relative;
     width: 100%;
@@ -25,13 +23,12 @@
     overflow: hidden;
 }
 
-/* Изображение героя */
 .hero-image {
-	z-index: 1;
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
+    z-index: 1;
 }
 
 /* Эффекты при наведении */
@@ -47,8 +44,8 @@
 /* ========== ХАРАКТЕРИСТИКИ ГЕРОЯ ========== */
 .hero-stats {
     position: absolute;
-    left: 20px;
-    top: 20px;
+    left: 15px;
+    top: 15px;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -58,96 +55,63 @@
 .hero-stats span {
     position: relative;
     background: rgba(0,0,0,0.9);
-    padding: 12px 20px 12px 55px;
+    padding: 10px 18px 10px 50px;
     border-radius: 8px;
     font-size: 1.6em;
-    border: 2px solid var(--primary-color);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    min-width: 70px;
+    text-align: center;
 }
 
 /* Иконки характеристик */
 .hero-stats span::before {
     content: '';
     position: absolute;
-    left: 15px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    width: 35px;
-    height: 35px;
+    width: 30px;
+    height: 30px;
     background-size: contain;
     background-repeat: no-repeat;
-}
-
-/* Здоровье */
-.hero-stats span:first-child {
-    color: #ff6b6b;
 }
 
 .hero-stats span:first-child::before {
     background-image: url('/assets/ui/heart-icon.webp');
 }
 
-/* Сила */
-.hero-stats span:last-child {
-    color: #4ecdc4;
-    position: absolute;
-    top: auto;
-    bottom: -300px; /* Расстояние от верхнего края карточки */
-}
-
 .hero-stats span:last-child::before {
     background-image: url('/assets/ui/sword-icon.webp');
 }
 
+/* Здоровье (сверху) */
+.hero-stats span:first-child {
+    color: #ff6b6b;
+}
+
+/* Сила (снизу) */
+.hero-stats span:last-child {
+    color: #4ecdc4;
+    position: absolute;
+    top: initial;
+    bottom: -320px;
+}
+
 /* Имя героя */
-h3 {
+.hero-name {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
     padding: 25px 20px;
-    background: linear-gradient(
-        to top, 
-        rgba(0,0,0,0.95) 60%, 
-        rgba(0,0,0,0) 100%
-    );
+    background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0));
     text-align: center;
     font-size: 1.8em;
     color: white;
     text-shadow: 0 3px 6px rgba(0,0,0,0.8);
     z-index: 2;
     margin: 0;
-    letter-spacing: 1px;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .hero-stats {
-        left: 10px;
-        top: 10px;
-        gap: 10px;
-    }
-    
-    .hero-stats span {
-        padding: 10px 15px 10px 45px;
-        font-size: 1.4em;
-    }
-    
-    .hero-stats span::before {
-        width: 28px;
-        height: 28px;
-        left: 10px;
-    }
-    
-    .hero-stats span:last-child {
-        bottom: -250px;
-    }
-    
-    h3 {
-        font-size: 1.5em;
-        padding: 20px 15px;
-    }
 }
 
 /* ========== ВЫБРАННАЯ КАРТА ========== */
@@ -157,67 +121,93 @@ h3 {
         0 0 35px rgba(76,175,80,0.5),
         inset 0 0 25px rgba(76,175,80,0.3);
     transform: translateY(-15px);
-}
-
-/* Анимация выбора */
-@keyframes card-selected-glow {
-    0% { box-shadow: 0 0 15px rgba(76,175,80,0.4); }
-    50% { box-shadow: 0 0 30px rgba(76,175,80,0.7); }
-    100% { box-shadow: 0 0 15px rgba(76,175,80,0.4); }
-}
-
-.hero-card.selected {
     animation: card-selected-glow 1.5s infinite;
 }
 
-/* ========== ФОН ПАНЕЛИ ВЫБОРА ========== */
+@keyframes card-selected-glow {
+    0%, 100% { box-shadow: 0 0 15px rgba(76,175,80,0.4); }
+    50% { box-shadow: 0 0 30px rgba(76,175,80,0.7); }
+}
+
+/* ========== КОНТЕЙНЕР ВЫБОРА ========== */
 .hero-select-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     background: 
         url('/assets/backgrounds/card_menu.webp') center/cover fixed,
-        linear-gradient(
-            45deg,
-            rgba(10,10,10,0.96),
-            rgba(20,20,20,0.94)
-        ) !important;
+        linear-gradient(45deg, rgba(10,10,10,0.96), rgba(20,20,20,0.94));
     backdrop-filter: blur(15px) saturate(1.2);
     -webkit-backdrop-filter: blur(15px) saturate(1.2);
     z-index: 1000;
+    padding: 40px 20px;
+    box-sizing: border-box;
 }
 
-/* Сетка выбора */
 .hero-select {
-    padding: 40px 20px;
-    gap: 30px;
+    display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    width: 100%;
     max-width: 1400px;
     margin: 0 auto;
 }
 
-/* Адаптивность */
+#confirmSelection {
+    margin-top: 40px;
+    padding: 15px 40px;
+    font-size: 1.2em;
+    position: relative;
+    z-index: 1001;
+}
+
+/* ========== АДАПТИВНОСТЬ ========== */
 @media (max-width: 768px) {
     .hero-card {
         width: 280px;
         height: 373px;
     }
-    
-    .card-stat {
-        width: 50px;
-        height: 50px;
+
+    .hero-stats {
+        left: 10px;
+        top: 10px;
+        gap: 12px;
+    }
+
+    .hero-stats span {
+        padding: 8px 15px 8px 42px;
         font-size: 1.4em;
     }
-    
+
+    .hero-stats span::before {
+        width: 25px;
+        height: 25px;
+        left: 10px;
+    }
+
+    .hero-stats span:last-child {
+        bottom: -280px;
+    }
+
     .hero-name {
-        font-size: 1.4em;
-        padding: 20px;
+        font-size: 1.5em;
+        padding: 20px 15px;
     }
-    
+
     .hero-select {
+        grid-template-columns: 1fr;
         padding: 20px 10px;
         gap: 20px;
+    }
+
+    #confirmSelection {
+        margin-top: 30px;
+        padding: 12px 30px;
     }
 }
