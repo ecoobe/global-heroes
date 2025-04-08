@@ -15,9 +15,9 @@
     flex-direction: column;
 }
 
-/* Обновленный контейнер изображения */
+/* Контейнер для изображения */
 .hero-image-container {
-    flex-grow: 1; /* Занимает всё доступное пространство */
+    flex-grow: 1;
     width: 100%;
     position: relative;
 }
@@ -29,51 +29,57 @@
     transition: transform 0.3s ease;
 }
 
-.hero-card:hover .hero-image {
-    transform: scale(1.05);
-}
-
-/* Новый стиль для информации о герое */
+/* Блок информации */
 .hero-info {
     position: absolute;
     bottom: 0;
     width: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 10px;
+    background: rgba(0, 0, 0, 0.8); /* Более плотный фон */
+    padding: 12px;
     text-align: center;
     border-top: 2px solid var(--primary-color);
-    backdrop-filter: blur(5px); /* Добавляет легкое размытие */
+    backdrop-filter: blur(7px); /* Более четкое размытие */
 }
 
 /* Заголовок */
 .hero-card h3 {
     margin: 0;
-    font-size: 1.2em;
+    font-size: 1.3em;
+    font-weight: bold;
 }
 
 /* Статы */
 .hero-stats {
     display: flex;
     justify-content: center;
-    gap: 15px;
-    font-size: 1.1em;
-    margin-top: 5px;
+    gap: 20px;
+    font-size: 1.2em;
+    margin-top: 6px;
+    font-weight: bold;
+}
+
+/* Улучшенные иконки */
+.hero-stats span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 /* Способность */
 .ability {
-    background: rgba(255, 255, 255, 0.15);
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 0.9em;
-    margin-top: 5px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 1em;
+    margin-top: 6px;
     display: inline-block;
+    font-weight: 600;
 }
 
 /* ========== ВЫБРАННАЯ КАРТА ========== */
 .hero-card.selected {
     border: 3px solid var(--primary-color);
-    box-shadow: 0 0 15px rgba(76,175,80,0.3);
+    box-shadow: 0 0 15px rgba(76,175,80,0.4);
     transform: translateY(-8px) scale(1.03);
     background: rgba(40,40,40,0.9);
 }
