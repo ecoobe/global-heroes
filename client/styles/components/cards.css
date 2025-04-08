@@ -45,47 +45,43 @@
 }
 
 /* ========== ХАРАКТЕРИСТИКИ ГЕРОЯ ========== */
-.card-stat {
+/* Здоровье (левый верх) */
+.hero-stats {
     position: absolute;
-    background: rgba(0,0,0,0.8);
-    border-radius: 8px;
-    width: 60px;
-    height: 60px;
+    left: 20px;
+    top: 20px;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1.8em;
-    color: white;
-    border: 2px solid var(--primary-color);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    z-index: 3;
-    text-shadow: 0 2px 2px rgba(0,0,0,0.5);
+    flex-direction: column;
+    gap: 15px;
+    z-index: 1000;
 }
 
-/* Здоровье (левый верх) */
-.health-stat, .strength-stat {
-    position: absolute;
+.hero-stats span {
     background: rgba(0,0,0,0.9);
-    padding: 12px 18px;
+    padding: 10px 16px;
     border-radius: 8px;
     font-size: 1.6em;
-    color: white;
-    z-index: 1000;
     border: 2px solid var(--primary-color);
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.health-stat {
-    top: 20px;
-    left: 20px;
+/* Стиль для здоровья (первый элемент) */
+.hero-stats span:first-child {
     color: #ff6b6b;
 }
 
-.strength-stat {
-    bottom: 20px;
-    left: 20px;
+/* Стиль для атаки (второй элемент) */
+.hero-stats span:last-child {
     color: #4ecdc4;
+    margin-top: auto; /* Для позиционирования внизу, если потребуется */
+}
+
+/* Гарантируем видимость над изображением */
+.hero-image {
+    z-index: 1;
 }
 
 /* Иконки характеристик */
