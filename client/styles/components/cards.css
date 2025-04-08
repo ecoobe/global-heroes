@@ -11,9 +11,10 @@
         box-shadow 0.3s ease;
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     background: linear-gradient(15deg, #1a1a1a 0%, #2d2d2d 100%);
-    border: 3px solid var(--primary-color);
+    border: 3px solid var(--primary-color); /* Усиленная рамка */
     color: #fff;
     font-family: 'Arial', sans-serif;
+    z-index: 1;
 }
 
 /* Контейнер изображения героя */
@@ -43,36 +44,60 @@
 }
 
 /* ========== ХАРАКТЕРИСТИКИ ГЕРОЯ ========== */
-/* Здоровье (левый верх) */
-.health-stat {
+.card-stat {
     position: absolute;
-    top: 15px;
-    left: 15px;
     background: rgba(0,0,0,0.8);
     border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 1.8em;
-    color: #ff4444;
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    z-index: 2;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.8em;
+    color: white;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    z-index: 1000;
+    text-shadow: 0 2px 2px rgba(0,0,0,0.5);
+}
+
+/* Здоровье (левый верх) */
+.health-stat {
+    top: 15px;
+    left: 15px;
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
 }
 
 /* Сила (левый низ) */
 .strength-stat {
-    position: absolute;
     bottom: 15px;
     left: 15px;
-    background: rgba(0,0,0,0.8);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 1.8em;
-    color: #4CAF50;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    z-index: 2;
+    background: linear-gradient(45deg, #3498db, #2980b9);
+}
+
+/* Иконки характеристик */
+.card-stat::before {
+    content: '';
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.health-stat::before {
+    background-image: url('/assets/ui/heart-icon.svg'); /* Путь к иконке */
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.strength-stat::before {
+    background-image: url('/assets/ui/sword-icon.svg'); /* Путь к иконке */
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 /* Имя героя */
@@ -81,63 +106,89 @@
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 20px;
-    background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0));
+    padding: 25px 20px;
+    background: linear-gradient(
+        to top, 
+        rgba(0,0,0,0.95) 60%, 
+        rgba(0,0,0,0) 100%
+    );
     text-align: center;
     font-size: 1.8em;
+    font-weight: 600;
     color: white;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    z-index: 2;
+    text-shadow: 0 3px 6px rgba(0,0,0,0.8);
+    z-index: 1000;
+    letter-spacing: 1px;
 }
 
 /* ========== ВЫБРАННАЯ КАРТА ========== */
 .hero-card.selected {
     border: 3px solid var(--primary-color);
-    box-shadow: 0 0 25px rgba(76,175,80,0.4);
+    box-shadow: 
+        0 0 35px rgba(76,175,80,0.5),
+        inset 0 0 25px rgba(76,175,80,0.3);
     transform: translateY(-15px);
 }
 
-/* ========== ФОН И ВЫРАВНИВАНИЕ ПАНЕЛИ ========== */
+/* Анимация выбора */
+@keyframes card-selected-glow {
+    0% { box-shadow: 0 0 15px rgba(76,175,80,0.4); }
+    50% { box-shadow: 0 0 30px rgba(76,175,80,0.7); }
+    100% { box-shadow: 0 0 15px rgba(76,175,80,0.4); }
+}
+
+.hero-card.selected {
+    animation: card-selected-glow 1.5s infinite;
+}
+
+/* ========== ФОН ПАНЕЛИ ВЫБОРА ========== */
 .hero-select-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 40px 20px;
-}
-
-.hero-select-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    max-width: 1400px;
-    text-align: center;
+    height: 100%;
+    background: 
+        url('/assets/backgrounds/card_menu.webp') center/cover fixed,
+        linear-gradient(
+            45deg,
+            rgba(10,10,10,0.96),
+            rgba(20,20,20,0.94)
+        ) !important;
+    backdrop-filter: blur(15px) saturate(1.2);
+    -webkit-backdrop-filter: blur(15px) saturate(1.2);
+    z-index: 1000;
 }
 
-/* Сетка карточек */
+/* Сетка выбора */
 .hero-select {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    padding: 40px 20px;
     gap: 30px;
-    justify-content: center;
-    padding: 30px 0;
-}
-
-/* Кнопка подтверждения */
-#confirmSelection {
-    margin-top: 40px;
-    padding: 15px 40px;
-    font-size: 1.2em;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
-    .hero-select {
-        grid-template-columns: 1fr;
-    }
-    
     .hero-card {
         width: 280px;
         height: 373px;
-        margin: 0 auto;
+    }
+    
+    .card-stat {
+        width: 50px;
+        height: 50px;
+        font-size: 1.4em;
+    }
+    
+    .hero-name {
+        font-size: 1.4em;
+        padding: 20px;
+    }
+    
+    .hero-select {
+        padding: 20px 10px;
+        gap: 20px;
     }
 }
