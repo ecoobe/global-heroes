@@ -12,7 +12,7 @@
 		"cost": 2,
 		"charges": 1
 	  },
-	  "image": "/assets/heroes/images/kaito.webp"
+	  "image": "assets/heroes/images/kaito.webp"
 	},
 	{
 	  "id": 2,
