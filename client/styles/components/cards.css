@@ -45,10 +45,10 @@
 .hero-stats {
     position: absolute;
     top: 15px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 15px; /* Для силы */
+    right: 15px; /* Для здоровья */
     display: flex;
-    gap: 15px;
+    justify-content: space-between; /* Разнесем по углам */
     z-index: 10;
 }
 
