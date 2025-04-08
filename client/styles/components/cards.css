@@ -3,7 +3,6 @@
     background: var(--card-bg);
     border: 2px solid var(--primary-color);
     border-radius: 12px;
-    padding: 0;
     color: white;
     position: relative;
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
@@ -11,21 +10,16 @@
     cursor: pointer;
     overflow: hidden;
     width: 220px;
-    height: 300px; /* Увеличиваем высоту для полного охвата */
+    height: 300px; /* Фиксированная высота */
+    display: flex;
+    flex-direction: column;
 }
 
-.hero-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 8px 20px rgba(76,175,80,0.4);
-}
-
-/* Обновляем контейнер изображения, чтобы оно занимало всю карточку */
+/* Обновленный контейнер изображения */
 .hero-image-container {
-    height: 100%;
+    flex-grow: 1; /* Занимает всё доступное пространство */
     width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
+    position: relative;
 }
 
 .hero-image {
@@ -48,6 +42,7 @@
     padding: 10px;
     text-align: center;
     border-top: 2px solid var(--primary-color);
+    backdrop-filter: blur(5px); /* Добавляет легкое размытие */
 }
 
 /* Заголовок */
