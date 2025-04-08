@@ -7,7 +7,6 @@ export class UIManager {
     this.initDynamicElements();
     
     // Привязка контекста для обработчиков
-    this.handleCardClick = this.handleCardClick.bind(this);
     this.handleCardHover = this.handleCardHover.bind(this);
   }
 
@@ -24,7 +23,7 @@ export class UIManager {
         throw new Error(`Critical UI element missing: ${name}`);
       }
     });
-}
+  }
 
   initDynamicElements() {
     this.elements.heroCards = [];
@@ -58,9 +57,9 @@ export class UIManager {
 
   updateHeroSelection(selectedCount) {
     const isComplete = selectedCount === 5;
-    this.elements.confirmButton.disabled = !isComplete;
+    this.elements.confirmSelection.disabled = !isComplete;
     
-    const counter = this.elements.confirmButton.querySelector('.btn-text');
+    const counter = this.elements.confirmSelection.querySelector('.btn-text');
     if (counter) {
       counter.textContent = `Подтвердить выбор (${selectedCount}/5)`;
       counter.classList.toggle('complete', isComplete);
@@ -94,24 +93,13 @@ export class UIManager {
       card.addEventListener('click', () => clickHandler(card.dataset.heroId));
       card.addEventListener('mouseenter', this.handleCardHover);
     });
-}
+  }
 
-handleCardHover(event) {
+  handleCardHover(event) {
     const heroId = event.currentTarget.dataset.heroId;
     // Логика показа подсказки
     console.log('Hover over hero:', heroId);
   }
-
-  updateHeroSelection(selectedCount) {
-    const isComplete = selectedCount === 5;
-    this.elements.confirmSelection.disabled = !isComplete;
-    
-    const counter = this.elements.confirmSelection.querySelector('.btn-text');
-    if (counter) {
-      counter.textContent = `Подтвердить выбор (${selectedCount}/5)`;
-      counter.classList.toggle('complete', isComplete);
-    }
-}
 
   updateGameInterface(state) {
     this.elements.playerHealth.textContent = state.human.health;
@@ -130,22 +118,22 @@ handleCardHover(event) {
   }
 
   createHandCardElement(card) {
-	return `
-	  <div class="hand-card" data-card-id="${card.id}">
-		<div class="card-image-container">
-		  <img src="${card.image}" 
-			   class="card-image"
-			   alt="${card.name}"
-			   onerror="this.src='assets/heroes/images/default-hero.webp'">
-		</div>
-		<div class="card-content">
-		  <div class="card-cost">${card.cost}⚡</div>
-		  <h3 class="card-title">${card.name}</h3>
-		  <p class="card-description">${card.description}</p>
-		</div>
-	  </div>
-	`;
-  }  
+    return `
+      <div class="hand-card" data-card-id="${card.id}">
+        <div class="card-image-container">
+          <img src="${card.image}" 
+               class="card-image"
+               alt="${card.name}"
+               onerror="this.src='assets/heroes/images/default-hero.webp'">
+        </div>
+        <div class="card-content">
+          <div class="card-cost">${card.cost}⚡</div>
+          <h3 class="card-title">${card.name}</h3>
+          <p class="card-description">${card.description}</p>
+        </div>
+      </div>
+    `;
+  }
 
   renderBattlefield(playerField, aiField) {
     this.clearBattlefield();

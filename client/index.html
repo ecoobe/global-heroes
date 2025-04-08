@@ -7,8 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-    <div id="error-message"></div>
-    <div id="connection-status" class="offline">Подключение...</div>
+    <div id="error-message" class="error-message"></div>
+    <div id="connection-status" class="connection-status offline">Подключение...</div>
     
     <div class="root-container">
         <div id="app">
@@ -24,13 +24,13 @@
             
             <!-- Выбор героев -->
             <div class="hero-select-container" id="heroSelectContainer">
-				<div class="hero-select-wrapper">
-					<div class="hero-select" id="heroSelect"></div>
-						<button id="confirmSelection" class="menu-btn" disabled>
-					<span class="btn-text">Подтвердить выбор (0/5)</span>
-				  </button>
-				</div>
-			</div>
+                <div class="hero-select-wrapper">
+                    <div class="hero-select" id="heroSelect"></div>
+                    <button id="confirmSelection" class="menu-btn" disabled>
+                        <span class="btn-text">Подтвердить выбор (0/5)</span>
+                    </button>
+                </div>
+            </div>
             
             <!-- Игровой интерфейс -->
             <div class="game-container" id="gameContainer">
@@ -62,11 +62,11 @@
                     </div>
                     
                     <div class="action-buttons">
-						<div class="hand-container" id="playerHand"></div>
-						<button id="endTurnBtn" class="action-btn end-turn-btn">
-						    Завершить ход
-						</button>
-					</div>
+                        <div class="hand-container" id="playerHand"></div>
+                        <button id="endTurnBtn" class="action-btn end-turn-btn">
+                            Завершить ход
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
