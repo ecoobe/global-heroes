@@ -127,8 +127,7 @@ export class UIManager {
 			   class="hero-image"
 			   alt="${card.name}"
 			   onerror="this.src='assets/heroes/images/default-hero.webp'">
-		  
-		  <!-- Добавленные элементы характеристик -->
+			   
 		  <div class="card-stat health-stat">${card.health}</div>
 		  <div class="card-stat strength-stat">${card.strength}</div>
 		  <div class="hero-name">${card.name}</div>
