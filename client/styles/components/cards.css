@@ -99,19 +99,24 @@
 }
 
 /* Имя героя */
-.hero-name {
+.hero-name { /* Исправлено: заменен селектор h3 на класс .hero-name */
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
     padding: 25px 20px;
-    background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0));
+    background: linear-gradient(
+        to top, 
+        rgba(0,0,0,0.95) 60%, 
+        rgba(0,0,0,0) 100%
+    );
     text-align: center;
     font-size: 1.8em;
     color: white;
     text-shadow: 0 3px 6px rgba(0,0,0,0.8);
-    z-index: 2;
+    z-index: 2; /* Гарантируем, что имя над изображением */
     margin: 0;
+    display: block !important; /* Принудительное отображение */
 }
 
 /* ========== ВЫБРАННАЯ КАРТА ========== */
@@ -142,9 +147,8 @@
     justify-content: center;
     background: 
         url('/assets/backgrounds/card_menu.webp') center/cover fixed,
-        linear-gradient(45deg, rgba(10,10,10,0.96), rgba(20,20,20,0.94));
-    backdrop-filter: blur(15px) saturate(1.2);
-    -webkit-backdrop-filter: blur(15px) saturate(1.2);
+        linear-gradient(45deg, rgba(10,10,10,0.96), rgba(20,20,20,0.94)) !important;
+    /* Убрал backdrop-filter для теста */
     z-index: 1000;
     padding: 40px 20px;
     box-sizing: border-box;
