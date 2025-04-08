@@ -120,21 +120,20 @@ export class UIManager {
   }
 
   createHandCardElement(card) {
-    return `
-      <div class="hand-card" data-card-id="${card.id}">
-        <div class="card-image-container">
-          <img src="${card.image}" 
-               class="card-image"
-               alt="${card.name}"
-               onerror="this.src='assets/heroes/images/default-hero.webp'">
-        </div>
-        <div class="card-content">
-          <div class="card-cost">${card.cost}⚡</div>
-          <h3 class="card-title">${card.name}</h3>
-          <p class="card-description">${card.description}</p>
-        </div>
-      </div>
-    `;
+	return `
+	  <div class="hero-card" data-card-id="${card.id}">
+		<div class="hero-image-container">
+		  <img src="${card.image}" 
+			   class="hero-image"
+			   alt="${card.name}"
+			   onerror="this.src='assets/heroes/images/default-hero.webp'">
+			   
+		  <div class="card-stat health-stat">${card.health}</div>
+		  <div class="card-stat strength-stat">${card.strength}</div>
+		  <div class="hero-name">${card.name}</div>
+		</div>
+	  </div>
+	`;
   }
 
   renderBattlefield(playerField, aiField) {
