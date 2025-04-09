@@ -1,4 +1,4 @@
-/* buttons.css - Идеально плавная версия */
+/* buttons.css - Финалная исправленная версия */
 :root {
 	--dark-metal: linear-gradient(135deg, #2a2e34 0%, #3e434c 50%, #2a2e34 100%);
 	--blood-red: #8a0303;
@@ -6,38 +6,24 @@
 	--ancient-parchment: #e6d8b5;
 	--shadow-dark: rgba(0, 0, 0, 0.7);
 	--glow-intensity: 0 0 8px;
-	--transition-duration: 0.35s;
+	--transition-duration: 0.4s;
+	--raise-height: 10px; /* Оптимальная высота поднятия */
   }
   
-  /* === Нижняя панель (абсолютно статичная) === */
+  /* === Нижняя панель (полностью статичная) === */
   .bottom-nav-container {
 	position: fixed;
 	bottom: 0;
 	left: 0;
 	width: 100%;
-	background: rgba(0, 0, 0, 0.85);
+	padding: 25px 0 15px;
+	background: rgba(0, 0, 0, 0.95);
 	border-top: 1px solid var(--golden-trim);
-	padding: 20px 0;
 	z-index: 100;
-	box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
-	/* Гарантируем что панель не будет двигаться */
+	/* Буферная зона для анимации */
+	clip-path: inset(-15px 0 0 0);
 	will-change: transform;
 	backface-visibility: hidden;
-  }
-  
-  .buttons-row {
-	display: flex;
-	justify-content: center;
-	gap: 8px;
-	padding: 0 15px;
-	overflow-x: auto;
-	scrollbar-width: none;
-	max-width: 1200px;
-	margin: 0 auto;
-  }
-  
-  .buttons-row::-webkit-scrollbar {
-	display: none;
   }
   
   /* === Идеально плавные кнопки === */
@@ -57,96 +43,95 @@
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
 	text-shadow: 1px 1px 1px var(--shadow-dark);
-	box-shadow: 0 3px 6px var(--shadow-dark);
-	transition: all var(--transition-duration) cubic-bezier(0.16, 1, 0.3, 1);
-	z-index: 110; /* Выше панели */
+	box-shadow: 0 4px 8px var(--shadow-dark);
+	transition: transform var(--transition-duration) cubic-bezier(0.18, 0.89, 0.32, 1.28),
+				box-shadow var(--transition-duration) ease;
+	z-index: 110;
 	margin: 0;
-	overflow: hidden;
-	/* Критически важные свойства для плавности */
+	/* Критически важные свойства */
 	transform: translateZ(0);
 	backface-visibility: hidden;
 	perspective: 1000px;
-	will-change: transform, box-shadow;
+	will-change: transform;
+	overflow: hidden; /* Фиксируем блик внутри кнопки */
   }
   
-  /* Эффект блика (теперь строго внутри кнопки) */
+  /* Блик (строго внутри кнопки) */
   .menu-btn::before {
 	content: '';
 	position: absolute;
 	top: 0;
-	left: -100%;
-	width: 60%;
+	left: -80%;
+	width: 50%;
 	height: 100%;
 	background: linear-gradient(
 	  90deg,
 	  transparent,
-	  rgba(255, 255, 255, 0.1),
+	  rgba(255, 255, 255, 0.08),
 	  transparent
 	);
-	transition: left 0.6s ease;
+	transition: left 0.7s ease;
 	z-index: -1;
-	clip-path: inset(0 0 0 0);
+	clip-path: inset(0 1px 0 1px); /* Жесткая обрезка по границам */
   }
   
-  /* Плавное поднятие без перекрытия */
+  /* Состояние наведения */
   .menu-btn:hover {
-	transform: translate3d(0, -8px, 0);
-	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
-	color: #fff;
+	transform: translateY(calc(-1 * var(--raise-height)));
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
 	border-color: #e6c884;
   }
   
   .menu-btn:hover::before {
-	left: 140%; /* Блик плавно выходит за пределы */
+	left: 130%; /* Плавный выход за пределы */
   }
   
-  /* === Кнопки Play (специальные стили) === */
+  /* Визуальная связь с панелью */
+  .menu-btn::after {
+	content: '';
+	position: absolute;
+	bottom: calc(-1 * var(--raise-height));
+	left: 15%;
+	width: 70%;
+	height: var(--raise-height);
+	background: linear-gradient(
+	  to bottom,
+	  rgba(201, 177, 118, 0.2),
+	  transparent
+	);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+	filter: blur(4px);
+	z-index: -1;
+  }
+  
+  .menu-btn:hover::after {
+	opacity: 1;
+  }
+  
+  /* === Специальные стили для кнопок Play === */
   .play-btn {
 	background: linear-gradient(135deg, #2a0e05 0%, #6a0202 50%, #2a0e05 100%) !important;
 	border-color: #d4af37 !important;
-	text-shadow: var(--glow-intensity) rgba(255, 80, 80, 0.7);
-  }
-  
-  .play-btn::after {
-	content: '⚔';
-	position: absolute;
-	right: 12px;
-	top: 50%;
-	transform: translateY(-50%);
-	font-size: 1rem;
-	opacity: 0.8;
   }
   
   .play-btn:hover {
-	animation: bloodGlow 1.8s ease-in-out infinite alternate;
+	animation: bloodPulse 2s ease-in-out infinite alternate;
   }
   
-  @keyframes bloodGlow {
+  @keyframes bloodPulse {
 	0% {
-	  box-shadow: 0 0 8px rgba(138, 3, 3, 0.4);
+	  box-shadow: 0 8px 15px rgba(138, 3, 3, 0.5);
 	}
 	100% {
-	  box-shadow: 0 0 16px rgba(138, 3, 3, 0.8);
+	  box-shadow: 0 8px 25px rgba(138, 3, 3, 0.8);
 	}
-  }
-  
-  /* === Кнопка подтверждения === */
-  #confirmSelection {
-	display: block;
-	margin: 25px auto 0;
-	min-width: 250px;
-	padding: 12px 25px;
-	text-align: center;
-	background: linear-gradient(135deg, #0d2a1a 0%, #1a4d32 50%, #0d2a1a 100%);
-	border-color: #4cae4c !important;
-	position: relative;
-	z-index: 120;
   }
   
   /* === Адаптация для мобильных === */
   @media (max-width: 768px) {
-	.bottom-nav-container {
-	  padding: 15px 0;
+	:root {
+	  --raise-height: 8px;
 	}
 	
 	.menu-btn {
@@ -154,15 +139,5 @@
 	  min-width: 110px;
 	  font-size: 0.85rem;
 	  padding: 0 12px;
-	}
-	
-	.play-btn::after {
-	  right: 8px;
-	  font-size: 0.9rem;
-	}
-	
-	#confirmSelection {
-	  min-width: 220px;
-	  padding: 10px 20px;
 	}
   }
