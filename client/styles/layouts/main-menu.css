@@ -1,88 +1,143 @@
 :root {
-	--transition-duration: 0.3s;
-	--primary-color: #f39c12;
+    --transition-duration: 0.3s;
+    --primary-color: #f39c12;
+    --menu-bg-opacity: 0.85;
+    --menu-border-radius: 20px;
+    --menu-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    --title-glow: 0 0 10px rgba(243, 156, 18, 0.5);
 }
-  
-  /* Основное меню */
+
+/* Основное меню */
 .main-menu {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: url('https://coobe.ru/assets/backgrounds/main_menu.webp') no-repeat center center fixed;
+    background: url('/assets/backgrounds/main_menu.webp') no-repeat center center fixed;
     background-size: cover;
-    z-index: 1000; /* Достаточно для фона */
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: 
+        opacity var(--transition-duration) ease,
+        visibility 0s linear var(--transition-duration);
 }
 
 .main-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transition: 
+        opacity var(--transition-duration) ease,
+        visibility 0s linear;
+}
+
+.menu-content {
+    background: rgba(0, 0, 0, var(--menu-bg-opacity));
+    padding: 3rem;
+    border-radius: var(--menu-border-radius);
+    box-shadow: var(--menu-shadow);
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    transform: translateY(20px);
+    transition: transform var(--transition-duration) ease;
+}
+
+.main-menu.active .menu-content {
+    transform: translateY(0);
+}
+
+/* Контейнер кнопок меню */
+.menu-buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 1.5rem;
+    width: 100%;
+}
+
+/* Заголовок игры */
+.game-title {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    text-shadow: var(--title-glow);
+    animation: titleGlow 2s ease-in-out infinite alternate;
+    line-height: 1.2;
+}
+
+@keyframes titleGlow {
+    from { text-shadow: 0 0 10px rgba(243, 156, 18, 0.5); }
+    to { text-shadow: 0 0 20px rgba(243, 156, 18, 0.8), 
+                     0 0 30px rgba(243, 156, 18, 0.4); }
+}
+
+/* Специальные стили для кнопок Play */
+.play-btn {
+    margin-top: 1.5rem;
+    background: linear-gradient(45deg, #27ae60, #2ecc71) !important;
+    box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+}
+
+.play-btn:hover {
+    box-shadow: 0 8px 16px rgba(39, 174, 96, 0.4) !important;
+}
+
+/* Контейнеры интерфейсов */
+.hero-select-container,
+.game-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    opacity: 0;
+    transition: 
+        opacity var(--transition-duration) ease,
+        visibility 0s linear var(--transition-duration);
+    z-index: 999;
+}
+
+.hero-select-container.active {
     display: flex;
     opacity: 1;
     visibility: visible;
     transition: 
-      opacity var(--transition-duration) ease,
-      visibility 0s linear;
+        opacity var(--transition-duration) ease,
+        visibility 0s linear;
 }
-  
-  .menu-content {
-	position: relative;
-	z-index: 1001;
-	text-align: center;
-	padding: 2rem;
-	max-width: 600px;
-	margin: 0 auto;
-	transform: translateY(20px);
-	transition: transform var(--transition-duration) ease;
-  }
-  
-  .main-menu.active .menu-content {
-	transform: translateY(0);
-  }
-  
-  /* Контейнеры интерфейсов */
-  .hero-select-container,
-  .game-container {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	display: none;
-	opacity: 0;
-	transition: 
-	  opacity var(--transition-duration) ease,
-	  visibility 0s linear var(--transition-duration);
-	z-index: 999;
-  }
-  
-  .hero-select-container.active {
-	display: flex;
-	opacity: 1;
-	visibility: visible;
-	transition: 
-	  opacity var(--transition-duration) ease,
-	  visibility 0s linear;
-  }
-  
-  .game-container.active {
-	display: block;
-	opacity: 1;
-	visibility: visible;
-	transition: 
-	  opacity var(--transition-duration) ease,
-	  visibility 0s linear;
-  }
-  
-  /* Заголовок игры */
-  .game-title {
-	font-size: 3rem;
-	margin-bottom: 2rem;
-	text-shadow: 0 4px 8px rgba(0,0,0,0.3);
-	color: var(--primary-color);
-	animation: titleGlow 2s ease-in-out infinite alternate;
-  }
-  
-  @keyframes titleGlow {
-	from { text-shadow: 0 0 10px rgba(243,156,18,0.5); }
-	to { text-shadow: 0 0 20px rgba(243,156,18,0.8); }
-  }
+
+.game-container.active {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    transition: 
+        opacity var(--transition-duration) ease,
+        visibility 0s linear;
+}
+
+/* Адаптация для мобильных устройств */
+@media (max-width: 768px) {
+    .menu-content {
+        padding: 2rem 1.5rem;
+        width: 95%;
+    }
+    
+    .game-title {
+        font-size: 2.2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .menu-buttons-container {
+        gap: 10px;
+    }
+    
+    .play-btn {
+        margin-top: 1rem;
+    }
+}
