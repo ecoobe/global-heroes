@@ -173,6 +173,36 @@ class GameClient {
       this.endTurn();
     });
 
+	this.ui.elements.startPvp?.addEventListener('click', () => {
+		console.log('PVP button clicked - временный обработчик');
+		this.ui.showError('PVP режим в разработке');
+	});
+  
+	this.ui.elements.shopBtn?.addEventListener('click', () => {
+		console.log('Магазин clicked - временный обработчик');
+		this.ui.showError('Магазин будет доступен в следующем обновлении');
+	});
+  
+	this.ui.elements.galleryBtn?.addEventListener('click', () => {
+		console.log('Галерея clicked - временный обработчик');
+		this.ui.showError('Галерея героев скоро откроется');
+	});
+  
+	this.ui.elements.allianceBtn?.addEventListener('click', () => {
+		console.log('Альянс clicked - временный обработчик');
+		this.ui.showError('Система альянсов в разработке');
+	});
+  
+	this.ui.elements.spiritCallBtn?.addEventListener('click', () => {
+		console.log('Вызов духов clicked - временный обработчик');
+		this.ui.showError('Механика вызова духов появится позже');
+	});
+  
+	this.ui.elements.heroesBtn?.addEventListener('click', () => {
+		console.log('Герои clicked - временный обработчик');
+		this.ui.showError('Коллекция героев будет доступна в обновлении 1.1');
+	});
+
     window.addEventListener('beforeunload', () => {
       this.debug.log('WINDOW_UNLOAD', {
         activeGame: !!this.state.currentGameState,
