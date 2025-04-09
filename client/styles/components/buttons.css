@@ -26,39 +26,23 @@
 	will-change: transform;
 	backface-visibility: hidden;
   }
-  
-  .buttons-row {
-	display: flex;
-	justify-content: center;
-	gap: 12px;
-	padding: 0 20px;
-	overflow-x: auto;
-	scrollbar-width: none;
-	max-width: 1200px;
-	width: 100%;
-  }
-  
-  .buttons-row::-webkit-scrollbar {
-	display: none;
-  }
-  
   /* === Кнопки (плавные анимации из предыдущей версии) === */
   .menu-btn {
 	position: relative;
-	height: 54px;
-	min-width: 130px;
+	height: 56px;
+	min-width: 140px;
 	background: var(--dark-metal);
 	color: var(--ancient-parchment);
-	border: 1px solid var(--golden-trim);
-	border-radius: 3px;
-	font-size: 0.95rem;
+	border: 2px solid var(--golden-trim);
+	border-radius: 4px;
+	font-size: 1rem;
 	font-family: 'Cinzel', serif;
 	font-weight: 700;
 	cursor: pointer;
-	padding: 0 18px;
+	padding: 0 22px;
 	text-transform: uppercase;
-	letter-spacing: 0.5px;
-	text-shadow: 1px 1px 1px var(--shadow-dark);
+	letter-spacing: 1px;
+	text-shadow: 1px 1px 2px var(--shadow-dark);
 	box-shadow: 0 4px 8px var(--shadow-dark);
 	transition: transform var(--transition-duration) cubic-bezier(0.18, 0.89, 0.32, 1.28),
 				box-shadow var(--transition-duration) ease;
