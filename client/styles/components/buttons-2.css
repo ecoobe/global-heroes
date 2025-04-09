@@ -48,12 +48,11 @@
 				box-shadow var(--transition-duration) ease;
 	z-index: 110;
 	margin: 0;
-	/* Критически важные свойства */
 	transform: translateZ(0);
 	backface-visibility: hidden;
 	perspective: 1000px;
 	will-change: transform;
-	overflow: hidden; /* Фиксируем блик внутри кнопки */
+	overflow: hidden;
   }
   
   /* Блик (строго внутри кнопки) */

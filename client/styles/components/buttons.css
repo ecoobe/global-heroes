@@ -17,11 +17,12 @@
 	left: 0;
 	width: 100%;
 	padding: 25px 0 15px;
-	background: rgba(0, 0, 0, 0.95);
-	border-top: 1px solid var(--golden-trim);
+	background: rgba(10, 8, 5, 0.95);
+	border-top: 2px solid var(--golden-trim);
 	z-index: 100;
-	/* Буферная зона для анимации */
 	clip-path: inset(-15px 0 0 0);
+	display: flex;
+	justify-content: center;
 	will-change: transform;
 	backface-visibility: hidden;
   }
@@ -44,20 +45,20 @@
   /* === Кнопки (плавные анимации из предыдущей версии) === */
   .menu-btn {
 	position: relative;
-	height: 56px;
-	min-width: 140px;
+	height: 54px;
+	min-width: 130px;
 	background: var(--dark-metal);
 	color: var(--ancient-parchment);
-	border: 2px solid var(--golden-trim);
-	border-radius: 4px;
-	font-size: 1rem;
+	border: 1px solid var(--golden-trim);
+	border-radius: 3px;
+	font-size: 0.95rem;
 	font-family: 'Cinzel', serif;
 	font-weight: 700;
 	cursor: pointer;
-	padding: 0 22px;
+	padding: 0 18px;
 	text-transform: uppercase;
-	letter-spacing: 1px;
-	text-shadow: 1px 1px 2px var(--shadow-dark);
+	letter-spacing: 0.5px;
+	text-shadow: 1px 1px 1px var(--shadow-dark);
 	box-shadow: 0 4px 8px var(--shadow-dark);
 	transition: transform var(--transition-duration) cubic-bezier(0.18, 0.89, 0.32, 1.28),
 				box-shadow var(--transition-duration) ease;
