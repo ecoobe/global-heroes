@@ -1,4 +1,4 @@
-/* buttons.css - Идеальный финальный вариант */
+/* buttons.css - Финалная исправленная версия */
 :root {
 	--dark-metal: linear-gradient(135deg, #2a2e34 0%, #3e434c 50%, #2a2e34 100%);
 	--blood-red: #8a0303;
@@ -7,10 +7,10 @@
 	--shadow-dark: rgba(0, 0, 0, 0.7);
 	--glow-intensity: 0 0 8px;
 	--transition-duration: 0.4s;
-	--raise-height: 10px;
+	--raise-height: 10px; /* Оптимальная высота поднятия */
   }
   
-  /* === Нижняя панель === */
+  /* === Нижняя панель (полностью статичная) === */
   .bottom-nav-container {
 	position: fixed;
 	bottom: 0;
@@ -26,48 +26,34 @@
 	backface-visibility: hidden;
   }
   
-  .buttons-row {
-	display: flex;
-	justify-content: center;
-	gap: 12px;
-	padding: 0 20px;
-	overflow-x: auto;
-	scrollbar-width: none;
-	max-width: 1200px;
-	width: 100%;
-  }
-  
-  .buttons-row::-webkit-scrollbar {
-	display: none;
-  }
-  
-  /* === Кнопки (плавные анимации из предыдущей версии) === */
+  /* === Идеально плавные кнопки === */
   .menu-btn {
 	position: relative;
-	height: 56px;
-	min-width: 140px;
+	height: 54px;
+	min-width: 130px;
 	background: var(--dark-metal);
 	color: var(--ancient-parchment);
-	border: 2px solid var(--golden-trim);
-	border-radius: 4px;
-	font-size: 1rem;
+	border: 1px solid var(--golden-trim);
+	border-radius: 3px;
+	font-size: 0.95rem;
 	font-family: 'Cinzel', serif;
 	font-weight: 700;
 	cursor: pointer;
-	padding: 0 22px;
+	padding: 0 18px;
 	text-transform: uppercase;
-	letter-spacing: 1px;
-	text-shadow: 1px 1px 2px var(--shadow-dark);
+	letter-spacing: 0.5px;
+	text-shadow: 1px 1px 1px var(--shadow-dark);
 	box-shadow: 0 4px 8px var(--shadow-dark);
 	transition: transform var(--transition-duration) cubic-bezier(0.18, 0.89, 0.32, 1.28),
 				box-shadow var(--transition-duration) ease;
 	z-index: 110;
 	margin: 0;
+	/* Критически важные свойства */
 	transform: translateZ(0);
 	backface-visibility: hidden;
 	perspective: 1000px;
 	will-change: transform;
-	overflow: hidden;
+	overflow: hidden; /* Фиксируем блик внутри кнопки */
   }
   
   /* Блик (строго внутри кнопки) */
@@ -86,18 +72,18 @@
 	);
 	transition: left 0.7s ease;
 	z-index: -1;
-	clip-path: inset(0 1px 0 1px);
+	clip-path: inset(0 1px 0 1px); /* Жесткая обрезка по границам */
   }
   
+  /* Состояние наведения */
   .menu-btn:hover {
 	transform: translateY(calc(-1 * var(--raise-height)));
 	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
-	color: #fff;
 	border-color: #e6c884;
   }
   
   .menu-btn:hover::before {
-	left: 130%;
+	left: 130%; /* Плавный выход за пределы */
   }
   
   /* Визуальная связь с панелью */
@@ -123,21 +109,10 @@
 	opacity: 1;
   }
   
-  /* === Специальные кнопки (новые цвета) === */
+  /* === Специальные стили для кнопок Play === */
   .play-btn {
-	background: linear-gradient(135deg, #3a1c0a 0%, #8a0303 50%, #3a1c0a 100%) !important;
+	background: linear-gradient(135deg, #2a0e05 0%, #6a0202 50%, #2a0e05 100%) !important;
 	border-color: #d4af37 !important;
-	text-shadow: var(--glow-intensity) rgba(255, 60, 60, 0.7);
-  }
-  
-  .play-btn::after {
-	content: '⚔';
-	position: absolute;
-	right: 15px;
-	top: 50%;
-	transform: translateY(-50%);
-	font-size: 1.1rem;
-	opacity: 0.8;
   }
   
   .play-btn:hover {
@@ -153,60 +128,16 @@
 	}
   }
   
-  /* Цветные акценты */
-  #spiritCallBtn {
-	background: linear-gradient(135deg, #1a2a3a 0%, #3a5166 50%, #1a2a3a 100%) !important;
-	border-color: #6a8fb5 !important;
-  }
-  
-  #heroesBtn {
-	background: linear-gradient(135deg, #2a1a3a 0%, #5a3a76 50%, #2a1a3a 100%) !important;
-	border-color: #9d6fb5 !important;
-  }
-  
-  #shopBtn {
-	background: linear-gradient(135deg, #2a341a 0%, #4d663a 50%, #2a341a 100%) !important;
-	border-color: #7a9f6a !important;
-  }
-  
-  #galleryBtn {
-	background: linear-gradient(135deg, #342a1a 0%, #66533a 50%, #342a1a 100%) !important;
-	border-color: #9f8e6a !important;
-  }
-  
-  /* === Кнопка подтверждения === */
-  #confirmSelection {
-	display: block;
-	margin: 25px auto 0;
-	min-width: 280px;
-	padding: 14px 28px;
-	text-align: center;
-	background: linear-gradient(135deg, #1a3a2a 0%, #3a6651 50%, #1a3a2a 100%);
-	border-color: #5cb85c !important;
-	font-size: 1.1rem;
-  }
-  
-  /* === Адаптация === */
+  /* === Адаптация для мобильных === */
   @media (max-width: 768px) {
-	.buttons-row {
-	  gap: 8px;
-	  padding: 0 15px;
-	  justify-content: flex-start;
-	}
-	
-	.menu-btn {
-	  height: 50px;
-	  min-width: 120px;
-	  font-size: 0.9rem;
-	  padding: 0 16px;
-	}
-	
 	:root {
 	  --raise-height: 8px;
 	}
 	
-	#confirmSelection {
-	  min-width: 240px;
-	  padding: 12px 20px;
+	.menu-btn {
+	  height: 48px;
+	  min-width: 110px;
+	  font-size: 0.85rem;
+	  padding: 0 12px;
 	}
   }
