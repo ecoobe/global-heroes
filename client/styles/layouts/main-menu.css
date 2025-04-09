@@ -50,3 +50,14 @@
 .main-menu:not(.active) {
     display: none;
 }
+
+.hero-select-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero-select-wrapper {
+    width: 100%;
+    max-width: 1200px;
+}

@@ -1,4 +1,4 @@
-/* buttons.css - Атмосферные кнопки для мрачного фэнтези */
+/* buttons.css - Атмосферные кнопки для Global Heroes */
 :root {
     --dark-metal: linear-gradient(135deg, #2a2e34 0%, #3e434c 50%, #2a2e34 100%);
     --blood-red: #8a0303;
@@ -9,7 +9,7 @@
     --transition-duration: 0.4s;
 }
 
-/* Базовые стили кнопок */
+/* === Основные стили кнопок === */
 .menu-btn {
     position: relative;
     height: 60px;
@@ -31,10 +31,11 @@
         inset 0 0 15px rgba(0, 0, 0, 0.5);
     transition: all var(--transition-duration) cubic-bezier(0.25, 1, 0.5, 1);
     overflow: hidden;
-    z-index: 1;
-    margin: 0;
+    z-index: 2;
+    margin: 0 0 5px 0;
 }
 
+/* Эффект скользящего света */
 .menu-btn::before {
     content: '';
     position: absolute;
@@ -52,8 +53,10 @@
     z-index: -1;
 }
 
+/* Состояние наведения */
 .menu-btn:hover {
-    transform: translateY(-5px);
+    transform: translateY(-8px);
+    margin-bottom: 8px;
     box-shadow: 
         0 6px 20px var(--shadow-dark),
         inset 0 0 20px rgba(0, 0, 0, 0.7);
@@ -65,7 +68,7 @@
     left: 100%;
 }
 
-/* Специальные стили для кнопок Play */
+/* === Специальные кнопки === */
 .play-btn {
     background: linear-gradient(135deg, #3a1c0a 0%, #8a0303 50%, #3a1c0a 100%) !important;
     border-color: #d4af37 !important;
@@ -73,6 +76,7 @@
     position: relative;
 }
 
+/* Иконка меча для кнопок Play */
 .play-btn::after {
     content: '⚔';
     position: absolute;
@@ -83,6 +87,7 @@
     opacity: 0.7;
 }
 
+/* Пульсация для кнопок Play */
 .play-btn:hover {
     animation: bloodPulse 1.5s infinite alternate;
 }
@@ -111,7 +116,54 @@
     border-color: #9d6fb5 !important;
 }
 
-/* Стили для других типов кнопок */
+/* === Кнопка подтверждения === */
+#confirmSelection {
+    display: block;
+    margin: 2rem auto 0;
+    min-width: 280px;
+    text-align: center;
+    position: relative;
+    left: auto;
+    transform: none;
+    background: linear-gradient(135deg, #1a3a2a 0%, #3a6651 50%, #1a3a2a 100%);
+    border-color: #5cb85c !important;
+}
+
+/* === Контейнеры кнопок === */
+.bottom-nav-container {
+    background: rgba(10, 8, 5, 0.9);
+    border-top: 2px solid var(--golden-trim);
+    padding: 30px 0 20px;
+    backdrop-filter: blur(5px);
+    margin-top: -10px;
+    z-index: 1;
+    position: relative;
+}
+
+.buttons-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.buttons-row::-webkit-scrollbar {
+    display: none;
+}
+
+.hero-select-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding-bottom: 20px;
+}
+
+/* === Другие типы кнопок === */
 .action-btn {
     background: #27ae60;
     padding: 0.8rem 1.5rem;
@@ -126,31 +178,7 @@
     margin-top: 1rem;
 }
 
-/* Контейнеры кнопок */
-.menu-buttons-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    margin-top: 2rem;
-    width: 100%;
-    max-width: 300px;
-}
-
-.buttons-row {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    padding: 0 20px;
-    overflow-x: auto;
-    scrollbar-width: none;
-}
-
-.buttons-row::-webkit-scrollbar {
-    display: none;
-}
-
-/* Адаптация для мобильных */
+/* === Адаптация для мобильных === */
 @media (max-width: 768px) {
     .menu-btn {
         height: 50px;
@@ -168,5 +196,10 @@
         justify-content: flex-start;
         gap: 8px;
         padding: 0 10px;
+    }
+    
+    #confirmSelection {
+        min-width: 240px;
+        font-size: 1rem;
     }
 }
