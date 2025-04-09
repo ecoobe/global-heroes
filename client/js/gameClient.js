@@ -48,6 +48,12 @@ class GameClient {
       aiBattlefield: document.getElementById('aiBattlefield'),
       confirmSelection: document.getElementById('confirmSelection'), // Исправлено
       startPve: document.getElementById('startPve'),
+	  startPvp: document.getElementById('startPvp'),
+      shopBtn: document.getElementById('shopBtn'),
+      galleryBtn: document.getElementById('galleryBtn'),
+      allianceBtn: document.getElementById('allianceBtn'),
+      spiritCallBtn: document.getElementById('spiritCallBtn'),
+      heroesBtn: document.getElementById('heroesBtn'),
       heroSelect: document.getElementById('heroSelect'),
       turnTimer: document.getElementById('turnTimer'),
       currentTurn: document.getElementById('currentTurn'),
