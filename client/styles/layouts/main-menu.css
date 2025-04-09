@@ -1,153 +1,128 @@
-/* main-menu.css */
-:root {
-	--transition-duration: 0.3s;
-	--primary-color: #f39c12;
-	--secondary-color: #3498db;
-	--success-color: #27ae60;
-	--menu-bg-opacity: 0.85;
-	--button-row-height: 80px;
-	--button-gap: 15px;
-  }
-  
-  /* Основная структура меню */
-  .main-menu {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background: url('/assets/backgrounds/main_menu.webp') no-repeat center center/cover;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	align-items: center;
-	z-index: 1000;
-	opacity: 0;
-	visibility: hidden;
-	transition: opacity var(--transition-duration) ease;
-  }
-  
-  .main-menu.active {
-	opacity: 1;
-	visibility: visible;
-  }
-  
-  /* Заголовок игры */
-  .game-title {
-	margin-top: 5vh;
-	font-size: 3.5rem;
-	color: var(--primary-color);
-	text-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
-	animation: titleGlow 2s ease-in-out infinite alternate;
-	text-align: center;
-	padding: 0 20px;
-  }
-  
-  /* Панель с кнопками внизу */
-  .menu-buttons-row {
-	position: fixed;
-	bottom: 0;
-	left: 0;
-	width: 100%;
-	height: var(--button-row-height);
-	background: rgba(0, 0, 0, 0.85);
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	gap: var(--button-gap);
-	padding: 0 20px;
-	box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.7);
-	z-index: 1001;
-	overflow-x: auto;
-	scrollbar-width: none;
-  }
-  
-  .menu-buttons-row::-webkit-scrollbar {
-	display: none;
-  }
-  
-  /* Базовые стили кнопок */
-  .menu-btn {
-	background: linear-gradient(45deg, #2c3e50, var(--secondary-color));
-	color: white;
-	padding: 12px 24px;
-	border: none;
-	border-radius: 50px;
-	font-size: 1rem;
-	font-weight: 500;
-	cursor: pointer;
-	transition: all var(--transition-duration) ease;
-	min-width: 120px;
-	text-align: center;
-	white-space: nowrap;
-	flex-shrink: 0;
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  }
-  
-  .menu-btn:hover {
-	transform: translateY(-3px);
-	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-  }
-  
-  /* Специальные стили для кнопок Play */
-  .menu-btn.play-btn {
-	background: linear-gradient(45deg, var(--success-color), #2ecc71);
-	font-weight: bold;
-  }
-  
-  /* Порядок кнопок (точно как в требованиях) */
-  #shopBtn { order: 1; }
-  #galleryBtn { order: 2; }
-  #allianceBtn { order: 3; }
-  #spiritCallBtn { order: 4; }
-  #heroesBtn { order: 5; }
-  #startPve { order: 6; }
-  #startPvp { order: 7; }
-  
-  /* Анимация заголовка */
-  @keyframes titleGlow {
-	to {
-	  text-shadow: 0 0 20px rgba(243, 156, 18, 0.8),
-				   0 0 30px rgba(243, 156, 18, 0.4);
-	}
-  }
-  
-  /* Адаптация для мобильных */
-  @media (max-width: 768px) {
-	.game-title {
-	  font-size: 2.5rem;
-	  margin-top: 3vh;
-	}
-  
-	.menu-buttons-row {
-	  height: auto;
-	  padding: 10px;
-	  gap: 10px;
-	  justify-content: flex-start;
-	}
-  
-	.menu-btn {
-	  padding: 10px 15px;
-	  font-size: 0.9rem;
-	  min-width: 100px;
-	}
-  }
-  
-  /* Контейнеры других экранов (остаются без изменений) */
-  .hero-select-container,
-  .game-container {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	display: none;
-	opacity: 0;
-	z-index: 999;
-  }
-  
-  .hero-select-container.active,
-  .game-container.active {
-	display: block;
-	opacity: 1;
-  }
+/* Основные стили меню */
+.main-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('/assets/backgrounds/main_menu.webp') no-repeat center center/cover;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+/* Контейнер заголовка */
+.title-container {
+    margin-top: 5vh;
+    text-align: center;
+    padding: 20px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.game-title {
+    font-size: 3.5rem;
+    color: #f39c12;
+    text-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
+    animation: titleGlow 2s ease-in-out infinite alternate;
+}
+
+/* Нижняя панель с кнопками */
+.bottom-nav-container {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 15px 0;
+    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.7);
+}
+
+.buttons-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 auto;
+    max-width: 1200px;
+}
+
+.buttons-row::-webkit-scrollbar {
+    display: none;
+}
+
+/* Стили кнопок */
+.menu-btn {
+    height: 50px;
+    min-width: 120px;
+    background: linear-gradient(45deg, #2c3e50, #3498db);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.menu-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.menu-btn.play-btn {
+    background: linear-gradient(45deg, #27ae60, #2ecc71);
+    font-weight: bold;
+}
+
+/* Порядок кнопок */
+#shopBtn { order: 1; }
+#galleryBtn { order: 2; }
+#allianceBtn { order: 3; }
+#spiritCallBtn { order: 4; }
+#heroesBtn { order: 5; }
+#startPve { order: 6; }
+#startPvp { order: 7; }
+
+/* Анимации */
+@keyframes titleGlow {
+    to {
+        text-shadow: 0 0 20px rgba(243, 156, 18, 0.8),
+                     0 0 30px rgba(243, 156, 18, 0.4);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 768px) {
+    .game-title {
+        font-size: 2.5rem;
+        margin-top: 3vh;
+    }
+    
+    .buttons-row {
+        justify-content: flex-start;
+        gap: 8px;
+        padding: 0 10px;
+    }
+    
+    .menu-btn {
+        min-width: 100px;
+        font-size: 0.9rem;
+        padding: 0 15px;
+        height: 45px;
+    }
+}
+
+/* Отключение ненужных элементов */
+.main-menu:not(.active) {
+    display: none;
+}

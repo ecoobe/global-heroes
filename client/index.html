@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Global Heroes</title>
     <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/layouts/main-menu.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -14,36 +15,24 @@
         <div id="app">
             <!-- Главное меню -->
             <div class="main-menu active" id="mainMenu">
-                <div class="menu-content">
+                <div class="title-container">
                     <h1 class="game-title">Global Heroes</h1>
-                    
-                    <div class="menu-buttons-container">
-                        <button id="shopBtn" class="menu-btn">
-                            <span class="btn-text">Магазин</span>
-                        </button>
-                        <button id="galleryBtn" class="menu-btn">
-                            <span class="btn-text">Галерея</span>
-                        </button>
-                        <button id="allianceBtn" class="menu-btn">
-                            <span class="btn-text">Альянс</span>
-                        </button>
-                        <button id="spiritCallBtn" class="menu-btn">
-                            <span class="btn-text">Вызов духов</span>
-                        </button>
-                        <button id="heroesBtn" class="menu-btn">
-                            <span class="btn-text">Герои</span>
-                        </button>
-                        <button id="startPve" class="menu-btn play-btn">
-                            <span class="btn-text">Играть PVE</span>
-                        </button>
-                        <button id="startPvp" class="menu-btn play-btn">
-                            <span class="btn-text">Играть PVP</span>
-                        </button>
+                </div>
+                
+                <div class="bottom-nav-container">
+                    <div class="buttons-row">
+                        <button id="shopBtn" class="menu-btn">Магазин</button>
+                        <button id="galleryBtn" class="menu-btn">Галерея</button>
+                        <button id="allianceBtn" class="menu-btn">Альянс</button>
+                        <button id="spiritCallBtn" class="menu-btn">Вызов духов</button>
+                        <button id="heroesBtn" class="menu-btn">Герои</button>
+                        <button id="startPve" class="menu-btn play-btn">Играть PVE</button>
+                        <button id="startPvp" class="menu-btn play-btn">Играть PVP</button>
                     </div>
                 </div>
             </div>
             
-            <!-- Выбор героев -->
+            <!-- Остальные секции остаются без изменений -->
             <div class="hero-select-container" id="heroSelectContainer">
                 <div class="hero-select-wrapper">
                     <div class="hero-select" id="heroSelect"></div>
