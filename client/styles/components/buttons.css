@@ -1,4 +1,4 @@
-/* buttons.css - Финальная версия с исправлениями */
+/* buttons.css - Финальная исправленная версия */
 :root {
 	--dark-metal: linear-gradient(135deg, #2a2e34 0%, #3e434c 50%, #2a2e34 100%);
 	--blood-red: #8a0303;
@@ -6,10 +6,10 @@
 	--ancient-parchment: #e6d8b5;
 	--shadow-dark: rgba(0, 0, 0, 0.7);
 	--glow-intensity: 0 0 8px;
-	--transition-duration: 0.4s;
+	--transition-duration: 0.3s;
   }
   
-  /* === Нижняя навигационная панель === */
+  /* === Нижняя навигационная панель (фиксированная) === */
   .bottom-nav-container {
 	position: fixed;
 	bottom: 0;
@@ -17,8 +17,8 @@
 	width: 100%;
 	background: rgba(10, 8, 5, 0.95);
 	border-top: 2px solid var(--golden-trim);
-	padding: 10px 0;
-	z-index: 100;
+	padding: 15px 0;
+	z-index: 50;
 	box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.8);
   }
   
@@ -26,7 +26,7 @@
 	display: flex;
 	justify-content: center;
 	gap: 10px;
-	padding: 0 15px;
+	padding: 0 20px;
 	overflow-x: auto;
 	scrollbar-width: none;
 	max-width: 1200px;
@@ -40,8 +40,8 @@
   /* === Основные стили кнопок === */
   .menu-btn {
 	position: relative;
-	height: 55px;
-	min-width: 130px;
+	height: 56px;
+	min-width: 135px;
 	background: var(--dark-metal);
 	color: var(--ancient-parchment);
 	border: 2px solid var(--golden-trim);
@@ -54,13 +54,13 @@
 	text-transform: uppercase;
 	letter-spacing: 1px;
 	text-shadow: 1px 1px 2px var(--shadow-dark);
-	box-shadow: 
-	  0 4px 8px var(--shadow-dark),
-	  inset 0 0 10px rgba(0, 0, 0, 0.5);
-	transition: all var(--transition-duration) ease;
-	z-index: 110;
+	box-shadow: 0 4px 8px var(--shadow-dark);
+	transition: all var(--transition-duration) cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	z-index: 60;
 	margin: 0;
 	overflow: visible;
+	transform: translate3d(0, 0, 0); /* Аппаратное ускорение */
+	backface-visibility: hidden;
   }
   
   /* Эффект скользящего света */
@@ -74,37 +74,17 @@
 	background: linear-gradient(
 	  90deg,
 	  transparent,
-	  rgba(201, 177, 118, 0.2),
+	  rgba(201, 177, 118, 0.15),
 	  transparent
 	);
-	transition: var(--transition-duration);
+	transition: left 0.5s ease;
 	z-index: -1;
-  }
-  
-  /* Эффект "соединения" при поднятии */
-  .menu-btn::after {
-	content: '';
-	position: absolute;
-	bottom: -8px;
-	left: 15%;
-	width: 70%;
-	height: 8px;
-	background: linear-gradient(
-	  to bottom,
-	  rgba(201, 177, 118, 0.4),
-	  transparent
-	);
-	filter: blur(4px);
-	opacity: 0;
-	transition: opacity var(--transition-duration) ease;
   }
   
   /* Состояние наведения */
   .menu-btn:hover {
-	transform: translateY(-12px);
-	box-shadow: 
-	  0 8px 20px rgba(0, 0, 0, 0.7),
-	  inset 0 0 15px rgba(0, 0, 0, 0.6);
+	transform: translate3d(0, -10px, 0);
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
 	color: #fff;
 	text-shadow: var(--glow-intensity) rgba(201, 177, 118, 0.8);
   }
@@ -113,46 +93,34 @@
 	left: 100%;
   }
   
-  .menu-btn:hover::after {
-	opacity: 1;
-  }
-  
-  /* === Специальные стили кнопок === */
+  /* === Специальные кнопки Play === */
   .play-btn {
 	background: linear-gradient(135deg, #3a1c0a 0%, #8a0303 50%, #3a1c0a 100%) !important;
 	border-color: #d4af37 !important;
 	text-shadow: var(--glow-intensity) rgba(255, 50, 50, 0.7);
+	position: relative;
   }
   
   .play-btn::after {
 	content: '⚔';
 	position: absolute;
-	right: 12px;
+	right: 15px;
 	top: 50%;
 	transform: translateY(-50%);
 	font-size: 1.1rem;
 	opacity: 0.8;
-	background: transparent;
-	filter: none;
-	width: auto;
-	height: auto;
-	left: auto;
   }
   
   .play-btn:hover {
-	animation: bloodPulse 1.5s infinite alternate;
+	animation: bloodPulse 1.5s ease-in-out infinite alternate;
   }
   
   @keyframes bloodPulse {
 	from {
-	  box-shadow: 
-		0 0 10px rgba(138, 3, 3, 0.5),
-		inset 0 0 15px rgba(0, 0, 0, 0.7);
+	  box-shadow: 0 0 10px rgba(138, 3, 3, 0.5);
 	}
 	to {
-	  box-shadow: 
-		0 0 20px rgba(138, 3, 3, 0.8),
-		inset 0 0 20px rgba(0, 0, 0, 0.9);
+	  box-shadow: 0 0 20px rgba(138, 3, 3, 0.8);
 	}
   }
   
@@ -176,9 +144,6 @@
 	text-align: center;
 	background: linear-gradient(135deg, #1a3a2a 0%, #3a6651 50%, #1a3a2a 100%);
 	border-color: #5cb85c !important;
-	position: relative;
-	left: auto;
-	transform: none;
   }
   
   /* === Другие типы кнопок === */
@@ -206,24 +171,19 @@
 	}
 	
 	.menu-btn {
-	  height: 48px;
-	  min-width: 110px;
-	  font-size: 0.85rem;
+	  height: 50px;
+	  min-width: 115px;
+	  font-size: 0.9rem;
 	  padding: 0 15px;
 	}
 	
-	.menu-btn:hover {
-	  transform: translateY(-10px);
+	.play-btn::after {
+	  right: 10px;
+	  font-size: 1rem;
 	}
 	
 	#confirmSelection {
 	  min-width: 220px;
 	  font-size: 0.95rem;
-	  margin-top: 20px;
-	}
-	
-	.play-btn::after {
-	  right: 8px;
-	  font-size: 1rem;
 	}
   }
