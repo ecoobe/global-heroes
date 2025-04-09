@@ -1,73 +1,132 @@
+/* buttons.css - Атмосферные кнопки для мрачного фэнтези */
 :root {
-	--gradient-btn: linear-gradient(45deg, #2c3e50, #3498db);
-	--transition-duration: 0.3s;
-  }
-  
-  .menu-btn {
-	background: var(--gradient-btn);
-	color: white;
-	padding: 1rem 2rem;
-	border: none;
-	border-radius: 50px;
-	font-size: 1.25rem;
-	cursor: pointer;
-	transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
-	position: relative;
-	overflow: hidden;
-	transform: translateZ(0);
-	min-width: 200px;
-	margin: 10px auto;
-	display: block;
-	opacity: 1;
-  }
-  
-  .menu-btn::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: -100%;
-	width: 100%;
-	height: 100%;
-	background: linear-gradient(
-	  120deg,
-	  transparent,
-	  rgba(255,255,255,0.3),
-	  transparent
-	);
-	transition: var(--transition-duration);
-  }
-  
-  .menu-btn:hover {
-	transform: translateY(-2px) scale(1.05);
-	box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-  }
-  
-  .menu-btn:hover::before {
-	left: 100%;
-  }
-  
-  .menu-btn:disabled {
-	background: #95a5a6;
-	cursor: not-allowed;
-	opacity: 0.5 !important;
-	transform: none !important;
-	box-shadow: none !important;
-  }
-  
-  .action-btn {
-	background: #27ae60;
-	padding: 0.8rem 1.5rem;
-	font-size: 1.1rem;
-	margin: 0 5px;
-  }
-  
-  .end-turn-btn {
-	background: #e67e22;
-	margin-top: 1rem;
-  }
-  
-  /* Добавим после существующих стилей */
+    --dark-metal: linear-gradient(135deg, #2a2e34 0%, #3e434c 50%, #2a2e34 100%);
+    --blood-red: #8a0303;
+    --golden-trim: #c9b176;
+    --ancient-parchment: #e6d8b5;
+    --shadow-dark: rgba(0, 0, 0, 0.7);
+    --glow-intensity: 0 0 8px;
+    --transition-duration: 0.4s;
+}
 
+/* Базовые стили кнопок */
+.menu-btn {
+    position: relative;
+    height: 60px;
+    min-width: 140px;
+    background: var(--dark-metal);
+    color: var(--ancient-parchment);
+    border: 2px solid var(--golden-trim);
+    border-radius: 4px;
+    font-size: 1.1rem;
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0 25px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 2px var(--shadow-dark);
+    box-shadow: 
+        0 4px 10px var(--shadow-dark),
+        inset 0 0 15px rgba(0, 0, 0, 0.5);
+    transition: all var(--transition-duration) cubic-bezier(0.25, 1, 0.5, 1);
+    overflow: hidden;
+    z-index: 1;
+    margin: 0;
+}
+
+.menu-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(201, 177, 118, 0.2),
+        transparent
+    );
+    transition: var(--transition-duration);
+    z-index: -1;
+}
+
+.menu-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 
+        0 6px 20px var(--shadow-dark),
+        inset 0 0 20px rgba(0, 0, 0, 0.7);
+    color: #fff;
+    text-shadow: var(--glow-intensity) rgba(201, 177, 118, 0.8);
+}
+
+.menu-btn:hover::before {
+    left: 100%;
+}
+
+/* Специальные стили для кнопок Play */
+.play-btn {
+    background: linear-gradient(135deg, #3a1c0a 0%, #8a0303 50%, #3a1c0a 100%) !important;
+    border-color: #d4af37 !important;
+    text-shadow: var(--glow-intensity) rgba(255, 50, 50, 0.7);
+    position: relative;
+}
+
+.play-btn::after {
+    content: '⚔';
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    opacity: 0.7;
+}
+
+.play-btn:hover {
+    animation: bloodPulse 1.5s infinite alternate;
+}
+
+@keyframes bloodPulse {
+    from {
+        box-shadow: 
+            0 0 10px rgba(138, 3, 3, 0.5),
+            inset 0 0 20px rgba(0, 0, 0, 0.7) !important;
+    }
+    to {
+        box-shadow: 
+            0 0 20px rgba(138, 3, 3, 0.8),
+            inset 0 0 25px rgba(0, 0, 0, 0.9) !important;
+    }
+}
+
+/* Уникальные стили для специальных кнопок */
+#spiritCallBtn {
+    background: linear-gradient(135deg, #1a2a3a 0%, #3a5166 50%, #1a2a3a 100%) !important;
+    border-color: #6a8fb5 !important;
+}
+
+#heroesBtn {
+    background: linear-gradient(135deg, #2a1a3a 0%, #5a3a76 50%, #2a1a3a 100%) !important;
+    border-color: #9d6fb5 !important;
+}
+
+/* Стили для других типов кнопок */
+.action-btn {
+    background: #27ae60;
+    padding: 0.8rem 1.5rem;
+    font-size: 1.1rem;
+    margin: 0 5px;
+    border: 1px solid #1e8449;
+}
+
+.end-turn-btn {
+    background: #e67e22;
+    border: 1px solid #d35400;
+    margin-top: 1rem;
+}
+
+/* Контейнеры кнопок */
 .menu-buttons-container {
     display: flex;
     flex-direction: column;
@@ -78,30 +137,36 @@
     max-width: 300px;
 }
 
-.play-btn {
-    margin-top: 2rem;
-    background: linear-gradient(45deg, #27ae60, #2ecc71);
-    box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+.buttons-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
 }
 
-.play-btn:hover {
-    box-shadow: 0 8px 16px rgba(39, 174, 96, 0.4);
+.buttons-row::-webkit-scrollbar {
+    display: none;
 }
 
-/* Адаптация для мобильных устройств */
+/* Адаптация для мобильных */
 @media (max-width: 768px) {
-    .menu-buttons-container {
-        gap: 8px;
-        max-width: 250px;
-    }
-    
     .menu-btn {
-        padding: 0.8rem 1.5rem;
-        font-size: 1.1rem;
-        min-width: 180px;
+        height: 50px;
+        min-width: 110px;
+        font-size: 0.9rem;
+        padding: 0 15px;
     }
     
-    .play-btn {
-        margin-top: 1.5rem;
+    .play-btn::after {
+        right: 10px;
+        font-size: 1rem;
+    }
+    
+    .buttons-row {
+        justify-content: flex-start;
+        gap: 8px;
+        padding: 0 10px;
     }
 }
