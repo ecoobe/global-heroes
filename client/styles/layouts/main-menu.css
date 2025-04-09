@@ -5,6 +5,7 @@
     --menu-border-radius: 20px;
     --menu-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
     --title-glow: 0 0 10px rgba(243, 156, 18, 0.5);
+    --button-row-height: 80px;
 }
 
 /* Основное меню */
@@ -18,8 +19,8 @@
     background-size: cover;
     z-index: 1000;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
+    justify-content: space-between;
     opacity: 0;
     visibility: hidden;
     transition: 
@@ -37,11 +38,12 @@
 
 .menu-content {
     background: rgba(0, 0, 0, var(--menu-bg-opacity));
-    padding: 3rem;
+    padding: 2rem 3rem;
     border-radius: var(--menu-border-radius);
     box-shadow: var(--menu-shadow);
     width: 90%;
-    max-width: 500px;
+    max-width: 800px;
+    margin: 0 auto;
     text-align: center;
     transform: translateY(20px);
     transition: transform var(--transition-duration) ease;
@@ -51,40 +53,61 @@
     transform: translateY(0);
 }
 
-/* Контейнер кнопок меню */
+/* Контейнер кнопок меню (теперь внизу) */
 .menu-buttons-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 1.5rem;
+    position: fixed;
+    bottom: 0;
+    left: 0;
     width: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 15px 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    z-index: 1002;
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+}
+
+/* Стили для кнопок в горизонтальном ряду */
+.menu-btn {
+    background: var(--gradient-btn);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 50px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all var(--transition-duration) ease;
+    min-width: 120px;
+    margin: 0;
+    flex: 1 1 auto;
+    max-width: 150px;
+}
+
+/* Специальные стили для кнопок Play */
+.play-btn {
+    background: linear-gradient(45deg, #27ae60, #2ecc71) !important;
+    box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+    font-weight: bold;
+    min-width: 140px;
 }
 
 /* Заголовок игры */
 .game-title {
-    font-size: 3rem;
-    margin-bottom: 1.5rem;
+    font-size: 3.5rem;
+    margin-bottom: 0.5rem;
     color: var(--primary-color);
     text-shadow: var(--title-glow);
     animation: titleGlow 2s ease-in-out infinite alternate;
     line-height: 1.2;
+    padding-top: 2rem;
 }
 
 @keyframes titleGlow {
     from { text-shadow: 0 0 10px rgba(243, 156, 18, 0.5); }
     to { text-shadow: 0 0 20px rgba(243, 156, 18, 0.8), 
                      0 0 30px rgba(243, 156, 18, 0.4); }
-}
-
-/* Специальные стили для кнопок Play */
-.play-btn {
-    margin-top: 1.5rem;
-    background: linear-gradient(45deg, #27ae60, #2ecc71) !important;
-    box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
-}
-
-.play-btn:hover {
-    box-shadow: 0 8px 16px rgba(39, 174, 96, 0.4) !important;
 }
 
 /* Контейнеры интерфейсов */
@@ -103,41 +126,38 @@
     z-index: 999;
 }
 
-.hero-select-container.active {
-    display: flex;
-    opacity: 1;
-    visibility: visible;
-    transition: 
-        opacity var(--transition-duration) ease,
-        visibility 0s linear;
-}
-
-.game-container.active {
-    display: block;
-    opacity: 1;
-    visibility: visible;
-    transition: 
-        opacity var(--transition-duration) ease,
-        visibility 0s linear;
-}
-
 /* Адаптация для мобильных устройств */
 @media (max-width: 768px) {
     .menu-content {
-        padding: 2rem 1.5rem;
+        padding: 1.5rem;
         width: 95%;
     }
     
     .game-title {
-        font-size: 2.2rem;
-        margin-bottom: 1rem;
+        font-size: 2.5rem;
+        padding-top: 1rem;
     }
     
     .menu-buttons-container {
-        gap: 10px;
+        padding: 10px 5px;
+        gap: 5px;
+        overflow-x: auto;
+        justify-content: flex-start;
+        scrollbar-width: none;
+    }
+    
+    .menu-buttons-container::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .menu-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        min-width: 100px;
+        flex: 0 0 auto;
     }
     
     .play-btn {
-        margin-top: 1rem;
+        min-width: 110px;
     }
 }
