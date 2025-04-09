@@ -1,4 +1,4 @@
-/* buttons.css - Идеально плавная версия */
+/* buttons.css - Финальная рабочая версия */
 :root {
 	--dark-metal: linear-gradient(135deg, #2a2e34 0%, #3e434c 50%, #2a2e34 100%);
 	--blood-red: #8a0303;
@@ -7,20 +7,20 @@
 	--shadow-dark: rgba(0, 0, 0, 0.7);
 	--glow-intensity: 0 0 8px;
 	--transition-duration: 0.35s;
+	--btn-raise-height: 12px;
   }
   
-  /* === Нижняя панель (абсолютно статичная) === */
   .bottom-nav-container {
 	position: fixed;
 	bottom: 0;
 	left: 0;
 	width: 100%;
-	background: rgba(0, 0, 0, 0.85);
+	padding: 25px 0 15px;
+	background: rgba(0, 0, 0, 0.9);
 	border-top: 1px solid var(--golden-trim);
-	padding: 20px 0;
 	z-index: 100;
 	box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
-	/* Гарантируем что панель не будет двигаться */
+	clip-path: inset(-20px 0 0 0);
 	will-change: transform;
 	backface-visibility: hidden;
   }
@@ -40,7 +40,6 @@
 	display: none;
   }
   
-  /* === Идеально плавные кнопки === */
   .menu-btn {
 	position: relative;
 	height: 54px;
@@ -59,17 +58,15 @@
 	text-shadow: 1px 1px 1px var(--shadow-dark);
 	box-shadow: 0 3px 6px var(--shadow-dark);
 	transition: all var(--transition-duration) cubic-bezier(0.16, 1, 0.3, 1);
-	z-index: 110; /* Выше панели */
-	margin: 0;
-	overflow: hidden;
-	/* Критически важные свойства для плавности */
+	z-index: 110;
+	margin-bottom: var(--btn-raise-height);
+	overflow: visible;
 	transform: translateZ(0);
 	backface-visibility: hidden;
 	perspective: 1000px;
 	will-change: transform, box-shadow;
   }
   
-  /* Эффект блика (теперь строго внутри кнопки) */
   .menu-btn::before {
 	content: '';
 	position: absolute;
@@ -88,19 +85,42 @@
 	clip-path: inset(0 0 0 0);
   }
   
-  /* Плавное поднятие без перекрытия */
   .menu-btn:hover {
-	transform: translate3d(0, -8px, 0);
-	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+	transform: translateY(calc(-1 * var(--btn-raise-height)));
+	margin-bottom: 0;
+	box-shadow: 
+	  0 var(--btn-raise-height) 15px rgba(0, 0, 0, 0.6),
+	  inset 0 0 10px rgba(0, 0, 0, 0.5);
 	color: #fff;
 	border-color: #e6c884;
   }
   
   .menu-btn:hover::before {
-	left: 140%; /* Блик плавно выходит за пределы */
+	left: 140%;
   }
   
-  /* === Кнопки Play (специальные стили) === */
+  .menu-btn::after {
+	content: '';
+	position: absolute;
+	bottom: calc(-1 * var(--btn-raise-height));
+	left: 10%;
+	width: 80%;
+	height: var(--btn-raise-height);
+	background: linear-gradient(
+	  to bottom,
+	  rgba(201, 177, 118, 0.3),
+	  transparent
+	);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+	filter: blur(3px);
+	z-index: -1;
+  }
+  
+  .menu-btn:hover::after {
+	opacity: 1;
+  }
+  
   .play-btn {
 	background: linear-gradient(135deg, #2a0e05 0%, #6a0202 50%, #2a0e05 100%) !important;
 	border-color: #d4af37 !important;
@@ -115,6 +135,11 @@
 	transform: translateY(-50%);
 	font-size: 1rem;
 	opacity: 0.8;
+	background: transparent;
+	filter: none;
+	width: auto;
+	height: auto;
+	left: auto;
   }
   
   .play-btn:hover {
@@ -123,14 +148,17 @@
   
   @keyframes bloodGlow {
 	0% {
-	  box-shadow: 0 0 8px rgba(138, 3, 3, 0.4);
+	  box-shadow: 
+		0 var(--btn-raise-height) 10px rgba(138, 3, 3, 0.4),
+		inset 0 0 8px rgba(0, 0, 0, 0.5);
 	}
 	100% {
-	  box-shadow: 0 0 16px rgba(138, 3, 3, 0.8);
+	  box-shadow: 
+		0 var(--btn-raise-height) 20px rgba(138, 3, 3, 0.8),
+		inset 0 0 12px rgba(0, 0, 0, 0.7);
 	}
   }
   
-  /* === Кнопка подтверждения === */
   #confirmSelection {
 	display: block;
 	margin: 25px auto 0;
@@ -139,14 +167,12 @@
 	text-align: center;
 	background: linear-gradient(135deg, #0d2a1a 0%, #1a4d32 50%, #0d2a1a 100%);
 	border-color: #4cae4c !important;
-	position: relative;
 	z-index: 120;
   }
   
-  /* === Адаптация для мобильных === */
   @media (max-width: 768px) {
 	.bottom-nav-container {
-	  padding: 15px 0;
+	  padding: 20px 0 10px;
 	}
 	
 	.menu-btn {
@@ -156,13 +182,7 @@
 	  padding: 0 12px;
 	}
 	
-	.play-btn::after {
-	  right: 8px;
-	  font-size: 0.9rem;
-	}
-	
-	#confirmSelection {
-	  min-width: 220px;
-	  padding: 10px 20px;
+	:root {
+	  --btn-raise-height: 10px;
 	}
   }
