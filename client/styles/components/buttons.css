@@ -65,3 +65,43 @@
 	background: #e67e22;
 	margin-top: 1rem;
   }
+  
+  /* Добавим после существующих стилей */
+
+.menu-buttons-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 2rem;
+    width: 100%;
+    max-width: 300px;
+}
+
+.play-btn {
+    margin-top: 2rem;
+    background: linear-gradient(45deg, #27ae60, #2ecc71);
+    box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+}
+
+.play-btn:hover {
+    box-shadow: 0 8px 16px rgba(39, 174, 96, 0.4);
+}
+
+/* Адаптация для мобильных устройств */
+@media (max-width: 768px) {
+    .menu-buttons-container {
+        gap: 8px;
+        max-width: 250px;
+    }
+    
+    .menu-btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 1.1rem;
+        min-width: 180px;
+    }
+    
+    .play-btn {
+        margin-top: 1.5rem;
+    }
+}
